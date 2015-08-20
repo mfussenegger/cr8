@@ -13,5 +13,5 @@ setup(
         ]
     },
     packages=['cr8'],
-    install_requires=['crate', 'argh', 'requests']
+    install_requires=['crate', 'argh', 'requests', 'tqdm', 'fake-factory']
 )
