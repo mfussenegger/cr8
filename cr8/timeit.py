@@ -68,7 +68,7 @@ class QueryRunner:
         for i in range(self.repeats):
             start = time()
             cursor.execute(self.stmt)
-            client_runtimes.append(time() - start)
+            client_runtimes.append(round(time() - start, 3))
             server_runtimes.append(cursor.duration / 1000.)
         ended = time()
 

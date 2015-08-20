@@ -34,6 +34,7 @@ A script to upload a file into a blob table::
 
     > bin/cr8 upload crate.cluster:4200 blobtable /tmp/screenshot.png
 
+
 bench.sh
 --------
 
@@ -49,6 +50,16 @@ second hostname is used to store the results.
 
 (this script also requires `jq <http://stedolan.github.io/jq/>`_ to be
 installed)
+
+perf_regressions.py
+-------------------
+
+A script which will re-run all queries recorded with the `bench.sh` script. It
+will record the runtimes again and output the new runtimes::
+
+    > bin/cr8 find-perf-regressions \
+            cluster.to.benchmark:4200 \
+            cluster.with.log.table:4200
 
 Installation / Setup
 ====================
