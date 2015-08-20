@@ -61,6 +61,29 @@ will record the runtimes again and output the new runtimes::
             cluster.to.benchmark:4200 \
             cluster.with.log.table:4200
 
+fill_table.py
+-------------
+
+A script that can be used to fill a table with random data.  The script
+will generate the records using `faker
+<https://github.com/joke2k/faker>`_.
+
+For example given the table as follows::
+
+    create table demo (
+        name string,
+        country string
+    );
+
+The following command can be used to insert 100k records::
+
+    > bin/cr8 fill-table localhost:4200 100000
+    
+It will automatically read the schema from the table and map the
+columns to faker providers and insert the give number of records.
+
+(Currently only top-level string columns are supported)
+
 Installation / Setup
 ====================
 
