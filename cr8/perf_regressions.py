@@ -13,8 +13,11 @@ def _get_runtimes(hosts):
     conn = connect(hosts)
     c = conn.cursor()
     c.execute("select min(runtime_stats['avg']), statement from benchmarks group by statement")
-    for min_avg, statement in c.fetchall():
-        yield min_avg, statement
+    rows = c.fetchall()
+    for min_avg, statement in rows:
+        c.execute("select runtime_stats['avg'] from benchmarks "
+                  "where statement = ? order by ended desc limit 1", (statement,))
+        yield min_avg, c.fetchall()[0][0], statement
 
 
 def _query_supported(cursor, statement):
@@ -31,7 +34,7 @@ def _query_supported(cursor, statement):
           help='host of the crate cluster where there is the table which contains benchmark results')
 def find_perf_regressions(benchmark_hosts, log_host):
     """ finds performance regressions by running recorded queries
-    
+
     Reads the benchmark table from the log_host and runs all queries again
     against the benchmark_hosts. It will compare the new runtimes with the
     previous runs and print runtime details.
@@ -46,14 +49,14 @@ def find_perf_regressions(benchmark_hosts, log_host):
 
     conn = connect(log_host)
     log_cursor = conn.cursor()
-    for min_avg, statement in runtimes:
+    for min_avg, last_avg, statement in runtimes:
         if not _query_supported(benchmark_cursor, statement):
             yield 'Skipping statement as it run into an error: {}'.format(statement)
             continue
         yield 'Running: {}'.format(statement)
         result = timeit(statement, benchmark_hosts, warmup=5)
-        yield 'Runtime: previous: {} current: {}'.format(
-            min_avg, result.runtime_stats['avg'])
+        yield 'Runtime: best: {} previous: {} current: {}'.format(
+            min_avg, last_avg, result.runtime_stats['avg'])
         if (result.runtime_stats['avg'] * 1.05) > min_avg:
             regressions.append((vars(result), min_avg))
 
