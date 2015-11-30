@@ -1,6 +1,18 @@
-==============
-Crate Devtools
-==============
+====================
+cr8 - Crate Devtools
+====================
+
+.. image:: https://img.shields.io/pypi/wheel/cr8.svg
+    :target: https://pypi.python.org/pypi/cr8/
+    :alt: Wheel
+
+.. image:: https://img.shields.io/pypi/v/cr8.svg
+   :target: https://pypi.python.org/pypi/cr8/
+   :alt: PyPI Version
+
+.. image:: https://img.shields.io/pypi/pyversions/cr8.svg
+   :target: https://pypi.python.org/pypi/cr8/
+   :alt: Python Version
 
 A collection of small utility scripts that can make using / testing /
 developing crate easier.
@@ -78,7 +90,7 @@ For example given the table as follows::
 The following command can be used to insert 100k records::
 
     > bin/cr8 fill-table localhost:4200 demo 100000
-    
+
 It will automatically read the schema from the table and map the
 columns to faker providers and insert the give number of records.
 
