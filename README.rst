@@ -2,6 +2,10 @@
 cr8 - Crate Devtools
 ====================
 
+.. image:: https://travis-ci.org/mfussenegger/crate-devtools.svg?branch=master
+    :target: https://travis-ci.org/mfussenegger/crate-devtools
+    :alt: travis-ci
+
 .. image:: https://img.shields.io/pypi/wheel/cr8.svg
     :target: https://pypi.python.org/pypi/cr8/
     :alt: Wheel
@@ -17,8 +21,32 @@ cr8 - Crate Devtools
 A collection of small utility scripts that can make using / testing /
 developing crate easier.
 
-Each script can be called with `-h` or `--help` to get a more detailed usage
+Install
+=======
+
+The scripts are written in python and require at least version 3.4.
+
+Install using pip::
+
+    pip install cr8
+
+Usage
+=====
+
+The main binary is called ``cr8`` which contains a couple of sub-commands.
+
+Use ``cr8 -h`` or ``cr8 <subcommand> -h`` to get a more detailed usage
 description.
+
+An example using ``cr8``::
+
+    > echo '{"name": "Arthur"}' | cr8 json2insert mytable
+    ('insert into mytable (name) values (?)', ['Arthur'])
+
+The included sub-commands are described in more detail below:
+
+Scripts/Sub-commands
+====================
 
 The included scripts are:
 
@@ -28,14 +56,14 @@ timeit.py
 A script that can be used to measure the runtime of a given SQL statement on a
 cluster::
 
-    > bin/cr8 timeit "select * from rankings limit 10" mycratecluster.hostname:4200
+    > cr8 timeit "select * from rankings limit 10" mycratecluster.hostname:4200
 
 json2insert.py
 --------------
 
 A script that generates an insert statement from a json string::
 
-    > echo '{"name": "Arthur"}' | bin/cr8 json2insert mytable
+    > echo '{"name": "Arthur"}' | cr8 json2insert mytable
     ('insert into mytable (name) values (?)', ['Arthur'])
 
 
@@ -44,7 +72,7 @@ blobs.py
 
 A script to upload a file into a blob table::
 
-    > bin/cr8 upload crate.cluster:4200 blobtable /tmp/screenshot.png
+    > cr8 upload crate.cluster:4200 blobtable /tmp/screenshot.png
 
 
 bench.sh
@@ -69,7 +97,7 @@ perf_regressions.py
 A script which will re-run all queries recorded with the `bench.sh` script. It
 will record the runtimes again and output the new runtimes::
 
-    > bin/cr8 find-perf-regressions \
+    > cr8 find-perf-regressions \
             cluster.to.benchmark:4200 \
             cluster.with.log.table:4200
 
@@ -89,17 +117,40 @@ For example given the table as follows::
 
 The following command can be used to insert 100k records::
 
-    > bin/cr8 fill-table localhost:4200 demo 100000
+    > cr8 fill-table localhost:4200 demo 100000
 
 It will automatically read the schema from the table and map the
 columns to faker providers and insert the give number of records.
 
 (Currently only top-level string columns are supported)
 
-Installation / Setup
-====================
+Development
+===========
 
-The scripts are written in python and require at least version 3.4.
+Tests are run using ``python setup.py test``.
+
+To get a sandboxed environment with all dependencies installed one can either
+use ``venv`` or ``buildout``:
+
+venv
+----
+
+Create a new virtualenv using ``venv``::
+
+    python -m venv .venv
+
+Install the ``cr8`` package using pip::
+
+    .venv/bin/python -m pip install -e .
+
+Run ``cr8``::
+
+    .venv/bin/cr8 -h
+
+buildout
+--------
+
+
 Use buildout to create a sandboxed environment with all dependencies installed:
 
 Bootstrap buildout::
@@ -112,9 +163,3 @@ Run buildout::
 
 After that you can access the tools via ``bin/cr8`` which is a central entry
 point for all scripts.
-
-
-Using ``bin/cr8``::
-
-    > echo '{"name": "Arthur"}' | bin/cr8 json2insert mytable
-    ('insert into mytable (name) values (?)', ['Arthur'])
