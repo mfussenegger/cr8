@@ -22,7 +22,13 @@ setup(
         ]
     },
     packages=['cr8'],
-    install_requires=['crate', 'argh', 'requests', 'tqdm', 'fake-factory'],
+    install_requires=[
+        'crate',
+        'argh',
+        'requests',
+        'tqdm',
+        'fake-factory'
+    ],
     classifiers=[
         'Development Status :: 4 - Beta',
         'Programming Language :: Python :: 3',

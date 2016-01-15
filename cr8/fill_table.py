@@ -37,10 +37,33 @@ def generate_row(fakers):
     return [x() for x in fakers]
 
 
+def x1000(func):
+    return func() * 1000
+
+
+def timestamp(fake):
+    # return lamda: fake.unix_time() * 1000 workaround:
+    # can't use lambda or nested functions because of multiprocessing pickling
+    return partial(x1000, fake.unix_time)
+
+
+def from_attribute(attr):
+    def func(fake):
+        return getattr(fake, attr)
+    return func
+
+
 class DataFaker:
     _mapping = {
-        ('id', 'string'): 'uuid4',
-        ('id', 'integer'): 'random_int'
+        ('id', 'string'): from_attribute('uuid4'),
+        ('id', 'integer'): from_attribute('random_int')
+    }
+
+    _type_default = {
+        'integer': from_attribute('random_int'),
+        'timestamp': timestamp,
+        'string': from_attribute('word'),
+        'boolean': from_attribute('boolean')
     }
 
     def __init__(self):
@@ -48,10 +71,12 @@ class DataFaker:
 
     def provider_for_column(self, column_name, data_type):
         provider = getattr(self.fake, column_name, None)
-        if not provider:
-            alternative = self._mapping[(column_name, data_type)]
-            provider = getattr(self.fake, alternative)
-        return provider
+        if provider:
+            return provider
+        alternative = self._mapping.get((column_name, data_type), None)
+        if not alternative:
+            alternative = self._type_default[data_type]
+        return alternative(self.fake)
 
 
 def create_row_generator(columns):
@@ -61,7 +86,8 @@ def create_row_generator(columns):
         try:
             fakers.append(fake.provider_for_column(column_name, type_name))
         except KeyError:
-            raise KeyError('No fake provider for columns with data type: {}'.format(type_name))
+            raise KeyError('No fake provider for column "{column}" with type "{type}"'.format(
+                column=column_name, type=type_name))
         except AttributeError:
             raise AttributeError(
                 'No fake provider found for column named: {}\n\

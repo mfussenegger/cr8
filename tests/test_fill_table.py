@@ -20,3 +20,16 @@ class TestDataFaker(TestCase):
     def test_fake_provider_for_int_id_column(self):
         provider = self.f.provider_for_column('id', 'integer')
         self.assertEqual(provider(), 1824)
+
+    def test_type_default_provider_for_unknown_int_column(self):
+        provider = self.f.provider_for_column(
+            'column_name_without_provider', 'integer')
+        self.assertEqual(provider(), 1824)  # got random_int provider
+
+    def test_timestamp_column_default(self):
+        provider = self.f.provider_for_column('timestamp', 'timestamp')
+        self.assertEqual(provider(), 1373158606000)
+
+    def test_timestamp_type_default(self):
+        provider = self.f.provider_for_column('some_ts_column', 'timestamp')
+        self.assertEqual(provider(), 1373158606000)
