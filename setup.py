@@ -15,6 +15,7 @@ setup(
     author='Mathias Fußenegger',
     author_email='pip@zignar.net',
     url='https://github.com/mfussenegger/crate-devtools',
+    description='A collection of utility scripts to work with testing and developing crate',
     long_description=readme,
     entry_points={
         'console_scripts': [
