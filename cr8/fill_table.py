@@ -33,23 +33,33 @@ def insert(cursor, stmt, args):
     yield from f
 
 
-def _fake_string(fake, column_name):
-    return getattr(fake, column_name)
-
-
 def generate_row(fakers):
     return [x() for x in fakers]
 
 
-def create_row_generator(columns):
-    fake = Factory.create()
-    type2fake_dict = {
-        'string': partial(_fake_string, fake)
+class DataFaker:
+    _mapping = {
+        ('id', 'string'): 'uuid4',
+        ('id', 'integer'): 'random_int'
     }
+
+    def __init__(self):
+        self.fake = Factory.create()
+
+    def provider_for_column(self, column_name, data_type):
+        provider = getattr(self.fake, column_name, None)
+        if not provider:
+            alternative = self._mapping[(column_name, data_type)]
+            provider = getattr(self.fake, alternative)
+        return provider
+
+
+def create_row_generator(columns):
+    fake = DataFaker()
     fakers = []
     for column_name, type_name in columns.items():
         try:
-            fakers.append(type2fake_dict[type_name](column_name))
+            fakers.append(fake.provider_for_column(column_name, type_name))
         except KeyError:
             raise KeyError('No fake provider for columns with data type: {}'.format(type_name))
         except AttributeError:
@@ -57,7 +67,6 @@ def create_row_generator(columns):
                 'No fake provider found for column named: {}\n\
                 See {} for a list of available providers.'.format(
                     column_name, PROVIDER_LIST_URL))
-
     return partial(generate_row, fakers)
 
 
