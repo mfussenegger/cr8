@@ -10,7 +10,8 @@ from functools import partial
 from collections import OrderedDict
 from crate.client import connect
 
-from cr8.json2insert import to_insert
+from .json2insert import to_insert
+from .misc import parse_table
 
 
 PROVIDER_LIST_URL = 'http://fake-factory.readthedocs.org/en/latest/providers.html'
@@ -24,21 +25,6 @@ def retrieve_columns(cursor, schema, table):
         where schema_name = ? and table_name = ? \
         order by ordinal_position asc', (schema, table))
     return OrderedDict({x[0]: x[1] for x in cursor.fetchall()})
-
-
-def parse_table(fq_table):
-    """ parses a tablename and returns a (<schema>, <table>) tuple
-
-    schema defaults to doc if the table name doesn't contain a schema
-    """
-
-    parts = fq_table.split('.')
-    if len(parts) == 1:
-        return 'doc', parts[0]
-    elif len(parts) == 2:
-        return parts[0], parts[1]
-    else:
-        raise ValueError
 
 
 @asyncio.coroutine
