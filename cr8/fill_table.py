@@ -1,9 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import json
 import argh
+import argparse
 import asyncio
 import multiprocessing as mp
+from pprint import pprint
 from tqdm import tqdm
 from faker import Factory
 from functools import partial
@@ -78,21 +81,27 @@ class DataFaker:
             alternative = self._type_default[data_type]
         return alternative(self.fake)
 
+    def provider_from_mapping(self, column_name, mapping):
+        key = mapping[column_name]
+        args = None
+        if isinstance(key, list):
+            key, args = key
+        provider = getattr(self.fake, key, None)
+        if not provider:
+            raise KeyError('No fake provider with name "%s" found' % (key,))
+        if args:
+            provider = partial(provider, *args)
+        return provider
 
-def create_row_generator(columns):
+
+def create_row_generator(columns, mapping=None):
     fake = DataFaker()
     fakers = []
     for column_name, type_name in columns.items():
-        try:
+        if mapping and column_name in mapping:
+            fakers.append(fake.provider_from_mapping(column_name, mapping))
+        else:
             fakers.append(fake.provider_for_column(column_name, type_name))
-        except KeyError:
-            raise KeyError('No fake provider for column "{column}" with type "{type}"'.format(
-                column=column_name, type=type_name))
-        except AttributeError:
-            raise AttributeError(
-                'No fake provider found for column named: {}\n\
-                See {} for a list of available providers.'.format(
-                    column_name, PROVIDER_LIST_URL))
     return partial(generate_row, fakers)
 
 
@@ -123,10 +132,19 @@ def _run_fill_table(conn, stmt, generate_row, num_inserts, bulk_size):
           Either <schema>.<table> or just <table>')
 @argh.arg('hosts', help='crate hosts', type=str, nargs='+')
 @argh.arg('num_records', help='number of records to insert')
-def fill_table(hosts, fqtable, num_records, bulk_size=1000):
+@argh.arg('--mapping_file',
+          type=argparse.FileType('r'),
+          help='''JSON file with a column to fake provider mapping.
+In the format:
+{
+    "source_column1": ["provider_with_args", ["arg1", "arg"]],
+    "source_column2": "provider_without_args"
+}
+''')
+def fill_table(hosts, fqtable, num_records, bulk_size=1000, mapping_file=None):
     """ fills a table with random data
 
-    Will insert <num_records> into <fqtable> on <hosts>.
+    Insert <num_records> into <fqtable> on <hosts>.
     Each insert request will contain <bulk_size> items.
 
     Depending on colum names and data types of the given table an appropriate
@@ -141,8 +159,11 @@ def fill_table(hosts, fqtable, num_records, bulk_size=1000):
     schema, table = parse_table(fqtable)
     columns = retrieve_columns(c, schema, table)
     yield 'Found schema: '
-    yield columns
-    generate_row = create_row_generator(columns)
+    pprint(columns)
+    mapping = None
+    if mapping_file:
+        mapping = json.load(mapping_file)
+    generate_row = create_row_generator(columns, mapping)
 
     stmt = to_insert(fqtable, columns)[0]
     yield 'Using insert statement: '
@@ -150,7 +171,7 @@ def fill_table(hosts, fqtable, num_records, bulk_size=1000):
 
     bulk_size = min(num_records, bulk_size)
     num_inserts = int(num_records / bulk_size)
-    yield 'Will make {} requests with a bulk size of {} per request'.format(
+    yield 'Will make {} requests with a bulk size of {}'.format(
         num_inserts, bulk_size)
     loop.run_until_complete(
         _run_fill_table(conn, stmt, generate_row, num_inserts, bulk_size))

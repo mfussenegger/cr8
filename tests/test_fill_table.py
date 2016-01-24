@@ -33,3 +33,10 @@ class TestDataFaker(TestCase):
     def test_timestamp_type_default(self):
         provider = self.f.provider_for_column('some_ts_column', 'timestamp')
         self.assertEqual(provider(), 1373158606000)
+
+    def test_provider_from_mapping(self):
+        mapping = {'x': ['random_int', [10, 20]]}
+        provider = self.f.provider_from_mapping('x', mapping)
+        self.assertEqual(provider(), 20)
+
+
