@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import sys
 import json
 import argh
 import argparse
@@ -158,6 +159,8 @@ def fill_table(hosts, fqtable, num_records, bulk_size=1000, mapping_file=None):
 
     schema, table = parse_table(fqtable)
     columns = retrieve_columns(c, schema, table)
+    if not columns:
+        sys.exit('Could not find columns for table "{}"'.format(fqtable))
     yield 'Found schema: '
     pprint(columns)
     mapping = None
