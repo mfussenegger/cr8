@@ -8,6 +8,7 @@ from cr8.blobs import upload
 from cr8.json2insert import json2insert
 from cr8.perf_regressions import find_perf_regressions
 from cr8.fill_table import fill_table
+from cr8.md_dump import md_dump
 
 
 def main():
@@ -16,7 +17,8 @@ def main():
                     json2insert,
                     upload,
                     find_perf_regressions,
-                    fill_table])
+                    fill_table,
+                    md_dump])
     p.dispatch()
 
 
