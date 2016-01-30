@@ -65,7 +65,10 @@ def pdf_to_tiff(fpath, **kwargs):
 def identify(fpath, **kwargs):
     p = run(['identify', '-format', '%wx%h', fpath],
             universal_newlines=True)
-    return [int(x) for x in p.stdout.split('x')]
+    w, h, *more = p.stdout.split('x')
+    if more:  # pdf with multiple pages or something
+        return None, None
+    return int(w), int(h)
 
 
 @warn_file_not_found
@@ -82,6 +85,7 @@ def no_extract(filename, **kwargs):
 
 text_extractors = {
     'application/pdf': pdf_extract,
+    'image/tiff': tesseract,
 }
 
 identify_types = {'application/pdf'}
