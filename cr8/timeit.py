@@ -96,12 +96,14 @@ class QueryRunner:
 def timeit(hosts, stmt=None, warmup=30, repeat=30):
     """ runs the given statement a number of times and returns the runtime stats
     """
+    num_lines = 0
     for line in lines_from_stdin(stmt):
         runner = QueryRunner(line, repeat, hosts)
         runner.warmup(warmup)
         result = runner.run()
         yield result
-    else:
+        num_lines += 1
+    if num_lines == 0:
         raise SystemExit(
             'No SQL statements provided. Use --stmt or provide statements via stdin')
 

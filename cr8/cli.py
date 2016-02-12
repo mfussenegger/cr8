@@ -4,9 +4,10 @@ import json
 
 
 def lines_from_stdin(default=None):
-    default = [default] if default else []
     if sys.stdin.isatty():
-        return default
+        if default:
+            yield default
+        return
     for line in sys.stdin:
         yield line
 

@@ -66,6 +66,8 @@ A script that generates an insert statement from a json string::
     > echo '{"name": "Arthur"}' | cr8 json2insert mytable
     ('insert into mytable (name) values (?)', ['Arthur'])
 
+If a Crate host is also provided the statement will be executed on the cluster.
+
 
 blobs.py
 --------
