@@ -135,31 +135,15 @@ use ``venv`` or ``buildout``:
 venv
 ----
 
-Create a new virtualenv using ``venv``::
+Create a new virtualenv using ``venv`` and active it::
 
     python -m venv .venv
+    source .venv/bin/activate
 
 Install the ``cr8`` package using pip::
 
-    .venv/bin/python -m pip install -e .
+    python -m pip install -e .
 
 Run ``cr8``::
 
-    .venv/bin/cr8 -h
-
-buildout
---------
-
-
-Use buildout to create a sandboxed environment with all dependencies installed:
-
-Bootstrap buildout::
-
-    /path/to/clean/python bootstrap.py
-
-Run buildout::
-
-    bin/buildout -N
-
-After that you can access the tools via ``bin/cr8`` which is a central entry
-point for all scripts.
+    cr8 -h

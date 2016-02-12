@@ -1,5 +1,5 @@
 from cr8.fill_table import DataFaker
-from unittest import TestCase
+from unittest import TestCase, main
 
 
 class TestDataFaker(TestCase):
@@ -40,3 +40,5 @@ class TestDataFaker(TestCase):
         self.assertEqual(provider(), 20)
 
 
+if __name__ == "__main__":
+    main()
