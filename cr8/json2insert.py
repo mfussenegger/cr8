@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import sys
 import argh
-import json
+
+from .cli import dicts_from_stdin
 
 
 def to_insert(table, d):
@@ -38,14 +38,14 @@ def json2insert(table, *hosts):
     If hosts are specified the insert statement will be executed on those hosts.
     Otherwise the statement and the arguments are printed.
     """
-    d = json.load(sys.stdin)
-    stmt, args = to_insert(table, d)
-    if hosts:
-        from crate.client import connect
-        conn = connect(hosts)
-        c = conn.cursor()
-        c.execute(stmt, args)
-    return stmt, args
+    for d in dicts_from_stdin():
+        stmt, args = to_insert(table, d)
+        if hosts:
+            from crate.client import connect
+            conn = connect(hosts)
+            c = conn.cursor()
+            c.execute(stmt, args)
+        yield stmt, args
 
 
 def main():
