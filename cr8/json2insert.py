@@ -38,6 +38,7 @@ def json2insert(table, *hosts):
     If hosts are specified the insert statement will be executed on those hosts.
     Otherwise the statement and the arguments are printed.
     """
+    count = 0
     for d in dicts_from_stdin():
         stmt, args = to_insert(table, d)
         if hosts:
@@ -46,6 +47,11 @@ def json2insert(table, *hosts):
             c = conn.cursor()
             c.execute(stmt, args)
         yield stmt, args
+        count += 1
+    if hosts:
+        yield 'Inserted {count} records'.format(count=count)
+    else:
+        yield 'No hosts provided. Nothing inserted'
 
 
 def main():
