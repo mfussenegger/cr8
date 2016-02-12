@@ -131,9 +131,9 @@ def _run_fill_table(conn, stmt, generate_row, num_inserts, bulk_size):
 @argh.arg('num_records', type=int)
 @argh.arg('fqtable', help='(fully qualified) table name. \
           Either <schema>.<table> or just <table>')
-@argh.arg('hosts', help='crate hosts', type=str, nargs='+')
+@argh.arg('hosts', help='crate hosts', type=str)
 @argh.arg('num_records', help='number of records to insert')
-@argh.arg('--mapping_file',
+@argh.arg('--mapping-file',
           type=argparse.FileType('r'),
           help='''JSON file with a column to fake provider mapping.
 In the format:

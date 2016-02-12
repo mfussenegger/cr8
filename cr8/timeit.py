@@ -9,6 +9,8 @@ from time import time
 from crate.client import connect
 from concurrent.futures import ThreadPoolExecutor, wait
 
+from .cli import lines_from_stdin
+
 
 executor = ThreadPoolExecutor(20)
 
@@ -90,14 +92,18 @@ class QueryRunner:
         }
 
 
-@argh.arg('hosts', type=str, nargs='+')
-def timeit(stmt, hosts, warmup=30, repeat=30):
+@argh.arg('hosts', help='crate hosts', type=str)
+def timeit(hosts, stmt=None, warmup=30, repeat=30):
     """ runs the given statement a number of times and returns the runtime stats
     """
-    runner = QueryRunner(stmt, repeat, hosts)
-    runner.warmup(warmup)
-    result = runner.run()
-    return result
+    for line in lines_from_stdin(stmt):
+        runner = QueryRunner(line, repeat, hosts)
+        runner.warmup(warmup)
+        result = runner.run()
+        yield result
+    else:
+        raise SystemExit(
+            'No SQL statements provided. Use --stmt or provide statements via stdin')
 
 
 def main():
