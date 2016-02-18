@@ -14,8 +14,8 @@ setup(
     name='cr8',
     author='Mathias Fußenegger',
     author_email='pip@zignar.net',
-    url='https://github.com/mfussenegger/crate-devtools',
-    description='A collection of utility scripts to work with testing and developing crate',
+    url='https://github.com/mfussenegger/cr8',
+    description='A collection of command line tools for crate devs',
     long_description=readme,
     entry_points={
         'console_scripts': [
@@ -32,7 +32,7 @@ setup(
     ],
     classifiers=[
         'Development Status :: 4 - Beta',
-        'License :: OSI Approved :: MIT License'
+        'License :: OSI Approved :: MIT License',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
