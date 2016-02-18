@@ -1,6 +1,6 @@
-====================
-cr8 - Crate Devtools
-====================
+===
+cr8
+===
 
 .. image:: https://travis-ci.org/mfussenegger/crate-devtools.svg?branch=master
     :target: https://travis-ci.org/mfussenegger/crate-devtools
@@ -18,20 +18,23 @@ cr8 - Crate Devtools
    :target: https://pypi.python.org/pypi/cr8/
    :alt: Python Version
 
-A collection of small utility scripts that can make using / testing /
-developing crate easier.
+A collection of command line tools for `Crate <https://github.com/crate/crate>`_.
+Most of these tools output JSON. In order to pretty-print the output or filter
+it using `jq <https://stedolan.github.io/jq/>`_  is recommended.
 
-Install
-=======
+Target audience are mostly developers of Crate and not users.
 
-The scripts are written in python and require at least version 3.4.
+Install 💾
+==========
 
-Install using pip::
+Python >= 3.4 is required to use the command line tools.
+
+Install them using `pip <https://pip.pypa.io/en/stable/>`_::
 
     pip install cr8
 
-Usage
-=====
+Usage 🎠
+========
 
 The main binary is called ``cr8`` which contains a couple of sub-commands.
 
@@ -45,37 +48,57 @@ An example using ``cr8``::
 
 The included sub-commands are described in more detail below:
 
-Scripts/Sub-commands
-====================
+Sub-commands
+============
 
-The included scripts are:
+timeit
+------
 
-timeit.py
----------
-
-A script that can be used to measure the runtime of a given SQL statement on a
+A tool that can be used to measure the runtime of a given SQL statement on a
 cluster::
 
-    > cr8 timeit "select * from rankings limit 10" mycratecluster.hostname:4200
+    > cr8 timeit cluster.hostname:4200 --stmt "select name from sys.cluster"
 
-json2insert.py
---------------
+fill_table
+----------
 
-A script that generates an insert statement from a json string::
+A tool that can be used to fill a table with random data. The script will
+generate the records using `faker <https://github.com/joke2k/faker>`_.
+
+For example given the table as follows::
+
+    create table demo (
+        name string,
+        country string
+    );
+
+The following command can be used to insert 100k records::
+
+    > cr8 fill-table localhost:4200 demo 100000
+
+It will automatically read the schema from the table and map the columns to
+faker `providers
+<http://fake-factory.readthedocs.org/en/latest/providers.html>`_ and insert the
+give number of records.
+
+(Currently only top-level string columns are supported)
+
+json2insert
+-----------
+
+json2insert generates an insert statement from a JSON string::
 
     > echo '{"name": "Arthur"}' | cr8 json2insert mytable
     ('insert into mytable (name) values (?)', ['Arthur'])
 
-If a Crate host is also provided the statement will be executed on the cluster.
+If a Crate host is provided the insert statement will be executed as well.
 
+blobs
+------
 
-blobs.py
---------
-
-A script to upload a file into a blob table::
+A tool to upload a file into a blob table::
 
     > cr8 upload crate.cluster:4200 blobtable /tmp/screenshot.png
-
 
 bench.sh
 --------
@@ -93,41 +116,18 @@ second hostname is used to store the results.
 (this script also requires `jq <http://stedolan.github.io/jq/>`_ to be
 installed)
 
-perf_regressions.py
--------------------
+perf_regressions
+----------------
 
-A script which will re-run all queries recorded with the `bench.sh` script. It
+A tool which will re-run all queries recorded with the `bench.sh` script. It
 will record the runtimes again and output the new runtimes::
 
     > cr8 find-perf-regressions \
             cluster.to.benchmark:4200 \
             cluster.with.log.table:4200
 
-fill_table.py
--------------
-
-A script that can be used to fill a table with random data.  The script
-will generate the records using `faker
-<https://github.com/joke2k/faker>`_.
-
-For example given the table as follows::
-
-    create table demo (
-        name string,
-        country string
-    );
-
-The following command can be used to insert 100k records::
-
-    > cr8 fill-table localhost:4200 demo 100000
-
-It will automatically read the schema from the table and map the
-columns to faker providers and insert the give number of records.
-
-(Currently only top-level string columns are supported)
-
-Development
-===========
+Development 😕
+==============
 
 Tests are run using ``python setup.py test``.
 
