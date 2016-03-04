@@ -25,6 +25,13 @@ def dicts_from_stdin():
         {
             "name": "n1"
         }
+
+    Or a list of JSON objects:
+
+        [
+            {"name": "n1"},
+            {"name": "n2"},
+        ]
     """
     if sys.stdin.isatty():
         raise SystemExit('Expected json input via stdin')
@@ -32,4 +39,8 @@ def dicts_from_stdin():
         try:
             yield json.loads(line)
         except json.decoder.JSONDecodeError:
-            yield json.loads(line + '\n' + sys.stdin.read())
+            dicts = json.loads(line + '\n' + sys.stdin.read())
+            if isinstance(dicts, list):
+                yield from dicts
+            else:
+                yield dicts
