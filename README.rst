@@ -20,7 +20,7 @@ cr8
 
 A collection of command line tools for `Crate <https://github.com/crate/crate>`_.
 Most of these tools output JSON. In order to pretty-print the output or filter
-it using `jq <https://stedolan.github.io/jq/>`_  is recommended.
+it using `jq`_  is recommended.
 
 Target audience are mostly developers of Crate and not users.
 
@@ -113,8 +113,7 @@ created using the `sql/benchmarks_table.sql` file and crash::
 Where the first hostname is used to benchmark the query and the
 second hostname is used to store the results.
 
-(this script also requires `jq <http://stedolan.github.io/jq/>`_ to be
-installed)
+(this script also requires `jq`_ to be installed)
 
 perf_regressions
 ----------------
@@ -149,3 +148,5 @@ Install the ``cr8`` package using pip::
 Run ``cr8``::
 
     cr8 -h
+
+.. _jq: https://stedolan.github.io/jq/
