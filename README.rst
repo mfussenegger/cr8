@@ -2,8 +2,8 @@
 cr8
 ===
 
-.. image:: https://travis-ci.org/mfussenegger/crate-devtools.svg?branch=master
-    :target: https://travis-ci.org/mfussenegger/crate-devtools
+.. image:: https://travis-ci.org/mfussenegger/cr8.svg?branch=master
+    :target: https://travis-ci.org/mfussenegger/cr8
     :alt: travis-ci
 
 .. image:: https://img.shields.io/pypi/wheel/cr8.svg
