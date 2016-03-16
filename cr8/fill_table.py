@@ -60,11 +60,13 @@ def from_attribute(attr):
 class DataFaker:
     _mapping = {
         ('id', 'string'): from_attribute('uuid4'),
-        ('id', 'integer'): from_attribute('random_int')
+        ('id', 'integer'): from_attribute('random_int'),
+        ('id', 'long'): from_attribute('random_int')
     }
 
     _type_default = {
         'integer': from_attribute('random_int'),
+        'long': from_attribute('random_int'),
         'timestamp': timestamp,
         'string': from_attribute('word'),
         'boolean': from_attribute('boolean')
