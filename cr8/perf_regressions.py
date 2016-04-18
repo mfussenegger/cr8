@@ -54,7 +54,7 @@ def find_perf_regressions(benchmark_hosts, log_host):
             yield 'Skipping statement as it run into an error: {}'.format(statement)
             continue
         yield 'Running: {}'.format(statement)
-        result = timeit(statement, benchmark_hosts, warmup=5)
+        result = next(timeit(benchmark_hosts, stmt=statement, warmup=5))
         yield 'Runtime: best: {} previous: {} current: {}'.format(
             min_avg, last_avg, result.runtime_stats['avg'])
         if (result.runtime_stats['avg'] * 1.05) > min_avg:
