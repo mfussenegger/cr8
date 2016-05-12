@@ -7,6 +7,7 @@ import argh
 import argparse
 import asyncio as aio
 import multiprocessing as mp
+import ast
 from pprint import pprint
 from tqdm import tqdm
 from faker import Factory
@@ -129,7 +130,25 @@ def _run_fill_table(conn, stmt, generate_row, num_inserts, bulk_size):
         yield from f
 
 
-@argh.arg('num_records', type=int)
+def _to_int(s):
+    """ converts a string to an integer
+
+    >>> _to_int('1_000_000')
+    1000000
+
+    >>> _to_int('1e6')
+    1000000
+
+    >>> _to_int('1000')
+    1000
+    """
+    try:
+        return int(s.replace('_', ''))
+    except ValueError:
+        return int(ast.literal_eval(s))
+
+
+@argh.arg('num_records', type=str)
 @argh.arg('fqtable', help='(fully qualified) table name. \
           Either <schema>.<table> or just <table>')
 @argh.arg('hosts', help='crate hosts', type=str)
@@ -155,6 +174,7 @@ def fill_table(hosts, fqtable, num_records, bulk_size=1000, mapping_file=None):
     E.g. a column called `name` will be filled with names.
 
     """
+    num_records = _to_int(num_records)
     conn = connect(hosts)
     c = conn.cursor()
 

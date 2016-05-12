@@ -1,5 +1,7 @@
 from cr8.fill_table import DataFaker
+from cr8 import fill_table
 from unittest import TestCase, main
+from doctest import DocTestSuite
 
 
 class TestDataFaker(TestCase):
@@ -42,6 +44,11 @@ class TestDataFaker(TestCase):
         mapping = {'x': ['random_int', [10, 20]]}
         provider = self.f.provider_from_mapping('x', mapping)
         self.assertEqual(provider(), 20)
+
+
+def load_tests(loader, tests, ignore):
+    tests.addTests(DocTestSuite(fill_table))
+    return tests
 
 
 if __name__ == "__main__":
