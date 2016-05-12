@@ -114,19 +114,17 @@ def generate_bulk_args(generate_row, bulk_size, _):
 
 @asyncio.coroutine
 def _run_fill_table(conn, stmt, generate_row, num_inserts, bulk_size):
-    print('Starting to generate and insert fake data. This might take a while')
+    print('Generating fake data and executing inserts')
     bulk_args_function = partial(generate_bulk_args, generate_row, bulk_size)
     tasks = []
     with mp.Pool() as pool:
-        i = 0
-        for args in pool.imap_unordered(bulk_args_function, range(num_inserts)):
-            if (i % 1000) == 0:
-                print('...')
+        args_it = pool.imap_unordered(bulk_args_function, range(num_inserts))
+        for args in tqdm(args_it, total=num_inserts):
             tasks.append(asyncio.Task(insert(conn.cursor(), stmt, args)))
-            i += 1
     print('Finished generating the data and queued all inserts.')
-    print('Now let us wait for the insert operations to complete')
-    for f in tqdm(asyncio.as_completed(tasks), total=len(tasks)):
+    print('Waiting for inserts to complete')
+    for f in tqdm(asyncio.as_completed(tasks),
+                  total=len(tasks), unit='requests', smoothing=0.1):
         yield from f
 
 
