@@ -9,7 +9,7 @@ import asyncio as aio
 import multiprocessing as mp
 import ast
 from pprint import pprint
-from tqdm import tqdm
+from tqdm import tqdm, trange
 from faker import Factory
 from functools import partial
 from collections import OrderedDict
@@ -109,19 +109,30 @@ def create_row_generator(columns, mapping=None):
     return partial(generate_row, fakers)
 
 
-def generate_bulk_args(generate_row, bulk_size, _):
+def generate_bulk_args(generate_row, bulk_size):
     return [generate_row() for i in range(bulk_size)]
 
 
 @aio.coroutine
 def _run_fill_table(conn, stmt, generate_row, num_inserts, bulk_size):
     print('Generating fake data and executing inserts')
-    bulk_args_function = partial(generate_bulk_args, generate_row, bulk_size)
+    bulk_args_func = partial(generate_bulk_args, generate_row, bulk_size)
     tasks = []
     with mp.Pool() as pool:
-        args_it = pool.imap_unordered(bulk_args_function, range(num_inserts))
-        for args in tqdm(args_it, total=num_inserts):
-            tasks.append(aio.ensure_future(insert(conn.cursor(), stmt, args)))
+        for i in trange(num_inserts):
+            fut = aio.Future()
+
+            def set_result(result):
+                loop.call_soon_threadsafe(fut.set_result, result)
+
+            def set_exc(exc):
+                loop.call_soon_threadsafe(fut.set_exception, exc)
+
+            pool.apply_async(bulk_args_func, callback=set_result, error_callback=set_exc)
+            args = yield from fut
+            t = aio.ensure_future(insert(conn.cursor(), stmt, args))
+            tasks.append(t)
+
     print('Finished generating the data and queued all inserts.')
     print('Waiting for inserts to complete')
     total = len(tasks)
