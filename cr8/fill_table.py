@@ -5,7 +5,7 @@ import sys
 import json
 import argh
 import argparse
-import asyncio
+import asyncio as aio
 import multiprocessing as mp
 from pprint import pprint
 from tqdm import tqdm
@@ -20,7 +20,7 @@ from .misc import parse_table
 
 PROVIDER_LIST_URL = 'http://fake-factory.readthedocs.org/en/latest/providers.html'
 
-loop = asyncio.get_event_loop()
+loop = aio.get_event_loop()
 
 
 def retrieve_columns(cursor, schema, table):
@@ -31,7 +31,7 @@ def retrieve_columns(cursor, schema, table):
     return OrderedDict({x[0]: x[1] for x in cursor.fetchall()})
 
 
-@asyncio.coroutine
+@aio.coroutine
 def insert(cursor, stmt, args):
     f = loop.run_in_executor(None, cursor.executemany, stmt, args)
     yield from f
@@ -112,7 +112,7 @@ def generate_bulk_args(generate_row, bulk_size, _):
     return [generate_row() for i in range(bulk_size)]
 
 
-@asyncio.coroutine
+@aio.coroutine
 def _run_fill_table(conn, stmt, generate_row, num_inserts, bulk_size):
     print('Generating fake data and executing inserts')
     bulk_args_function = partial(generate_bulk_args, generate_row, bulk_size)
@@ -120,11 +120,12 @@ def _run_fill_table(conn, stmt, generate_row, num_inserts, bulk_size):
     with mp.Pool() as pool:
         args_it = pool.imap_unordered(bulk_args_function, range(num_inserts))
         for args in tqdm(args_it, total=num_inserts):
-            tasks.append(asyncio.Task(insert(conn.cursor(), stmt, args)))
+            tasks.append(aio.ensure_future(insert(conn.cursor(), stmt, args)))
     print('Finished generating the data and queued all inserts.')
     print('Waiting for inserts to complete')
-    for f in tqdm(asyncio.as_completed(tasks),
-                  total=len(tasks), unit='requests', smoothing=0.1):
+    total = len(tasks)
+    tasks = aio.as_completed(tasks)
+    for f in tqdm(tasks, total=total, unit='requests', smoothing=0.1):
         yield from f
 
 
@@ -176,8 +177,12 @@ def fill_table(hosts, fqtable, num_records, bulk_size=1000, mapping_file=None):
     num_inserts = int(num_records / bulk_size)
     yield 'Will make {} requests with a bulk size of {}'.format(
         num_inserts, bulk_size)
-    loop.run_until_complete(
-        _run_fill_table(conn, stmt, generate_row, num_inserts, bulk_size))
+    try:
+        loop.run_until_complete(
+            _run_fill_table(conn, stmt, generate_row, num_inserts, bulk_size))
+    finally:
+        loop.stop()
+        loop.close()
 
 
 def main():
