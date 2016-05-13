@@ -6,7 +6,7 @@ import asyncio as aio
 from tqdm import tqdm
 from collections import defaultdict
 
-from .cli import dicts_from_stdin
+from .cli import dicts_from_stdin, to_int
 
 
 def to_insert(table, d):
@@ -104,6 +104,7 @@ def sync_inserts(cursor, table, bulk_size):
 
 
 @argh.arg('table', help='table name that should be used in the statement')
+@argh.arg('--bulk-size', type=to_int)
 @argh.arg('hosts', help='crate hosts which will be used \
           to execute the insert statement')
 def json2insert(table, bulk_size=1000, sequential=False, *hosts):

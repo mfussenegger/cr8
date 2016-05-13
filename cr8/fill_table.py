@@ -7,7 +7,6 @@ import argh
 import argparse
 import asyncio as aio
 import multiprocessing as mp
-import ast
 from pprint import pprint
 from tqdm import tqdm, trange
 from faker import Factory
@@ -17,6 +16,7 @@ from crate.client import connect
 
 from .json2insert import to_insert
 from .misc import parse_table
+from .cli import to_int
 
 
 PROVIDER_LIST_URL = 'http://fake-factory.readthedocs.org/en/latest/providers.html'
@@ -141,25 +141,7 @@ def _run_fill_table(conn, stmt, generate_row, num_inserts, bulk_size):
         yield from f
 
 
-def _to_int(s):
-    """ converts a string to an integer
-
-    >>> _to_int('1_000_000')
-    1000000
-
-    >>> _to_int('1e6')
-    1000000
-
-    >>> _to_int('1000')
-    1000
-    """
-    try:
-        return int(s.replace('_', ''))
-    except ValueError:
-        return int(ast.literal_eval(s))
-
-
-@argh.arg('num_records', type=str)
+@argh.arg('num_records', type=to_int)
 @argh.arg('fqtable', help='(fully qualified) table name. \
           Either <schema>.<table> or just <table>')
 @argh.arg('hosts', help='crate hosts', type=str)
@@ -185,7 +167,6 @@ def fill_table(hosts, fqtable, num_records, bulk_size=1000, mapping_file=None):
     E.g. a column called `name` will be filled with names.
 
     """
-    num_records = _to_int(num_records)
     conn = connect(hosts)
     c = conn.cursor()
 

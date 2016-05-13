@@ -1,4 +1,6 @@
+from cr8 import cli
 from cr8.cli import dicts_from_stdin, lines_from_stdin
+from doctest import DocTestSuite
 from unittest import TestCase, main
 from unittest.mock import patch
 import io
@@ -48,6 +50,11 @@ class CliTest(TestCase):
 
         lines = list(lines_from_stdin('default'))
         self.assertEqual(['default'], lines)
+
+
+def load_tests(loader, tests, ignore):
+    tests.addTests(DocTestSuite(cli))
+    return tests
 
 
 if __name__ == "__main__":

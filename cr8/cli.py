@@ -1,6 +1,25 @@
 
 import sys
 import json
+import ast
+
+
+def to_int(s):
+    """ converts a string to an integer
+
+    >>> to_int('1_000_000')
+    1000000
+
+    >>> to_int('1e6')
+    1000000
+
+    >>> to_int('1000')
+    1000
+    """
+    try:
+        return int(s.replace('_', ''))
+    except ValueError:
+        return int(ast.literal_eval(s))
 
 
 def lines_from_stdin(default=None):

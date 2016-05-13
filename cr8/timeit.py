@@ -10,7 +10,7 @@ from time import time
 from crate.client import connect
 from concurrent.futures import ThreadPoolExecutor, wait
 
-from .cli import lines_from_stdin
+from .cli import lines_from_stdin, to_int
 
 
 executor = ThreadPoolExecutor(20)
@@ -96,6 +96,8 @@ class QueryRunner:
 
 
 @argh.arg('hosts', help='crate hosts', type=str)
+@argh.arg('-w', '--warmup', type=to_int)
+@argh.arg('-r', '--repeat', type=to_int)
 def timeit(hosts, stmt=None, warmup=30, repeat=30):
     """ runs the given statement a number of times and returns the runtime stats
     """
