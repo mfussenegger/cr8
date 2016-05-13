@@ -100,20 +100,24 @@ A tool to upload a file into a blob table::
 
     > cr8 upload crate.cluster:4200 blobtable /tmp/screenshot.png
 
-bench.sh
---------
+bench
+-----
 
-A wrapper script that combines timeit with json2insert to measure the runtime
-of a query and insert the result into the `benchmarks` table which can be
-created using the `sql/benchmarks_table.sql` file and crash::
+A tool to run benchmarks against a cluster and store the result in another
+cluster. The benchmark itself is defined in a spec file which defines `setup`,
+`benchmark` and `teardown` instructions.
 
-    ./bench.sh "select * from rankings limit 100" mycratecluster.hostname:4200 mycratecluster.hostname:4200
+The instructions itself are just SQL statements (or files containing SQL
+statements).
+
+In the `specs` folder is an example spec file.
+
+Usage::
+
+    > cr8 bench specs/sample.toml bench.host:4200 [ -r report.host:4200 ]
 
 
-Where the first hostname is used to benchmark the query and the
-second hostname is used to store the results.
-
-(this script also requires `jq`_ to be installed)
+The `report.host` must contain the table specified in `sql/benchmarks_table.sql`.
 
 perf_regressions
 ----------------

@@ -1,0 +1,14 @@
+[setup]
+statement_files = ["sql/create_countries.sql"]
+
+    [[setup.data_files]]
+    target = "countries"
+    source = "data/countries.json"
+
+[[queries]]
+statement = "select count(*) from countries"
+iterations = 1000
+concurrency = [1, 100, 49]
+
+[teardown]
+statements = ["drop table countries"]

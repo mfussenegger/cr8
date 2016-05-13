@@ -24,4 +24,4 @@ create table if not exists benchmarks (
         variance double,
         stdev double
     )
-) clustered into 8 shards with (number_of_replicas = '1-3', column_policy='strict')
+) clustered into 8 shards with (number_of_replicas = '1-3', column_policy='strict');

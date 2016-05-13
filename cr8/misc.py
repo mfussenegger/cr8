@@ -39,3 +39,30 @@ def as_bulk_queries(queries, bulk_size):
             del stmt_dict[stmt]
     for stmt, bulk_args in stmt_dict.items():
         yield stmt, bulk_args
+
+
+def get_lines(filename):
+    with open(filename, 'r', encoding='utf-8') as f:
+        for line in f:
+            yield line
+
+
+def as_statements(lines):
+    """ generator expression that transforms lines into strings of sql statements
+
+    statements within the lines must end with ";"
+
+    >>> list(as_statements(['select * from', '-- comments are filtered', 't;']))
+    ['select * from t']
+
+    >>> list(as_statements(['a;', 'b', 'c;', 'd']))
+    ['a', 'b c']
+    """
+    lines = (l.strip() for l in lines if l)
+    lines = (l for l in lines if not l.startswith('--'))
+    parts = []
+    for line in lines:
+        parts.append(line.rstrip(';'))
+        if line.endswith(';'):
+            yield ' '.join(parts)
+            parts.clear()
