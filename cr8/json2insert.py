@@ -60,9 +60,9 @@ class AsyncExecutor:
         print('Inserted {count} records'.format(count=count))
 
 
-async def do_inserts(table, process, after_loop):
+async def do_inserts(dicts, table, process, after_loop):
     count = 0
-    for d in tqdm(dicts_from_stdin()):
+    for d in tqdm(dicts):
         stmt, args = to_insert(table, d)
         await process(stmt, args)
         count += 1
@@ -76,21 +76,21 @@ def print_only(table):
     yield 'No hosts provided. Nothing inserted'
 
 
-def async_inserts(cursor, table, bulk_size):
+def async_inserts(dicts, cursor, table, bulk_size):
     loop = aio.get_event_loop()
     e = AsyncExecutor(cursor, table, bulk_size, loop)
     print('Reading statements and inserting with bulk_size=' + str(bulk_size))
     try:
-        loop.run_until_complete(do_inserts(table, e.process, e.after_loop))
+        loop.run_until_complete(do_inserts(dicts, table, e.process, e.after_loop))
     finally:
         loop.stop()
         loop.close()
 
 
-def sync_inserts(cursor, table, bulk_size):
+def sync_inserts(dicts, cursor, table, bulk_size):
     stmt_dict = defaultdict(list)
     count = 0
-    for d in tqdm(dicts_from_stdin()):
+    for d in tqdm(dicts):
         stmt, args = to_insert(table, d)
         bulk_args = stmt_dict[stmt]
         bulk_args.append(args)
@@ -118,12 +118,13 @@ def json2insert(table, bulk_size=1000, sequential=False, *hosts):
     from crate.client import connect
     conn = connect(hosts)
     cursor = conn.cursor()
+    dicts = dicts_from_stdin()
     if sequential:
         print('Executing requests sequential with bulk_size={}'.format(bulk_size))
-        sync_inserts(cursor, table, bulk_size)
+        sync_inserts(dicts, cursor, table, bulk_size)
     else:
         print('Executing requests async with bulk_size={}'.format(bulk_size))
-        async_inserts(cursor, table, bulk_size)
+        async_inserts(dicts, cursor, table, bulk_size)
 
 
 def main():

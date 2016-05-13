@@ -7,9 +7,13 @@ create table if not exists benchmarks (
     started timestamp,
     ended timestamp,
     repeats int,
+    server_runtimes array(double),
+    client_runtimes array(double),
     runtime_stats object (strict) as (
         avg double,
         min double,
-        max double
+        max double,
+        pvariance double,
+        stdev double
     )
-) clustered into 8 shards with (number_of_replicas = '1-3')
+) clustered into 8 shards with (column_policy='strict', number_of_replicas='1-3')
