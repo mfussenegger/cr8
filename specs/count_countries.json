@@ -12,7 +12,9 @@
     },
     "benchmark": {
         "repeats": 1000,
-        "statement": "select count(*) from countries"
+        "queries": [
+            ["select count(*) from countries", null]
+        ]
     },
     "tearDown": {
         "statements": [

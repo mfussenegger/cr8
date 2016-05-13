@@ -8,6 +8,7 @@ from crate.client import connect
 from crate.crash.command import CrateCmd
 
 from cr8.json2insert import async_inserts, to_insert
+from cr8.bench_spec import load_spec
 from cr8.timeit import timeit
 
 
@@ -33,34 +34,35 @@ class Executor:
                 cursor = conn.cursor()
                 stmt, args = to_insert('benchmarks', result.__dict__)
                 cursor.execute(stmt, args)
+                print(result.runtime_stats)
         else:
             def process_result(result):
-                pass
+                print(result.runtime_stats)
         self.process_result = process_result
 
     def exec_instructions(self, instructions):
-        filenames = instructions.get('statement_files', [])
+        filenames = instructions.statement_files
         filenames = (os.path.join(self.spec_dir, i) for i in filenames)
         lines = (line for fn in filenames for line in get_lines(fn))
         for line in lines:
             self.cmd.process(line)
 
-        for stmt in instructions.get('statements', []):
+        for stmt in instructions.statements:
             self.cmd.execute(stmt)
 
-        data_files = instructions.get('data_files', [])
-        for data_file in data_files:
+        for data_file in instructions.data_files:
             target = data_file['target']
             source = os.path.join(self.spec_dir, data_file['source'])
             dicts = read_dicts(source)
             async_inserts(dicts, self.cmd.connection.cursor(), target, 1000)
 
-    def run_benchmark(self, instructions):
-        result = next(timeit(
-            hosts=self.cmd.connection.client.active_servers,
-            stmt=instructions['statement'],
-            repeat=instructions['repeats']))
-        self.process_result(result)
+    def run_benchmark(self, queries, bench_config):
+        for stmt, args in queries:
+            result = next(timeit(
+                hosts=self.cmd.connection.client.active_servers,
+                stmt=stmt,
+                repeat=bench_config.get('repeats', 100)))
+            self.process_result(result)
 
 
 def bench(spec, benchmark_hosts, result_hosts=None):
@@ -70,16 +72,15 @@ def bench(spec, benchmark_hosts, result_hosts=None):
         spec_dir=os.path.dirname(spec),
         result_hosts=result_hosts,
     )
-    with open(spec, 'r', encoding='utf-8') as spec_file:
-        spec = json.load(spec_file)
+    spec = load_spec(spec)
     try:
         yield 'Running setUp'
-        executor.exec_instructions(spec.get('setUp', {}))
+        executor.exec_instructions(spec.setup)
         yield 'Running benchmark'
-        executor.run_benchmark(spec['benchmark'])
+        executor.run_benchmark(spec.queries, spec.config)
     finally:
         yield 'Running tearDown'
-        executor.exec_instructions(spec.get('tearDown', {}))
+        executor.exec_instructions(spec.teardown)
 
 
 def main():
