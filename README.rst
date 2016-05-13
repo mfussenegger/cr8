@@ -27,7 +27,7 @@ Target audience are mostly developers of Crate and not users.
 Install 💾
 ==========
 
-Python >= 3.4 is required to use the command line tools.
+Python >= 3.5 is required to use the command line tools.
 
 Install them using `pip <https://pip.pypa.io/en/stable/>`_::
 
