@@ -4,6 +4,7 @@
 import json
 import argh
 import requests
+import statistics
 
 from time import time
 from crate.client import connect
@@ -36,9 +37,11 @@ class Result:
         runtimes = self.server_runtimes
         avg = sum(runtimes) / float(len(runtimes))
         self.runtime_stats = {
-            'avg': round(avg, 3),
-            'min': round(min(runtimes), 3),
-            'max': round(max(runtimes), 3)
+            'avg': round(avg, 6),
+            'min': round(min(runtimes), 6),
+            'max': round(max(runtimes), 6),
+            'stdev': round(statistics.stdev(runtimes), 6),
+            'pvariance': round(statistics.pvariance(runtimes), 6),
         }
 
     def __str__(self):
