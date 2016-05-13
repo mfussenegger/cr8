@@ -1,4 +1,6 @@
 
+from collections import defaultdict
+
 
 def parse_table(fq_table):
     """ parses a tablename and returns a (<schema>, <table>) tuple
@@ -19,3 +21,21 @@ def parse_table(fq_table):
         return parts[0], parts[1]
     else:
         raise ValueError
+
+
+def as_bulk_queries(queries, bulk_size):
+    """ groups a iterable of (stmt, args) by stmt into (stmt, bulk_args)
+
+    bulk_args will be a list of the args grouped by stmt.
+
+    len(bulk_args) will be <= bulk_size
+    """
+    stmt_dict = defaultdict(list)
+    for stmt, args in queries:
+        bulk_args = stmt_dict[stmt]
+        bulk_args.append(args)
+        if len(bulk_args) == bulk_size:
+            yield stmt, bulk_args
+            del stmt_dict[stmt]
+    for stmt, bulk_args in stmt_dict.items():
+        yield stmt, bulk_args
