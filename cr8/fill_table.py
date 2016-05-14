@@ -5,7 +5,6 @@ import sys
 import json
 import argh
 import argparse
-import asyncio as aio
 import multiprocessing as mp
 from pprint import pprint
 from tqdm import tqdm, trange
@@ -15,7 +14,7 @@ from collections import OrderedDict
 from crate.client import connect
 
 from .json2insert import to_insert
-from .misc import parse_table
+from .misc import aio, parse_table
 from .cli import to_int
 
 
@@ -141,11 +140,10 @@ def _run_fill_table(conn, stmt, generate_row, num_inserts, bulk_size):
         yield from f
 
 
-@argh.arg('num_records', type=to_int)
 @argh.arg('fqtable', help='(fully qualified) table name. \
           Either <schema>.<table> or just <table>')
 @argh.arg('hosts', help='crate hosts', type=str)
-@argh.arg('num_records', help='number of records to insert')
+@argh.arg('num_records', help='number of records to insert', type=to_int)
 @argh.arg('--mapping-file',
           type=argparse.FileType('r'),
           help='''JSON file with a column to fake provider mapping.

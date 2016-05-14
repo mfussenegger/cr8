@@ -30,6 +30,9 @@ setup(
         'tqdm',
         'fake-factory'
     ],
+    extras_require={
+        'uvloop': ['uvloop']
+    },
     classifiers=[
         'Development Status :: 4 - Beta',
         'License :: OSI Approved :: MIT License',

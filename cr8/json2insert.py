@@ -2,12 +2,12 @@
 # -*- coding: utf-8 -*-
 
 import argh
-import asyncio as aio
+
 import itertools
 from tqdm import tqdm
 
 from .cli import dicts_from_stdin, to_int
-from .misc import as_bulk_queries
+from .misc import aio, as_bulk_queries
 
 
 def to_insert(table, d):
