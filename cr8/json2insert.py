@@ -3,6 +3,7 @@
 
 import argh
 import asyncio as aio
+import itertools
 from tqdm import tqdm
 
 from .cli import dicts_from_stdin, to_int
@@ -33,26 +34,21 @@ def to_insert(table, d):
 
 
 async def do_exec_bulk_async(f, bulk_queries):
-    for stmt, bulk_args in bulk_queries:
-        await f(stmt, bulk_args)
+    tasks = []
+    for stmt, bulk_args in tqdm(bulk_queries):
+        tasks.append(aio.ensure_future(f(stmt, bulk_args)))
+    print('Fired off all requests, waiting for them to complete')
+    for task in tqdm(tasks, total=len(tasks), unit=' requests'):
+        await task
 
 
-def exec_bulk_queries_async(cursor, bulk_queries):
+def exec_bulk_queries_async(exec_func, bulk_queries):
     loop = aio.get_event_loop()
 
     async def f(stmt, bulk_args):
-        await loop.run_in_executor(None, cursor.executemany, stmt, bulk_args)
+        await loop.run_in_executor(None, exec_func, stmt, bulk_args)
 
-    try:
-        loop.run_until_complete(do_exec_bulk_async(f, bulk_queries))
-    finally:
-        loop.stop()
-        loop.close()
-
-
-def exec_bulk_queries_sync(cursor, bulk_queries):
-    for stmt, bulk_args in bulk_queries:
-        cursor.executemany(stmt, bulk_args)
+    loop.run_until_complete(do_exec_bulk_async(f, bulk_queries))
 
 
 def print_only(table):
@@ -79,18 +75,14 @@ def json2insert(table, bulk_size=1000, sequential=False, *hosts):
     from crate.client import connect
     conn = connect(hosts)
     cursor = conn.cursor()
-    t = tqdm(
-        (to_insert(table, d) for d in dicts_from_stdin()),
-        unit=' inserts'
-    )
-    bulk_queries = as_bulk_queries(t, bulk_size)
+    queries = (to_insert(table, d) for d in dicts_from_stdin())
+    bulk_queries = as_bulk_queries(queries, bulk_size)
     if sequential:
-        t.write('Executing requests sequential with bulk_size={}'.format(bulk_size))
-        exec_bulk_queries_sync(cursor, bulk_queries)
+        yield 'Executing requests sequential with bulk_size={}'.format(bulk_size)
+        all(itertools.starmap(cursor.executemany, tqdm(bulk_queries)))
     else:
-        t.write('Executing requests async with bulk_size={}'.format(bulk_size))
-        exec_bulk_queries_async(cursor, bulk_queries)
-    t.close()
+        yield 'Executing requests async with bulk_size={}'.format(bulk_size)
+        exec_bulk_queries_async(cursor.executemany, bulk_queries)
 
 
 def main():
