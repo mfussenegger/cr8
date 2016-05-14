@@ -14,8 +14,9 @@ from collections import OrderedDict
 from crate.client import connect
 
 from .json2insert import to_insert
-from .misc import aio, parse_table
+from .misc import parse_table
 from .cli import to_int
+from .aio import asyncio as aio
 
 
 PROVIDER_LIST_URL = 'http://fake-factory.readthedocs.org/en/latest/providers.html'

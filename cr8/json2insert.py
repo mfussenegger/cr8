@@ -2,12 +2,12 @@
 # -*- coding: utf-8 -*-
 
 import argh
-
 import itertools
 from tqdm import tqdm
 
 from .cli import dicts_from_stdin, to_int
-from .misc import aio, as_bulk_queries
+from .misc import as_bulk_queries
+from .aio import asyncio, run
 
 
 def to_insert(table, d):
@@ -33,24 +33,6 @@ def to_insert(table, d):
     return (stmt, args)
 
 
-async def do_exec_bulk_async(f, bulk_queries):
-    tasks = []
-    for stmt, bulk_args in tqdm(bulk_queries):
-        tasks.append(aio.ensure_future(f(stmt, bulk_args)))
-    print('Fired off all requests, waiting for them to complete')
-    for task in tqdm(tasks, total=len(tasks), unit=' requests'):
-        await task
-
-
-def exec_bulk_queries_async(exec_func, bulk_queries):
-    loop = aio.get_event_loop()
-
-    async def f(stmt, bulk_args):
-        await loop.run_in_executor(None, exec_func, stmt, bulk_args)
-
-    loop.run_until_complete(do_exec_bulk_async(f, bulk_queries))
-
-
 def print_only(table):
     for d in dicts_from_stdin():
         yield to_insert(table, d)
@@ -62,8 +44,9 @@ def print_only(table):
 @argh.arg('--bulk-size', type=to_int)
 @argh.arg('hosts', help='crate hosts which will be used \
           to execute the insert statement')
+@argh.arg('-c', '--concurrency', type=to_int)
 @argh.wrap_errors([KeyboardInterrupt])
-def json2insert(table, bulk_size=1000, sequential=False, *hosts):
+def json2insert(table, bulk_size=1000, concurrency=100, *hosts):
     """ Converts the given json line (read from stdin) into an insert statement
 
     If hosts are specified the insert statement will be executed on those hosts.
@@ -77,12 +60,20 @@ def json2insert(table, bulk_size=1000, sequential=False, *hosts):
     cursor = conn.cursor()
     queries = (to_insert(table, d) for d in dicts_from_stdin())
     bulk_queries = as_bulk_queries(queries, bulk_size)
-    if sequential:
-        yield 'Executing requests sequential with bulk_size={}'.format(bulk_size)
-        all(itertools.starmap(cursor.executemany, tqdm(bulk_queries)))
-    else:
-        yield 'Executing requests async with bulk_size={}'.format(bulk_size)
-        exec_bulk_queries_async(cursor.executemany, bulk_queries)
+    yield 'Executing requests async bulk_size={} concurrency={}'.format(
+        bulk_size, concurrency)
+
+    if concurrency == 1:
+        all(itertools.starmap(
+            cursor.executemany, tqdm(bulk_queries, unit=' requests')))
+        return
+
+    loop = asyncio.get_event_loop()
+
+    async def f(stmt, bulk_args):
+        await loop.run_in_executor(None, cursor.executemany, stmt, bulk_args)
+
+    run(f, bulk_queries, concurrency, loop)
 
 
 def main():

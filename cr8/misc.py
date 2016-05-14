@@ -1,11 +1,5 @@
 
 from collections import defaultdict
-import asyncio as aio
-try:
-    import uvloop
-    aio.set_event_loop_policy(uvloop.EventLoopPolicy())
-except ImportError:
-    pass
 
 
 def parse_table(fq_table):
