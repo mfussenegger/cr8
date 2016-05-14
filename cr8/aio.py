@@ -15,8 +15,8 @@ async def map_async(q, corof, iterable):
     await q.put(None)
 
 
-async def consume(q):
-    with tqdm(unit=' requests') as t:
+async def consume(q, total=None):
+    with tqdm(total=total, unit=' requests', smoothing=0.1) as t:
         while True:
             task = await q.get()
             if task is None:

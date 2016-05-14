@@ -5,23 +5,22 @@ import sys
 import json
 import argh
 import argparse
-import multiprocessing as mp
 from pprint import pprint
-from tqdm import tqdm, trange
 from faker import Factory
 from functools import partial
 from collections import OrderedDict
 from crate.client import connect
+from concurrent.futures import ProcessPoolExecutor
 
 from .json2insert import to_insert
 from .misc import parse_table
+from .aio import asyncio, consume
 from .cli import to_int
-from .aio import asyncio as aio
 
 
 PROVIDER_LIST_URL = 'http://fake-factory.readthedocs.org/en/latest/providers.html'
 
-loop = aio.get_event_loop()
+loop = asyncio.get_event_loop()
 
 
 def retrieve_columns(cursor, schema, table):
@@ -30,12 +29,6 @@ def retrieve_columns(cursor, schema, table):
         where schema_name = ? and table_name = ? \
         order by ordinal_position asc', (schema, table))
     return OrderedDict({x[0]: x[1] for x in cursor.fetchall()})
-
-
-@aio.coroutine
-def insert(cursor, stmt, args):
-    f = loop.run_in_executor(None, cursor.executemany, stmt, args)
-    yield from f
 
 
 def generate_row(fakers):
@@ -113,38 +106,27 @@ def generate_bulk_args(generate_row, bulk_size):
     return [generate_row() for i in range(bulk_size)]
 
 
-@aio.coroutine
-def _run_fill_table(conn, stmt, generate_row, num_inserts, bulk_size):
-    print('Generating fake data and executing inserts')
-    bulk_args_func = partial(generate_bulk_args, generate_row, bulk_size)
-    tasks = []
-    with mp.Pool() as pool:
-        for i in trange(num_inserts):
-            fut = aio.Future()
+async def _produce_data_and_insert(q, cursor, stmt, bulk_args_fun, num_inserts):
 
-            def set_result(result):
-                loop.call_soon_threadsafe(fut.set_result, result)
+    async def insert(stmt, args):
+        f = loop.run_in_executor(None, cursor.executemany, stmt, args)
+        await f
 
-            def set_exc(exc):
-                loop.call_soon_threadsafe(fut.set_exception, exc)
-
-            pool.apply_async(bulk_args_func, callback=set_result, error_callback=set_exc)
-            args = yield from fut
-            t = aio.ensure_future(insert(conn.cursor(), stmt, args))
-            tasks.append(t)
-
-    print('Finished generating the data and queued all inserts.')
-    print('Waiting for inserts to complete')
-    total = len(tasks)
-    tasks = aio.as_completed(tasks)
-    for f in tqdm(tasks, total=total, unit='requests', smoothing=0.1):
-        yield from f
+    executor = ProcessPoolExecutor()
+    for i in range(num_inserts):
+        args = await asyncio.ensure_future(
+            loop.run_in_executor(executor, bulk_args_fun))
+        task = asyncio.ensure_future(insert(stmt, args))
+        await q.put(task)
+    await q.put(None)
 
 
 @argh.arg('fqtable', help='(fully qualified) table name. \
           Either <schema>.<table> or just <table>')
 @argh.arg('hosts', help='crate hosts', type=str)
 @argh.arg('num_records', help='number of records to insert', type=to_int)
+@argh.arg('--bulk-size', type=to_int)
+@argh.arg('--concurrency', type=to_int)
 @argh.arg('--mapping-file',
           type=argparse.FileType('r'),
           help='''JSON file with a column to fake provider mapping.
@@ -154,7 +136,12 @@ In the format:
     "source_column2": "provider_without_args"
 }
 ''')
-def fill_table(hosts, fqtable, num_records, bulk_size=1000, mapping_file=None):
+def fill_table(hosts,
+               fqtable,
+               num_records,
+               bulk_size=1000,
+               concurrency=100,
+               mapping_file=None):
     """ fills a table with random data
 
     Insert <num_records> into <fqtable> on <hosts>.
@@ -179,6 +166,7 @@ def fill_table(hosts, fqtable, num_records, bulk_size=1000, mapping_file=None):
     if mapping_file:
         mapping = json.load(mapping_file)
     generate_row = create_row_generator(columns, mapping)
+    bulk_args_fun = partial(generate_bulk_args, generate_row, bulk_size)
 
     stmt = to_insert(fqtable, columns)[0]
     yield 'Using insert statement: '
@@ -188,12 +176,12 @@ def fill_table(hosts, fqtable, num_records, bulk_size=1000, mapping_file=None):
     num_inserts = int(num_records / bulk_size)
     yield 'Will make {} requests with a bulk size of {}'.format(
         num_inserts, bulk_size)
-    try:
-        loop.run_until_complete(
-            _run_fill_table(conn, stmt, generate_row, num_inserts, bulk_size))
-    finally:
-        loop.stop()
-        loop.close()
+
+    yield 'Generating fake data and executing inserts'
+    q = asyncio.Queue(maxsize=concurrency)
+    loop.run_until_complete(asyncio.gather(
+        _produce_data_and_insert(q, conn.cursor(), stmt, bulk_args_fun, num_inserts),
+        consume(q, total=num_inserts)))
 
 
 def main():
