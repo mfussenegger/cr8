@@ -1,0 +1,24 @@
+{
+    "setUp": {
+        "statement_files": [
+            "sql/create_countries.sql"
+        ],
+        "data_files": [
+            {
+                "target": "countries",
+                "source": "data/countries.json"
+            }
+        ]
+    },
+    "benchmark": {
+        "repeats": 1000,
+        "queries": [
+            ["select count(*) from countries", null]
+        ]
+    },
+    "tearDown": {
+        "statements": [
+            "drop table countries"
+        ]
+    }
+}

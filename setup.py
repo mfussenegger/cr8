@@ -28,6 +28,7 @@ setup(
         'argh',
         'requests',
         'tqdm',
+        'crash',
         'fake-factory'
     ],
     classifiers=[
