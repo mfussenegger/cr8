@@ -12,7 +12,6 @@ async def map_async(q, corof, iterable):
     for i in iterable:
         task = asyncio.ensure_future(corof(*i))
         await q.put(task)
-    await q.join()
     await q.put(None)
 
 
@@ -24,7 +23,6 @@ async def consume(q):
                 break
             await task
             t.update(1)
-            q.task_done()
 
 
 def run(coro, iterable, concurrency, loop=None):
