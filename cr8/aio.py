@@ -13,12 +13,15 @@ async def map_async(q, corof, iterable):
         task = asyncio.ensure_future(corof(*i))
         await q.put(task)
     await q.join()
+    await q.put(None)
 
 
 async def consume(q):
     with tqdm(unit=' requests') as t:
         while True:
             task = await q.get()
+            if task is None:
+                break
             await task
             t.update(1)
             q.task_done()
@@ -27,6 +30,6 @@ async def consume(q):
 def run(coro, iterable, concurrency, loop=None):
     loop = loop or asyncio.get_event_loop()
     q = asyncio.Queue(maxsize=concurrency)
-    consume_task = loop.create_task(consume(q))
-    loop.run_until_complete(map_async(q, coro, iterable))
-    consume_task.cancel()
+    loop.run_until_complete(asyncio.gather(
+        map_async(q, coro, iterable),
+        consume(q)))
