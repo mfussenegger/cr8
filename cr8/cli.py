@@ -31,8 +31,8 @@ def lines_from_stdin(default=None):
         yield line
 
 
-def dicts_from_stdin():
-    """ a generator producing dicts from json strings provided via stdin
+def dicts_from_lines(lines):
+    """ returns a generator producing dicts from json lines
 
     1 JSON object per line is supported:
 
@@ -52,14 +52,23 @@ def dicts_from_stdin():
             {"name": "n2"},
         ]
     """
-    if sys.stdin.isatty():
-        raise SystemExit('Expected json input via stdin')
-    for line in sys.stdin:
+    lines = iter(lines)
+    for line in lines:
         try:
             yield json.loads(line)
         except json.decoder.JSONDecodeError:
-            dicts = json.loads(line + '\n' + sys.stdin.read())
+            content = line + ''.join(lines)
+            dicts = json.loads(content)
             if isinstance(dicts, list):
                 yield from dicts
             else:
                 yield dicts
+
+
+def dicts_from_stdin():
+    if sys.stdin.isatty():
+        raise SystemExit('Expected json input via stdin')
+    yield from dicts_from_lines(sys.stdin)
+
+
+dicts_from_stdin.__doc__ = dicts_from_lines.__doc__

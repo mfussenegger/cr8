@@ -1,5 +1,5 @@
 from cr8 import cli
-from cr8.cli import dicts_from_stdin, lines_from_stdin
+from cr8.cli import dicts_from_stdin, lines_from_stdin, dicts_from_lines
 from doctest import DocTestSuite
 from unittest import TestCase, main
 from unittest.mock import patch
@@ -50,6 +50,14 @@ class CliTest(TestCase):
 
         lines = list(lines_from_stdin('default'))
         self.assertEqual(['default'], lines)
+
+    def test_dicts_from_iterable(self):
+        d = next(iter(dicts_from_lines(['{\n', '    "name": 10\n', '}\n'])))
+        self.assertEqual(d, {"name": 10})
+
+    def test_dicts_from_iterator(self):
+        d = next(iter(dicts_from_lines(iter(['{\n', '    "name": 10\n', '}\n']))))
+        self.assertEqual(d, {"name": 10})
 
 
 def load_tests(loader, tests, ignore):
