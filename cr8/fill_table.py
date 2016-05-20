@@ -26,7 +26,7 @@ loop = asyncio.get_event_loop()
 def retrieve_columns(cursor, schema, table):
     cursor.execute(
         'select column_name, data_type from information_schema.columns \
-        where schema_name = ? and table_name = ? \
+        where is_generated = false and schema_name = ? and table_name = ? \
         order by ordinal_position asc', (schema, table))
     return OrderedDict({x[0]: x[1] for x in cursor.fetchall()})
 
