@@ -22,7 +22,7 @@ async def execute_many(loop, cursor, stmt, bulk_args=None):
 
 async def measure(hist, f, *args, **kw):
     duration = await f(*args, **kw)
-    hist.notify(duration)
+    hist.notify(max(0.0001, duration))
 
 
 async def map_async(q, corof, iterable):

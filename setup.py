@@ -25,6 +25,7 @@ setup(
     packages=['cr8'],
     install_requires=[
         'crate',
+        'crash',
         'argh',
         'requests',
         'appmetrics',

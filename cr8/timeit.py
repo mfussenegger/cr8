@@ -10,43 +10,37 @@ from time import time
 from crate.client import connect
 from functools import partial
 
+from cr8 import aio
 from .cli import lines_from_stdin, to_int
-from .aio import asyncio, map_async, consume, measure, execute
 from .stats import Result
 
 
 class QueryRunner:
     def __init__(self, stmt, repeats, hosts, concurrency, loop=None):
-        self.loop = loop = loop or asyncio.get_event_loop()
+        self.loop = loop = loop or aio.asyncio.get_event_loop()
         self.stmt = stmt
         self.concurrency = concurrency
         self.hosts = hosts
         self.repeats = repeats
         self.conn = connect(hosts)
         cursor = self.conn.cursor()
-        self.execute = partial(execute, loop, cursor)
+        self.execute = partial(aio.execute, loop, cursor)
 
-        self.hist = hist = metrics.new_histogram('durations')
-        self.measure = partial(measure, hist, self.execute)
+        self.hist = hist = metrics.new_histogram(
+            'durations-{}-{}-{}'.format(stmt, repeats, concurrency))
+        self.measure = partial(aio.measure, hist, self.execute)
 
     def warmup(self, num_warmup):
-        q = asyncio.Queue()
         statements = itertools.repeat((self.stmt,), num_warmup)
-        self.loop.run_until_complete(asyncio.gather(
-            map_async(q, self.execute, statements),
-            consume(q)))
+        aio.run(self.execute, statements, 0, self.loop)
 
     def run(self):
-        version_info = self.__get_version_info(self.conn.client.active_servers[0])
+        version_info = self.get_version_info(self.conn.client.active_servers[0])
 
         started = time()
 
         statements = itertools.repeat((self.stmt,), self.repeats)
-        q = asyncio.Queue(maxsize=self.concurrency)
-        self.loop.run_until_complete(asyncio.gather(
-            map_async(q, self.measure, statements),
-            consume(q)))
-
+        aio.run(self.measure, statements, self.concurrency, self.loop)
         ended = time()
 
         return Result(
@@ -55,10 +49,12 @@ class QueryRunner:
             started=started,
             ended=ended,
             repeats=self.repeats,
+            concurrency=self.concurrency,
             stats=self.hist.get()
         )
 
-    def __get_version_info(self, server):
+    @staticmethod
+    def get_version_info(server):
         data = requests.get(server).json()
         return {
             'number': data['version']['number'],
@@ -74,7 +70,7 @@ def timeit(hosts, stmt=None, warmup=30, repeat=30, concurrency=1):
     """ runs the given statement a number of times and returns the runtime stats
     """
     num_lines = 0
-    loop = asyncio.get_event_loop()
+    loop = aio.asyncio.get_event_loop()
     for line in lines_from_stdin(stmt):
         runner = QueryRunner(line, repeat, hosts, concurrency, loop=loop)
         runner.warmup(warmup)
