@@ -27,6 +27,7 @@ setup(
         'crate',
         'argh',
         'requests',
+        'appmetrics',
         'tqdm',
         'fake-factory'
     ],
