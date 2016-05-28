@@ -4,7 +4,6 @@
 import json
 import argh
 import requests
-import statistics
 import itertools
 
 from functools import partial
@@ -12,6 +11,7 @@ from time import time
 from crate.client import connect
 
 from .cli import lines_from_stdin, to_int
+from .metrics import Stats
 from . import aio
 
 
@@ -21,27 +21,13 @@ class Result:
                  statement,
                  started,
                  ended,
-                 repeats,
-                 client_runtimes,
-                 server_runtimes):
+                 stats):
         self.version_info = version_info
         self.statement = statement
         # need ts in ms in crate
         self.started = int(started * 1000)
         self.ended = int(ended * 1000)
-        self.repeats = repeats
-        self.client_runtimes = client_runtimes
-        self.server_runtimes = server_runtimes
-
-        runtimes = self.server_runtimes
-        avg = sum(runtimes) / float(len(runtimes))
-        self.runtime_stats = {
-            'avg': round(avg, 6),
-            'min': round(min(runtimes), 6),
-            'max': round(max(runtimes), 6),
-            'stdev': round(statistics.stdev(runtimes), 6),
-            'pvariance': round(statistics.pvariance(runtimes), 6),
-        }
+        self.runtime_stats = stats.get()
 
     def __str__(self):
         return json.dumps(self.__dict__)
@@ -65,14 +51,11 @@ class QueryRunner:
         version_info = self.__get_version_info(self.conn.client.active_servers[0])
 
         started = time()
-        client_runtimes = []
-        server_runtimes = []
         cursor = self.conn.cursor()
+        stats = Stats(min(self.repeats, 1000))
         for i in range(self.repeats):
-            start = time()
             cursor.execute(self.stmt)
-            client_runtimes.append(round(time() - start, 3))
-            server_runtimes.append(cursor.duration / 1000.)
+            stats.measure(cursor.duration)
         ended = time()
 
         return Result(
@@ -80,9 +63,7 @@ class QueryRunner:
             version_info=version_info,
             started=started,
             ended=ended,
-            repeats=self.repeats,
-            client_runtimes=client_runtimes,
-            server_runtimes=server_runtimes
+            stats=stats
         )
 
     def __get_version_info(self, server):

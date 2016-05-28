@@ -6,10 +6,21 @@ create table if not exists benchmarks (
     statement string,
     started timestamp,
     ended timestamp,
-    repeats int,
     runtime_stats object (strict) as (
         avg double,
         min double,
-        max double
+        max double,
+        mean double,
+        median double,
+        percentile object as (
+                "50" double,
+                "75" double,
+                "90" double,
+                "99" double,
+                "99_9" double
+        ),
+        n integer,
+        variance double,
+        stdev double
     )
-) clustered into 8 shards with (number_of_replicas = '1-3')
+) clustered into 8 shards with (number_of_replicas = '1-3', column_policy='strict')
