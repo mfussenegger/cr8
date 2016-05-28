@@ -8,6 +8,12 @@ except ImportError:
     pass
 
 
+async def execute(loop, cursor, stmt, args=None):
+    f = loop.run_in_executor(None, cursor.execute, stmt, args)
+    await f
+    return cursor.duration
+
+
 async def map_async(q, corof, iterable):
     for i in iterable:
         task = asyncio.ensure_future(corof(*i))

@@ -5,15 +5,14 @@ import json
 import argh
 import requests
 import statistics
+import itertools
 
+from functools import partial
 from time import time
 from crate.client import connect
-from concurrent.futures import ThreadPoolExecutor, wait
 
 from .cli import lines_from_stdin, to_int
-
-
-executor = ThreadPoolExecutor(20)
+from . import aio
 
 
 class Result:
@@ -53,15 +52,14 @@ class QueryRunner:
         self.stmt = stmt
         self.hosts = hosts
         self.repeats = repeats
-        self.conn = connect(hosts)
+        self.conn = conn = connect(hosts)
+        cursor = conn.cursor()
+        self.loop = loop = aio.asyncio.get_event_loop()
+        self.execute = partial(aio.execute, loop, cursor)
 
     def warmup(self, num_warmup):
-        futures = []
-        for i in range(num_warmup):
-            c = self.conn.cursor()
-            stmt = self.stmt
-            futures.append(executor.submit(lambda: c.execute(stmt)))
-        wait(futures)
+        statements = itertools.repeat((self.stmt,), num_warmup)
+        aio.run(self.execute, statements, 0, loop=self.loop)
 
     def run(self):
         version_info = self.__get_version_info(self.conn.client.active_servers[0])
