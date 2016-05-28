@@ -1,13 +1,17 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import sys
 import argh
 import itertools
+import json
+from appmetrics import metrics
+from functools import partial
 from tqdm import tqdm
 
 from .cli import dicts_from_stdin, to_int
 from .misc import as_bulk_queries
-from .aio import asyncio, run
+from .aio import asyncio, run, execute_many, measure
 
 
 def to_insert(table, d):
@@ -46,7 +50,7 @@ def print_only(table):
           to execute the insert statement')
 @argh.arg('-c', '--concurrency', type=to_int)
 @argh.wrap_errors([KeyboardInterrupt])
-def json2insert(table, bulk_size=1000, concurrency=100, *hosts):
+def json2insert(table, bulk_size=1000, concurrency=100, stats=False, *hosts):
     """ Converts the given json line (read from stdin) into an insert statement
 
     If hosts are specified the insert statement will be executed on those hosts.
@@ -56,12 +60,14 @@ def json2insert(table, bulk_size=1000, concurrency=100, *hosts):
         return print_only(table)
 
     from crate.client import connect
+    stdout = sys.stderr if stats else sys.stdout
+    log = partial(print, file=stdout)
     conn = connect(hosts)
     cursor = conn.cursor()
     queries = (to_insert(table, d) for d in dicts_from_stdin())
     bulk_queries = as_bulk_queries(queries, bulk_size)
-    yield 'Executing requests async bulk_size={} concurrency={}'.format(
-        bulk_size, concurrency)
+    log('Executing requests async bulk_size={} concurrency={}'.format(
+        bulk_size, concurrency))
 
     if concurrency == 1:
         all(itertools.starmap(
@@ -69,11 +75,13 @@ def json2insert(table, bulk_size=1000, concurrency=100, *hosts):
         return
 
     loop = asyncio.get_event_loop()
-
-    async def f(stmt, bulk_args):
-        await loop.run_in_executor(None, cursor.executemany, stmt, bulk_args)
-
+    f = partial(execute_many, loop, cursor)
+    if stats:
+        hist = metrics.new_histogram('durations')
+        f = partial(measure, hist, f)
     run(f, bulk_queries, concurrency, loop)
+    if stats:
+        yield json.dumps(hist.get())
 
 
 def main():

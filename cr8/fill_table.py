@@ -5,6 +5,7 @@ import sys
 import json
 import argh
 import argparse
+from appmetrics import metrics
 from pprint import pprint
 from faker import Factory
 from functools import partial
@@ -14,7 +15,7 @@ from concurrent.futures import ProcessPoolExecutor
 
 from .json2insert import to_insert
 from .misc import parse_table
-from .aio import asyncio, consume
+from .aio import asyncio, consume, execute_many, measure
 from .cli import to_int
 
 
@@ -63,6 +64,7 @@ class DataFaker:
         'long': from_attribute('random_int'),
         'timestamp': timestamp,
         'string': from_attribute('word'),
+        'double': from_attribute('pyfloat'),
         'boolean': from_attribute('boolean')
     }
 
@@ -106,17 +108,12 @@ def generate_bulk_args(generate_row, bulk_size):
     return [generate_row() for i in range(bulk_size)]
 
 
-async def _produce_data_and_insert(q, cursor, stmt, bulk_args_fun, num_inserts):
-
-    async def insert(stmt, args):
-        f = loop.run_in_executor(None, cursor.executemany, stmt, args)
-        await f
-
+async def _produce_data_and_insert(q, corof, stmt, bulk_args_fun, num_inserts):
     executor = ProcessPoolExecutor()
     for i in range(num_inserts):
         args = await asyncio.ensure_future(
             loop.run_in_executor(executor, bulk_args_fun))
-        task = asyncio.ensure_future(insert(stmt, args))
+        task = asyncio.ensure_future(corof(stmt, args))
         await q.put(task)
     await q.put(None)
 
@@ -141,6 +138,7 @@ def fill_table(hosts,
                num_records,
                bulk_size=1000,
                concurrency=100,
+               stats=False,
                mapping_file=None):
     """ fills a table with random data
 
@@ -154,34 +152,45 @@ def fill_table(hosts,
 
     """
     conn = connect(hosts)
-    c = conn.cursor()
+    cursor = conn.cursor()
 
     schema, table = parse_table(fqtable)
-    columns = retrieve_columns(c, schema, table)
+    columns = retrieve_columns(cursor, schema, table)
     if not columns:
         sys.exit('Could not find columns for table "{}"'.format(fqtable))
-    yield 'Found schema: '
-    pprint(columns)
+
+    stdout = sys.stderr if stats else sys.stdout
+    log = partial(print, file=stdout)
+    log('Found schema: ')
+    pprint(columns, stream=stdout)
     mapping = None
     if mapping_file:
         mapping = json.load(mapping_file)
     generate_row = create_row_generator(columns, mapping)
+    bulk_size = min(num_records, bulk_size)
     bulk_args_fun = partial(generate_bulk_args, generate_row, bulk_size)
 
     stmt = to_insert(fqtable, columns)[0]
-    yield 'Using insert statement: '
-    yield stmt
+    log('Using insert statement: ')
+    log(stmt)
 
-    bulk_size = min(num_records, bulk_size)
     num_inserts = int(num_records / bulk_size)
-    yield 'Will make {} requests with a bulk size of {}'.format(
-        num_inserts, bulk_size)
+    log('Will make {} requests with a bulk size of {}'.format(
+        num_inserts, bulk_size))
 
-    yield 'Generating fake data and executing inserts'
+    corof = partial(execute_many, loop, cursor)
+    if stats:
+        hist = metrics.new_histogram('durations')
+        corof = partial(measure, hist, corof)
+
+    log('Generating fake data and executing inserts')
     q = asyncio.Queue(maxsize=concurrency)
     loop.run_until_complete(asyncio.gather(
-        _produce_data_and_insert(q, conn.cursor(), stmt, bulk_args_fun, num_inserts),
+        _produce_data_and_insert(q, corof, stmt, bulk_args_fun, num_inserts),
         consume(q, total=num_inserts)))
+
+    if stats:
+        yield json.dumps(hist.get())
 
 
 def main():
