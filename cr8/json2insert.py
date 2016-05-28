@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 
 import argh
-import itertools
-from tqdm import tqdm
 
 from .cli import dicts_from_stdin, to_int
 from .misc import as_bulk_queries
@@ -62,11 +60,6 @@ def json2insert(table, bulk_size=1000, concurrency=100, *hosts):
     bulk_queries = as_bulk_queries(queries, bulk_size)
     yield 'Executing requests async bulk_size={} concurrency={}'.format(
         bulk_size, concurrency)
-
-    if concurrency == 1:
-        all(itertools.starmap(
-            cursor.executemany, tqdm(bulk_queries, unit=' requests')))
-        return
 
     loop = asyncio.get_event_loop()
 
