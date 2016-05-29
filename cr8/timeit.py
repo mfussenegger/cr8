@@ -21,23 +21,26 @@ class Result:
                  statement,
                  started,
                  ended,
-                 stats):
+                 stats,
+                 concurrency):
         self.version_info = version_info
         self.statement = statement
         # need ts in ms in crate
         self.started = int(started * 1000)
         self.ended = int(ended * 1000)
         self.runtime_stats = stats.get()
+        self.concurrency = concurrency
 
     def __str__(self):
         return json.dumps(self.__dict__)
 
 
 class QueryRunner:
-    def __init__(self, stmt, repeats, hosts):
+    def __init__(self, stmt, repeats, hosts, concurrency):
         self.stmt = stmt
         self.hosts = hosts
         self.repeats = repeats
+        self.concurrency = concurrency
         self.conn = conn = connect(hosts)
         cursor = conn.cursor()
         self.loop = loop = aio.asyncio.get_event_loop()
@@ -51,11 +54,14 @@ class QueryRunner:
         version_info = self.__get_version_info(self.conn.client.active_servers[0])
 
         started = time()
-        cursor = self.conn.cursor()
+        statements = itertools.repeat((self.stmt,), self.repeats)
         stats = Stats(min(self.repeats, 1000))
-        for i in range(self.repeats):
-            cursor.execute(self.stmt)
-            stats.measure(cursor.duration)
+
+        async def measure(stmt, args=None):
+            duration = await self.execute(stmt, args)
+            stats.measure(duration)
+
+        aio.run(measure, statements, self.concurrency, loop=self.loop)
         ended = time()
 
         return Result(
@@ -63,7 +69,8 @@ class QueryRunner:
             version_info=version_info,
             started=started,
             ended=ended,
-            stats=stats
+            stats=stats,
+            concurrency=self.concurrency
         )
 
     def __get_version_info(self, server):
@@ -77,12 +84,13 @@ class QueryRunner:
 @argh.arg('hosts', help='crate hosts', type=str)
 @argh.arg('-w', '--warmup', type=to_int)
 @argh.arg('-r', '--repeat', type=to_int)
-def timeit(hosts, stmt=None, warmup=30, repeat=30):
+@argh.arg('-c', '--concurrency', type=to_int)
+def timeit(hosts, stmt=None, warmup=30, repeat=30, concurrency=1):
     """ runs the given statement a number of times and returns the runtime stats
     """
     num_lines = 0
     for line in lines_from_stdin(stmt):
-        runner = QueryRunner(line, repeat, hosts)
+        runner = QueryRunner(line, repeat, hosts, concurrency)
         runner.warmup(warmup)
         result = runner.run()
         yield result
