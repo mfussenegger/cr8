@@ -14,7 +14,7 @@ from concurrent.futures import ProcessPoolExecutor
 
 from .json2insert import to_insert
 from .misc import parse_table
-from .aio import asyncio, consume
+from .aio import asyncio, consume, execute_many
 from .cli import to_int
 
 
@@ -107,11 +107,7 @@ def generate_bulk_args(generate_row, bulk_size):
 
 
 async def _produce_data_and_insert(q, cursor, stmt, bulk_args_fun, num_inserts):
-
-    async def insert(stmt, args):
-        f = loop.run_in_executor(None, cursor.executemany, stmt, args)
-        await f
-
+    insert = partial(execute_many, loop, cursor)
     executor = ProcessPoolExecutor()
     for i in range(num_inserts):
         args = await asyncio.ensure_future(
