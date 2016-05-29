@@ -2,10 +2,14 @@
 # -*- coding: utf-8 -*-
 
 import argh
+import sys
+import json
+from functools import partial
 
 from .cli import dicts_from_stdin, to_int
 from .misc import as_bulk_queries
-from .aio import asyncio, run
+from . import aio
+from .metrics import Stats
 
 
 def to_insert(table, d):
@@ -54,19 +58,19 @@ def json2insert(table, bulk_size=1000, concurrency=100, *hosts):
         return print_only(table)
 
     from crate.client import connect
+    log = partial(print, file=sys.stderr)
     conn = connect(hosts)
-    cursor = conn.cursor()
     queries = (to_insert(table, d) for d in dicts_from_stdin())
     bulk_queries = as_bulk_queries(queries, bulk_size)
-    yield 'Executing requests async bulk_size={} concurrency={}'.format(
-        bulk_size, concurrency)
+    log('Executing requests async bulk_size={} concurrency={}'.format(
+        bulk_size, concurrency))
 
-    loop = asyncio.get_event_loop()
-
-    async def f(stmt, bulk_args):
-        await loop.run_in_executor(None, cursor.executemany, stmt, bulk_args)
-
-    run(f, bulk_queries, concurrency, loop)
+    loop = aio.asyncio.get_event_loop()
+    stats = Stats()
+    f = partial(aio.execute_many, loop, conn.cursor())
+    f = partial(aio.measure, stats, f)
+    aio.run(f, bulk_queries, concurrency, loop)
+    yield json.dumps(stats.get())
 
 
 def main():

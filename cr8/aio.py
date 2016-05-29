@@ -14,6 +14,18 @@ async def execute(loop, cursor, stmt, args=None):
     return cursor.duration
 
 
+async def execute_many(loop, cursor, stmt, bulk_args):
+    f = loop.run_in_executor(None, cursor.executemany, stmt, bulk_args)
+    await f
+    return cursor.duration
+
+
+async def measure(stats, f, *args, **kws):
+    duration = await f(*args, **kws)
+    stats.measure(duration)
+    return duration
+
+
 async def map_async(q, corof, iterable):
     for i in iterable:
         task = asyncio.ensure_future(corof(*i))

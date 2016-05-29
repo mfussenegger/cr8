@@ -56,10 +56,7 @@ class QueryRunner:
         started = time()
         statements = itertools.repeat((self.stmt,), self.repeats)
         stats = Stats(min(self.repeats, 1000))
-
-        async def measure(stmt, args=None):
-            duration = await self.execute(stmt, args)
-            stats.measure(duration)
+        measure = partial(aio.measure, stats, self.execute)
 
         aio.run(measure, statements, self.concurrency, loop=self.loop)
         ended = time()
