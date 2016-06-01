@@ -39,7 +39,7 @@ class Spec:
             setup=Instructions.from_dict(d.get('setup', {})),
             teardown=Instructions.from_dict(d.get('teardown', {})),
             queries=d.get('queries', []),
-            load_data=d.get('load_data', {})
+            load_data=d.get('load_data', [])
         )
 
     @staticmethod

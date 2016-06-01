@@ -1,0 +1,12 @@
+[setup]
+statement_files = ["sql/create_countries.sql"]
+
+[[load_data]]
+target = "countries"
+source = "data/countries.json"
+bulk_size = 2
+concurrency = 10
+num_records = 22
+
+[teardown]
+statements = ["drop table countries"]

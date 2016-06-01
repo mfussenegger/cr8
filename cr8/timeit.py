@@ -51,7 +51,7 @@ class QueryRunner:
         aio.run(self.execute, statements, 0, loop=self.loop)
 
     def run(self):
-        version_info = self.__get_version_info(self.conn.client.active_servers[0])
+        version_info = self.get_version_info(self.conn.client.active_servers[0])
 
         started = time()
         statements = itertools.repeat((self.stmt,), self.repeats)
@@ -70,7 +70,8 @@ class QueryRunner:
             concurrency=self.concurrency
         )
 
-    def __get_version_info(self, server):
+    @staticmethod
+    def get_version_info(server):
         data = requests.get(server).json()
         return {
             'number': data['version']['number'],

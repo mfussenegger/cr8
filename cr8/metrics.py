@@ -1,10 +1,12 @@
-
 import statistics
 import random
 
 
+DEFAULT_NUM_SAMPLES = 1000
+
+
 def percentile(sorted_values, p):
-    """ calculate the percentile using the nearest rank method
+    """Calculate the percentile using the nearest rank method.
 
     >>> percentile([15, 20, 35, 40, 50], 50)
     35
@@ -25,8 +27,9 @@ def percentile(sorted_values, p):
 
 
 class UniformReservoir:
-    """ Reservoir Sampling Algorithm R by Jeffrey Vitter
-    https://en.wikipedia.org/wiki/Reservoir_sampling#Algorithm_R
+    """Reservoir Sampling Algorithm R by Jeffrey Vitter.
+
+    See https://en.wikipedia.org/wiki/Reservoir_sampling#Algorithm_R
     """
 
     def __init__(self, size):
@@ -48,8 +51,8 @@ class UniformReservoir:
 class Stats:
     plevels = [50, 75, 90, 95, 99, 99.9]
 
-    def __init__(self, size=1000):
-        self.reservoir = UniformReservoir(size=size)
+    def __init__(self, size=DEFAULT_NUM_SAMPLES):
+        self.reservoir = UniformReservoir(size=size or DEFAULT_NUM_SAMPLES)
 
     def measure(self, value):
         self.reservoir.add(value)

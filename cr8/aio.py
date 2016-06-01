@@ -43,16 +43,16 @@ async def consume(q, total=None):
             t.update(1)
 
 
-async def run_sync(coro, iterable):
-    for i in tqdm(iterable, unit=' requests', smoothing=0.1):
+async def run_sync(coro, iterable, total=None):
+    for i in tqdm(iterable, total=total, unit=' requests', smoothing=0.1):
         await coro(*i)
 
 
-def run(coro, iterable, concurrency, loop=None):
+def run(coro, iterable, concurrency, loop=None, num_items=None):
     loop = loop or asyncio.get_event_loop()
     if concurrency == 1:
-        return loop.run_until_complete(run_sync(coro, iterable))
+        return loop.run_until_complete(run_sync(coro, iterable, total=num_items))
     q = asyncio.Queue(maxsize=concurrency)
     loop.run_until_complete(asyncio.gather(
         map_async(q, coro, iterable),
-        consume(q)))
+        consume(q, total=num_items)))
