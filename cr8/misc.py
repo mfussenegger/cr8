@@ -1,11 +1,13 @@
+"""misc functions that have no real home."""
 
+from typing import Tuple, Iterator
 from collections import defaultdict
 
 
-def parse_table(fq_table):
-    """ parses a tablename and returns a (<schema>, <table>) tuple
+def parse_table(fq_table: str) -> Tuple[str, str]:
+    """Parse a tablename into tuple(<schema>, <table>).
 
-    schema defaults to doc if the table name doesn't contain a schema
+    Schema defaults to doc if the table name doesn't contain a schema.
 
     >>> parse_table('x.users')
     ('x', 'users')
@@ -13,7 +15,6 @@ def parse_table(fq_table):
     >>> parse_table('users')
     ('doc', 'users')
     """
-
     parts = fq_table.split('.')
     if len(parts) == 1:
         return 'doc', parts[0]
@@ -24,7 +25,7 @@ def parse_table(fq_table):
 
 
 def as_bulk_queries(queries, bulk_size):
-    """ groups a iterable of (stmt, args) by stmt into (stmt, bulk_args)
+    """Group a iterable of (stmt, args) by stmt into (stmt, bulk_args).
 
     bulk_args will be a list of the args grouped by stmt.
 
@@ -41,16 +42,17 @@ def as_bulk_queries(queries, bulk_size):
         yield stmt, bulk_args
 
 
-def get_lines(filename):
+def get_lines(filename: str) -> Iterator[str]:
+    """Create an iterator that returns the lines of a utf-8 encoded file."""
     with open(filename, 'r', encoding='utf-8') as f:
         for line in f:
             yield line
 
 
-def as_statements(lines):
-    """ generator expression that transforms lines into strings of sql statements
+def as_statements(lines: Iterator[str]) -> Iterator[str]:
+    """Create an iterator that transforms lines into sql statements.
 
-    statements within the lines must end with ";"
+    Statements within the lines must end with ";"
 
     >>> list(as_statements(['select * from', '-- comments are filtered', 't;']))
     ['select * from t']
