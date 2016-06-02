@@ -37,18 +37,18 @@ def to_insert(table, d):
 
 def print_only(table):
     for d in dicts_from_stdin():
-        yield to_insert(table, d)
-    yield ''
-    yield 'No hosts provided. Nothing inserted'
+        print(to_insert(table, d))
+    print('')
+    print('No hosts provided. Nothing inserted')
 
 
 @argh.arg('table', help='table name that should be used in the statement')
 @argh.arg('--bulk-size', type=to_int)
-@argh.arg('hosts', help='crate hosts which will be used \
+@argh.arg('--hosts', help='crate hosts which will be used \
           to execute the insert statement')
 @argh.arg('-c', '--concurrency', type=to_int)
 @argh.wrap_errors([KeyboardInterrupt])
-def json2insert(table, bulk_size=1000, concurrency=100, *hosts):
+def json2insert(table, bulk_size=1000, concurrency=100, hosts=None):
     """ Converts the given json line (read from stdin) into an insert statement
 
     If hosts are specified the insert statement will be executed on those hosts.
