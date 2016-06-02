@@ -26,7 +26,6 @@ setup(
     install_requires=[
         'crate',
         'argh',
-        'requests',
         'tqdm',
         'fake-factory'
     ],

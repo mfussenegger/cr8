@@ -3,7 +3,7 @@
 
 import json
 import argh
-import requests
+from urllib.request import urlopen
 import itertools
 
 from functools import partial
@@ -72,7 +72,8 @@ class QueryRunner:
 
     @staticmethod
     def get_version_info(server):
-        data = requests.get(server).json()
+        r = urlopen(server)
+        data = json.loads(r.read().decode('utf-8'))
         return {
             'number': data['version']['number'],
             'hash': data['version']['build_hash']
