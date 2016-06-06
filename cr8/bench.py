@@ -94,7 +94,8 @@ class Executor:
             started=start,
             ended=end,
             stats=stats,
-            concurrency=concurrency
+            concurrency=concurrency,
+            bulk_size=bulk_size
         ))
 
     def run_queries(self, queries):

@@ -7,6 +7,7 @@ create table if not exists benchmarks (
     started timestamp,
     ended timestamp,
     concurrency int,
+    bulk_size int,
     runtime_stats object (strict) as (
         avg double,
         min double,

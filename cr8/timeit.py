@@ -22,7 +22,8 @@ class Result:
                  started,
                  ended,
                  stats,
-                 concurrency):
+                 concurrency,
+                 bulk_size=None):
         self.version_info = version_info
         self.statement = statement
         # need ts in ms in crate
@@ -30,6 +31,7 @@ class Result:
         self.ended = int(ended * 1000)
         self.runtime_stats = stats.get()
         self.concurrency = concurrency
+        self.bulk_size = bulk_size
 
     def __str__(self):
         return json.dumps(self.__dict__)
