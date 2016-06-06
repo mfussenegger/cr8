@@ -31,9 +31,8 @@ class Executor:
         self.loop = aio.asyncio.get_event_loop()
 
         if result_hosts:
-            conn = connect(result_hosts)
-
             def process_result(result):
+                conn = connect(result_hosts)
                 cursor = conn.cursor()
                 stmt, args = to_insert('benchmarks', result.__dict__)
                 cursor.execute(stmt, args)
