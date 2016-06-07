@@ -3,8 +3,10 @@
 
 import json
 import argh
+from pprint import pprint
 from urllib.request import urlopen
 import itertools
+import collections
 
 from functools import partial
 from time import time
@@ -34,7 +36,7 @@ class Result:
         self.bulk_size = bulk_size
 
     def __str__(self):
-        return json.dumps(self.__dict__)
+        return json.dumps(self.__dict__, sort_keys=True, indent=4)
 
 
 class QueryRunner:
@@ -94,7 +96,7 @@ def timeit(hosts, stmt=None, warmup=30, repeat=30, concurrency=1):
         runner = QueryRunner(line, repeat, hosts, concurrency)
         runner.warmup(warmup)
         result = runner.run()
-        yield result
+        print(result)
         num_lines += 1
     if num_lines == 0:
         raise SystemExit(

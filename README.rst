@@ -44,11 +44,6 @@ The main binary is called ``cr8`` which contains a couple of sub-commands.
 Use ``cr8 -h`` or ``cr8 <subcommand> -h`` to get a more detailed usage
 description.
 
-An example using ``cr8``::
-
-    > echo '{"name": "Arthur"}' | cr8 json2insert mytable
-    ('insert into mytable (name) values (?)', ['Arthur'])
-
 The included sub-commands are described in more detail below:
 
 Sub-commands
@@ -60,7 +55,22 @@ timeit
 A tool that can be used to measure the runtime of a given SQL statement on a
 cluster::
 
-    > cr8 timeit cluster.hostname:4200 --stmt "select name from sys.cluster"
+    >>> echo "select name from sys.cluster" | cr8 timeit localhost:4200
+    {
+        "bulk_size": null,
+        "concurrency": 1,
+        "ended": ...
+        "runtime_stats": {
+            ...
+        },
+        "started": ...
+        "statement": "select name from sys.cluster\n",
+        "version_info": {
+            "hash": "4713a5498fadf14b2359e13c641e6734f8189dc5",
+            "number": "0.55.0"
+        }
+    }
+
 
 fill_table
 ----------
@@ -77,7 +87,18 @@ For example given the table as follows::
 
 The following command can be used to insert 100k records::
 
-    > cr8 fill-table localhost:4200 demo 100000
+    >>> cr8 fill-table localhost:4200 demo 1000
+    Found schema: 
+    {
+        "country": "string",
+        "name": "string"
+    }
+    Using insert statement: 
+    insert into demo (country, name) values (?, ?)
+    Will make 1 requests with a bulk size of 1000
+    Generating fake data and executing inserts
+    <BLANKLINE>
+
 
 It will automatically read the schema from the table and map the columns to
 faker `providers
@@ -91,8 +112,9 @@ json2insert
 
 json2insert generates an insert statement from a JSON string::
 
-    > echo '{"name": "Arthur"}' | cr8 json2insert mytable
+    >>> echo '{"name": "Arthur"}' | cr8 json2insert mytable
     ('insert into mytable (name) values (?)', ['Arthur'])
+    ...
 
 If a Crate host is provided the insert statement will be executed as well.
 
@@ -101,7 +123,8 @@ blobs
 
 A tool to upload a file into a blob table::
 
-    > cr8 upload crate.cluster:4200 blobtable /tmp/screenshot.png
+    >>> cr8 upload localhost:4200 blobtable specs/sample.toml
+    http://localhost:44200/_blobs/blobtable/8dbcce48cde2270915fe088338220581ed736983
 
 bench
 -----
@@ -117,10 +140,27 @@ In the `specs` folder is an example spec file.
 
 Usage::
 
-    > cr8 bench specs/sample.toml bench.host:4200 [ -r report.host:4200 ]
+    >>> cr8 bench specs/sample.toml localhost:44200 -r localhost:44200
+    Running setUp
+    Running benchmark
+    {'concurrency': 2,
+     'iterations': 1000,
+     'statement': 'select count(*) from countries'}
+    {'bulk_size': None,
+     'concurrency': 2,
+     'ended': ...,
+     'runtime_stats': {...
+     'started': ...,
+     'statement': 'select count(*) from countries',
+     'version_info': {'hash': '4713a5498fadf14b2359e13c641e6734f8189dc5',
+                      'number': '0.55.0'}}
+    <BLANKLINE>
+    Running tearDown
+    <BLANKLINE>
 
 
-The `report.host` must contain the table specified in `sql/benchmarks_table.sql`.
+`-r` is optional and can be used to save the benchmark result into a cluster.
+The cluster must contain the table specified in `sql/benchmarks_table.sql`.
 
 perf_regressions
 ----------------

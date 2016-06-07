@@ -1,11 +1,20 @@
 
-from tqdm import tqdm
+import functools
+import sys
 import asyncio
 try:
     import uvloop
     asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 except ImportError:
     pass
+
+from tqdm import tqdm
+tqdm = functools.partial(
+    tqdm,
+    unit=' requests',
+    smoothing=0.1,
+    disable=not sys.stdin.isatty()
+)
 
 
 async def execute(loop, cursor, stmt, args=None):
@@ -34,7 +43,7 @@ async def map_async(q, corof, iterable):
 
 
 async def consume(q, total=None):
-    with tqdm(total=total, unit=' requests', smoothing=0.1) as t:
+    with tqdm(total=total) as t:
         while True:
             task = await q.get()
             if task is None:
@@ -44,7 +53,7 @@ async def consume(q, total=None):
 
 
 async def run_sync(coro, iterable, total=None):
-    for i in tqdm(iterable, total=total, unit=' requests', smoothing=0.1):
+    for i in tqdm(iterable, total=total):
         await coro(*i)
 
 

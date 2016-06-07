@@ -24,14 +24,14 @@ setup(
     },
     packages=['cr8'],
     install_requires=[
-        'crate',
+        'crate>=0.16',
         'argh',
         'tqdm',
         'fake-factory',
         'toml'
     ],
     extras_require={
-        'uvloop': ['uvloop']
+        'uvloop': ['uvloop'],
     },
     classifiers=[
         'Development Status :: 4 - Beta',

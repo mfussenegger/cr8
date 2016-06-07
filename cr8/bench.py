@@ -15,14 +15,6 @@ from .metrics import Stats
 from .cli import dicts_from_lines
 
 
-def get_concurrency_range(concurrency):
-    if isinstance(concurrency, int):
-        return range(concurrency)
-    elif isinstance(concurrency, list):
-        return range(concurrency[0], concurrency[1], concurrency[2])
-    raise ValueError('Invalid concurrency: {}'.format(concurrency))
-
-
 class Executor:
     def __init__(self, spec_dir, benchmark_hosts, result_hosts):
         self.benchmark_hosts = benchmark_hosts
@@ -102,16 +94,15 @@ class Executor:
             pprint(query)
             stmt = query['statement']
             iterations = query.get('iterations', 1)
-            concurrency_range = get_concurrency_range(query.get('concurrency', 1))
-            for concurrency in concurrency_range:
-                runner = QueryRunner(
-                    stmt,
-                    repeats=iterations,
-                    hosts=self.benchmark_hosts,
-                    concurrency=concurrency
-                )
-                result = runner.run()
-                self.process_result(result)
+            concurrency = query.get('concurrency', 1)
+            runner = QueryRunner(
+                stmt,
+                repeats=iterations,
+                hosts=self.benchmark_hosts,
+                concurrency=concurrency
+            )
+            result = runner.run()
+            self.process_result(result)
 
 
 def bench(spec, benchmark_hosts, result_hosts=None):

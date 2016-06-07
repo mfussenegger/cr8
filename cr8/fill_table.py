@@ -5,7 +5,6 @@ import sys
 import json
 import argh
 import argparse
-from pprint import pprint
 from faker import Factory
 from functools import partial
 from collections import OrderedDict
@@ -156,8 +155,8 @@ def fill_table(hosts,
     columns = retrieve_columns(c, schema, table)
     if not columns:
         sys.exit('Could not find columns for table "{}"'.format(fqtable))
-    yield 'Found schema: '
-    pprint(columns)
+    print('Found schema: ')
+    print(json.dumps(columns, sort_keys=True, indent=4))
     mapping = None
     if mapping_file:
         mapping = json.load(mapping_file)
@@ -165,15 +164,15 @@ def fill_table(hosts,
     bulk_args_fun = partial(generate_bulk_args, generate_row, bulk_size)
 
     stmt = to_insert(fqtable, columns)[0]
-    yield 'Using insert statement: '
-    yield stmt
+    print('Using insert statement: ')
+    print(stmt)
 
     bulk_size = min(num_records, bulk_size)
     num_inserts = int(num_records / bulk_size)
-    yield 'Will make {} requests with a bulk size of {}'.format(
-        num_inserts, bulk_size)
+    print('Will make {} requests with a bulk size of {}'.format(
+        num_inserts, bulk_size))
 
-    yield 'Generating fake data and executing inserts'
+    print('Generating fake data and executing inserts')
     q = asyncio.Queue(maxsize=concurrency)
     loop.run_until_complete(asyncio.gather(
         _produce_data_and_insert(q, conn.cursor(), stmt, bulk_args_fun, num_inserts),
