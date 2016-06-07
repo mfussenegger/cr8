@@ -4,7 +4,23 @@ from doctest import DocTestSuite
 from cr8 import metrics
 
 
+class UniformReservoirTest(TestCase):
+
+    def test_fewer_values_than_size(self):
+        r = metrics.UniformReservoir(10)
+        r.add(10)
+        r.add(20)
+        self.assertEqual([10, 20], r.values)
+
+
 class StatsTest(TestCase):
+
+    def test_stats_with_only_1_value(self):
+        hist = metrics.Stats(size=4)
+        hist.measure(23.2)
+        result = hist.get()
+        self.assertEqual(result['stdev'], 0)
+        self.assertEqual(result['variance'], 0)
 
     def test_stats(self):
         hist = metrics.Stats(size=4)

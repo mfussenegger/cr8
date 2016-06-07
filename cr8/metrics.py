@@ -35,12 +35,12 @@ class UniformReservoir:
     def __init__(self, size):
         self.size = size
         self.count = 0
-        self.values = [0] * size
+        self.values = []
 
     def add(self, value):
         count = self.count
         if count < self.size:
-            self.values[count] = value
+            self.values.append(value)
         else:
             k = random.randint(0, self.count)
             if k < self.size:
@@ -65,8 +65,8 @@ class Stats:
             max=values[-1] if values else 0,
             mean=statistics.mean(values),
             median=statistics.median(values),
-            variance=statistics.variance(values),
-            stdev=statistics.stdev(values),
+            variance=statistics.variance(values) if len(values) > 1 else 0,
+            stdev=statistics.stdev(values) if len(values) > 1 else 0,
             # replace . with _ so that the output can be inserted into crate
             # crate doesn't allow dots in column names
             percentile={str(i[0]).replace('.', '_'): i[1] for i in
