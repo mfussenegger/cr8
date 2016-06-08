@@ -15,12 +15,20 @@ class UniformReservoirTest(TestCase):
 
 class StatsTest(TestCase):
 
-    def test_stats_with_only_1_value(self):
+    def test_stats_are_empty_without_values(self):
+        hist = metrics.Stats(size=4)
+        result = hist.get()
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result['n'], 0)
+
+    def test_stats_only_has_min_max_mean_with_1_value(self):
         hist = metrics.Stats(size=4)
         hist.measure(23.2)
         result = hist.get()
-        self.assertEqual(result['stdev'], 0)
-        self.assertEqual(result['variance'], 0)
+        self.assertIn('mean', result)
+        self.assertIn('min', result)
+        self.assertIn('max', result)
+        self.assertEqual(result['n'], 1)
 
     def test_stats(self):
         hist = metrics.Stats(size=4)

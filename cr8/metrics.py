@@ -59,17 +59,24 @@ class Stats:
 
     def get(self):
         values = sorted(self.reservoir.values)
+        count = len(values)
+        # instead of failing return empty / subset so that json2insert & co
+        # don't fail
+        if count == 0:
+            return dict(n=0)
+        elif count == 1:
+            return dict(min=values[0], max=values[0], mean=values[0], n=count)
         percentiles = [percentile(values, p) for p in self.plevels]
         return dict(
-            min=values[0] if values else 0,
-            max=values[-1] if values else 0,
+            min=values[0],
+            max=values[-1],
             mean=statistics.mean(values),
             median=statistics.median(values),
-            variance=statistics.variance(values) if len(values) > 1 else 0,
-            stdev=statistics.stdev(values) if len(values) > 1 else 0,
+            variance=statistics.variance(values),
+            stdev=statistics.stdev(values),
             # replace . with _ so that the output can be inserted into crate
             # crate doesn't allow dots in column names
             percentile={str(i[0]).replace('.', '_'): i[1] for i in
                         zip(self.plevels, percentiles)},
-            n=len(values)
+            n=count
         )
