@@ -77,7 +77,7 @@ class Executor:
         num_records = data_spec.get('num_records', None)
         if num_records:
             num_records = max(1, int(num_records / bulk_size))
-        stats = Stats(size=num_records)
+        stats = Stats()
         cursor = self.conn.cursor()
         f = partial(aio.measure, stats, partial(aio.execute_many, self.loop, cursor))
         start = time()
