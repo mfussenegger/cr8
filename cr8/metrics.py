@@ -1,5 +1,6 @@
 import statistics
 import random
+import math
 
 
 DEFAULT_NUM_SAMPLES = 1000
@@ -48,6 +49,27 @@ class UniformReservoir:
         self.count = count + 1
 
 
+def get_histogram_bins(min_, max_, stdev, count):
+    # Use Scott's normal reference rule to get the bin width
+    # https://en.wikipedia.org/wiki/Histogram#Number_of_bins_and_width
+    bin_width = (3.5 * stdev) / (count ** (1. / 3))
+    num_bins = math.ceil((max_ - min_) / bin_width)
+    return [i * bin_width + min_ for i in range(1, num_bins + 1)]
+
+
+def get_histogram(sorted_values, min_, max_, stdev):
+    bins = get_histogram_bins(min_, max_, stdev, len(sorted_values))
+    result = {x: 0 for x in bins}
+    for value in sorted_values:
+        for bin_ in bins:
+            if value <= bin_:
+                result[bin_] += 1
+                break
+    items = sorted(result.items(), key=lambda t: t[0])
+    keys = ('bin', 'num')
+    return [dict(zip(keys, v)) for v in items]
+
+
 class Stats:
     plevels = [50, 75, 90, 95, 99, 99.9]
 
@@ -67,13 +89,17 @@ class Stats:
         elif count == 1:
             return dict(min=values[0], max=values[0], mean=values[0], n=count)
         percentiles = [percentile(values, p) for p in self.plevels]
+        min_ = values[0]
+        max_ = values[-1]
+        stdev = statistics.stdev(values)
         return dict(
-            min=values[0],
-            max=values[-1],
+            min=min_,
+            max=max_,
+            hist=get_histogram(values, min_, max_, stdev),
             mean=statistics.mean(values),
             median=statistics.median(values),
             variance=statistics.variance(values),
-            stdev=statistics.stdev(values),
+            stdev=stdev,
             # replace . with _ so that the output can be inserted into crate
             # crate doesn't allow dots in column names
             percentile={str(i[0]).replace('.', '_'): i[1] for i in

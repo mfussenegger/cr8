@@ -15,14 +15,18 @@ create table if not exists benchmarks (
         mean double,
         median double,
         percentile object as (
-                "50" double,
-                "75" double,
-                "90" double,
-                "99" double,
-                "99_9" double
+            "50" double,
+            "75" double,
+            "90" double,
+            "99" double,
+            "99_9" double
         ),
         n integer,
         variance double,
-        stdev double
+        stdev double,
+        hist array(object (strict) as (
+            bin double,
+            num int
+        ))
     )
 ) clustered into 8 shards with (number_of_replicas = '1-3', column_policy='strict');
