@@ -2,6 +2,7 @@
 import sys
 import json
 import ast
+from collections import OrderedDict
 
 
 def to_int(s):
@@ -55,10 +56,10 @@ def dicts_from_lines(lines):
     lines = iter(lines)
     for line in lines:
         try:
-            yield json.loads(line)
+            yield json.loads(line, object_pairs_hook=OrderedDict)
         except json.decoder.JSONDecodeError:
             content = line + ''.join(lines)
-            dicts = json.loads(content)
+            dicts = json.loads(content, object_pairs_hook=OrderedDict)
             if isinstance(dicts, list):
                 yield from dicts
             else:
