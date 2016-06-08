@@ -28,7 +28,7 @@ def retrieve_columns(cursor, schema, table):
         'select column_name, data_type from information_schema.columns \
         where is_generated = false and schema_name = ? and table_name = ? \
         order by ordinal_position asc', (schema, table))
-    return OrderedDict({x[0]: x[1] for x in cursor.fetchall()})
+    return OrderedDict(cursor.fetchall())
 
 
 def generate_row(fakers):
