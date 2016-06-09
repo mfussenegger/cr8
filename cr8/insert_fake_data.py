@@ -60,6 +60,9 @@ class DataFaker:
     _type_default = {
         'integer': from_attribute('random_int'),
         'long': from_attribute('random_int'),
+        'float': from_attribute('pyfloat'),
+        'double': from_attribute('pydecimal'),
+        'ip': from_attribute('ipv4'),
         'timestamp': timestamp,
         'string': from_attribute('word'),
         'boolean': from_attribute('boolean')

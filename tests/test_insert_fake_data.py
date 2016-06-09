@@ -2,6 +2,7 @@ from cr8.insert_fake_data import DataFaker
 from cr8 import insert_fake_data
 from unittest import TestCase, main
 from doctest import DocTestSuite
+from decimal import Decimal
 
 
 class TestDataFaker(TestCase):
@@ -44,6 +45,18 @@ class TestDataFaker(TestCase):
         mapping = {'x': ['random_int', [10, 20]]}
         provider = self.f.provider_from_mapping('x', mapping)
         self.assertEqual(provider(), 20)
+
+    def test_float_type_default(self):
+        provider = self.f.provider_for_column('x', 'float')
+        self.assertEqual(provider(), -37544673531.0)
+
+    def test_double_type_default(self):
+        provider = self.f.provider_for_column('x', 'double')
+        self.assertEqual(provider(), Decimal(-37544673531.0))
+
+    def test_ip_type_default(self):
+        provider = self.f.provider_for_column('x', 'ip')
+        self.assertEqual(provider(), '163.177.121.157')
 
 
 def load_tests(loader, tests, ignore):
