@@ -1,11 +1,7 @@
 
 import os
 import json
-try:
-    import toml
-    has_toml = True
-except ImportError:
-    has_toml = False
+import toml
 
 
 class Instructions:
@@ -55,10 +51,8 @@ class Spec:
 
 spec_loaders = {
     '.json': Spec.from_json_file,
+    '.toml': Spec.from_toml_file
 }
-
-if has_toml:
-    spec_loaders['.toml'] = Spec.from_toml_file
 
 
 def load_spec(spec_file):

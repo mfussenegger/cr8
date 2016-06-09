@@ -27,7 +27,8 @@ setup(
         'crate',
         'argh',
         'tqdm',
-        'fake-factory'
+        'fake-factory',
+        'toml'
     ],
     extras_require={
         'uvloop': ['uvloop']
