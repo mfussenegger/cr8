@@ -11,7 +11,7 @@ from collections import OrderedDict
 from crate.client import connect
 from concurrent.futures import ProcessPoolExecutor
 
-from .json2insert import to_insert
+from .insert_json import to_insert
 from .misc import parse_table
 from .aio import asyncio, consume, execute_many
 from .cli import to_int
@@ -131,12 +131,12 @@ In the format:
     "source_column2": "provider_without_args"
 }
 ''')
-def fill_table(hosts,
-               fqtable,
-               num_records,
-               bulk_size=1000,
-               concurrency=100,
-               mapping_file=None):
+def insert_fake_data(hosts,
+                     fqtable,
+                     num_records,
+                     bulk_size=1000,
+                     concurrency=100,
+                     mapping_file=None):
     """ fills a table with random data
 
     Insert <num_records> into <fqtable> on <hosts>.
@@ -180,7 +180,7 @@ def fill_table(hosts,
 
 
 def main():
-    argh.dispatch_command(fill_table)
+    argh.dispatch_command(insert_fake_data)
 
 
 if __name__ == '__main__':

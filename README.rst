@@ -72,8 +72,8 @@ cluster::
     }
 
 
-fill_table
-----------
+insert-fake-data
+----------------
 
 A tool that can be used to fill a table with random data. The script will
 generate the records using `faker <https://github.com/joke2k/faker>`_.
@@ -87,7 +87,7 @@ For example given the table as follows::
 
 The following command can be used to insert 100k records::
 
-    >>> cr8 fill-table localhost:4200 demo 1000
+    >>> cr8 insert-fake-data localhost:4200 demo 1000
     Found schema: 
     {
         "country": "string",
@@ -107,27 +107,27 @@ give number of records.
 
 (Currently only top-level string columns are supported)
 
-json2insert
+insert-json
 -----------
 
-json2insert generates an insert statement from a JSON string::
+``insert-json`` generates an insert statement from a JSON string::
 
-    >>> echo '{"name": "Arthur"}' | cr8 json2insert mytable
+    >>> echo '{"name": "Arthur"}' | cr8 insert-json mytable
     ('insert into mytable (name) values (?)', ['Arthur'])
     ...
 
 If a Crate host is provided the insert statement will be executed as well.
 
-blobs
-------
+insert-blob
+-----------
 
 A tool to upload a file into a blob table::
 
-    >>> cr8 upload localhost:4200 blobtable specs/sample.toml
+    >>> cr8 insert-blob localhost:4200 blobtable specs/sample.toml
     http://localhost:44200/_blobs/blobtable/8dbcce48cde2270915fe088338220581ed736983
 
-bench
------
+run-spec
+--------
 
 A tool to run benchmarks against a cluster and store the result in another
 cluster. The benchmark itself is defined in a spec file which defines `setup`,
@@ -140,7 +140,7 @@ In the `specs` folder is an example spec file.
 
 Usage::
 
-    >>> cr8 bench specs/sample.toml localhost:44200 -r localhost:44200
+    >>> cr8 run-spec specs/sample.toml localhost:44200 -r localhost:44200
     Running setUp
     Running benchmark
     {'concurrency': 2,

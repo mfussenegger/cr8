@@ -4,19 +4,19 @@
 import argh
 
 from cr8.timeit import timeit
-from cr8.blobs import upload
-from cr8.json2insert import json2insert
-from cr8.fill_table import fill_table
-from cr8.bench import bench
+from cr8.insert_json import insert_json
+from cr8.insert_fake_data import insert_fake_data
+from cr8.insert_blob import insert_blob
+from cr8.run_spec import run_spec
 
 
 def main():
     p = argh.ArghParser()
     p.add_commands([timeit,
-                    json2insert,
-                    bench,
-                    upload,
-                    fill_table])
+                    insert_json,
+                    insert_fake_data,
+                    insert_blob,
+                    run_spec])
     p.dispatch()
 
 

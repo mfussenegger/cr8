@@ -10,7 +10,7 @@ from crate.client import connect
 @argh.arg('table', help='name of the blob table')
 @argh.arg('hosts', type=str, nargs='+',
           help='crate hosts to which the file should be uploaded to')
-def upload(hosts, table, filename):
+def insert_blob(hosts, table, filename):
     """ uploads a file into a blob table """
     conn = connect(hosts)
     container = conn.get_blob_container(table)
@@ -23,7 +23,7 @@ def upload(hosts, table, filename):
 
 
 def main():
-    argh.dispatch_command(upload)
+    argh.dispatch_command(insert_blob)
 
 
 if __name__ == '__main__':

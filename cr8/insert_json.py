@@ -48,7 +48,7 @@ def print_only(table):
           to execute the insert statement')
 @argh.arg('-c', '--concurrency', type=to_int)
 @argh.wrap_errors([KeyboardInterrupt])
-def json2insert(table, bulk_size=1000, concurrency=100, hosts=None):
+def insert_json(table, bulk_size=1000, concurrency=100, hosts=None):
     """ Converts the given json line (read from stdin) into an insert statement
 
     If hosts are specified the insert statement will be executed on those hosts.
@@ -74,7 +74,7 @@ def json2insert(table, bulk_size=1000, concurrency=100, hosts=None):
 
 
 def main():
-    argh.dispatch_command(json2insert)
+    argh.dispatch_command(insert_json)
 
 
 if __name__ == '__main__':

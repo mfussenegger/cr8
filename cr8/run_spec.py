@@ -7,7 +7,7 @@ from pprint import pprint
 from crate.client import connect
 
 from cr8 import aio
-from .json2insert import to_insert
+from .insert_json import to_insert
 from .bench_spec import load_spec
 from .timeit import QueryRunner, Result
 from .misc import as_bulk_queries, as_statements, get_lines
@@ -105,7 +105,7 @@ class Executor:
             self.process_result(result)
 
 
-def bench(spec, benchmark_hosts, result_hosts=None):
+def run_spec(spec, benchmark_hosts, result_hosts=None):
     executor = Executor(
         spec_dir=os.path.dirname(spec),
         benchmark_hosts=benchmark_hosts,
@@ -127,7 +127,7 @@ def bench(spec, benchmark_hosts, result_hosts=None):
 
 
 def main():
-    argh.dispatch_command(bench)
+    argh.dispatch_command(run_spec)
 
 
 if __name__ == "__main__":

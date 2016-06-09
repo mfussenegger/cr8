@@ -64,3 +64,4 @@ target/
 
 # buildout
 bin/
+venv/

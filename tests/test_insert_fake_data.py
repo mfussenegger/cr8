@@ -1,5 +1,5 @@
-from cr8.fill_table import DataFaker
-from cr8 import fill_table
+from cr8.insert_fake_data import DataFaker
+from cr8 import insert_fake_data
 from unittest import TestCase, main
 from doctest import DocTestSuite
 
@@ -47,7 +47,7 @@ class TestDataFaker(TestCase):
 
 
 def load_tests(loader, tests, ignore):
-    tests.addTests(DocTestSuite(fill_table))
+    tests.addTests(DocTestSuite(insert_fake_data))
     return tests
 
 
