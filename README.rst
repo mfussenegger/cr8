@@ -110,7 +110,18 @@ give number of records.
 insert-json
 -----------
 
-``insert-json`` generates an insert statement from a JSON string::
+``insert-json`` can be used to insert records from a JSON file::
+
+    >>> cat tests/demo.json | cr8 insert-json demo --hosts localhost:4200
+    Executing requests async bulk_size=1000 concurrency=100
+    {
+        "max": ...,
+        "mean": ...,
+        "min": ...,
+        "n": 1
+    }
+
+Or simply print the insert statement generated from a JSON string::
 
     >>> echo '{"name": "Arthur"}' | cr8 insert-json mytable
     ('insert into mytable ("name") values (?)', ['Arthur'])

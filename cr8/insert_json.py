@@ -70,7 +70,7 @@ def insert_json(table, bulk_size=1000, concurrency=100, hosts=None):
     f = partial(aio.execute_many, loop, conn.cursor())
     f = partial(aio.measure, stats, f)
     aio.run(f, bulk_queries, concurrency, loop)
-    yield json.dumps(stats.get())
+    yield json.dumps(stats.get(), sort_keys=True, indent=4)
 
 
 def main():
