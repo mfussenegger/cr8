@@ -1,7 +1,79 @@
 
 
-Unreleased
-==========
+2016-06-09 0.5.0
+================
+
+Breaking 💔
+-----------
+
+Pretty much everything:
+
+- Renamed ``blob upload`` to ``insert-blob``
+
+- Renamed ``json2insert`` to ``insert-json``
+
+- Renamed ``fill-table`` to ``insert-fake-data``
+
+- Removed ``find-perf-regressions``
+
+New & shiny features ✨
+-----------------------
+
+run-spec
+~~~~~~~~
+
+Added a new command which can be used to "run" spec files. Spec files are
+either ``.json`` or ``.toml`` files which contain setup, queries and tear-down
+directives. A minimal example::
+
+    [setup]
+    statement_files = ["sql/create_countries.sql"]
+
+        [[setup.data_files]]
+        target = "countries"
+        source = "data/countries.json" # paths are relative to the spec file
+
+    [[queries]]
+    statement = "select count(*) from countries"
+    iterations = 1000
+
+    [teardown]
+    statements = ["drop table countries"]
+
+
+``run-spec`` will execute the given specification and output runtime statistics.
+The result can also directly be inserted into a Crate cluster.
+
+insert-fake-data & insert-json
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+- Column names are now quoted in the insert statement
+
+insert-fake-data
+~~~~~~~~~~~~~~~~
+
+- No longer tries to generate data for generated columns
+
+- Speed improvements
+
+- Added default provider mappings for columns of type ``float``, ``double`` and
+  ``ip``
+
+insert-json
+~~~~~~~~~~~
+
+- Prints runtime stats after the inserts are finished
+
+timeit
+~~~~~~
+
+- Added a histogram and percentiles to the runtime statistics that are printed
+
+- Added a concurrency option
+
+
+2016-05-19 0.4.0
+================
 
 - Python 3.4 support has been dropped.
 
