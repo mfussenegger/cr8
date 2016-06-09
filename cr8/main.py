@@ -6,7 +6,6 @@ import argh
 from cr8.timeit import timeit
 from cr8.blobs import upload
 from cr8.json2insert import json2insert
-from cr8.perf_regressions import find_perf_regressions
 from cr8.fill_table import fill_table
 from cr8.bench import bench
 
@@ -17,7 +16,6 @@ def main():
                     json2insert,
                     bench,
                     upload,
-                    find_perf_regressions,
                     fill_table])
     p.dispatch()
 

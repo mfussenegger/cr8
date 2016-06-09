@@ -36,8 +36,8 @@ Install them using `pip <https://pip.pypa.io/en/stable/>`_::
 (Users of Python 3.5.0 might run into `this AssertionError
 <http://bugs.python.org/issue25233>`_.)
 
-Usage 🎠
-========
+Usage
+=====
 
 The main binary is called ``cr8`` which contains a couple of sub-commands.
 
@@ -49,8 +49,8 @@ The included sub-commands are described in more detail below:
 Sub-commands
 ============
 
-timeit
-------
+timeit 🕐
+---------
 
 A tool that can be used to measure the runtime of a given SQL statement on a
 cluster::
@@ -162,17 +162,8 @@ Usage::
 `-r` is optional and can be used to save the benchmark result into a cluster.
 The cluster must contain the table specified in `sql/benchmarks_table.sql`.
 
-perf_regressions
-----------------
 
-A tool which will re-run all queries recorded with the `bench.sh` script. It
-will record the runtimes again and output the new runtimes::
-
-    > cr8 find-perf-regressions \
-            cluster.to.benchmark:4200 \
-            cluster.with.log.table:4200
-
-Development 😕
+Development ☢
 ==============
 
 Tests are run using ``python setup.py test``.
