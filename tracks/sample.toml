@@ -1,0 +1,9 @@
+versions = [
+    "latest-testing"
+]
+configurations = [
+    "default.toml"
+]
+specs = [
+    "../specs/sample.toml"
+]

@@ -182,6 +182,24 @@ Launch a Crate instance::
 This requires Java 8.
 
 
+run-track
+---------
+
+A tool to run ``.toml`` track files.
+A track is a matrix definition of node version, configurations and spec files.
+
+For each version and configuration a Crate node will be launched and all specs
+will be executed.
+
+    >>> cr8 run-track tracks/sample.toml
+    # Version:  latest-testing
+    ## Starting Crate latest-testing, configuration: default.toml
+    ### Running spec file:  sample.toml
+    Running setUp
+    Running benchmark
+    ...
+
+
 Development ☢
 ==============
 

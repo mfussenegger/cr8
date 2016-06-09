@@ -9,6 +9,7 @@ from cr8.insert_fake_data import insert_fake_data
 from cr8.insert_blob import insert_blob
 from cr8.run_spec import run_spec
 from cr8.run_crate import run_crate
+from cr8.run_track import run_track
 
 
 def main():
@@ -18,7 +19,8 @@ def main():
                     insert_fake_data,
                     insert_blob,
                     run_spec,
-                    run_crate])
+                    run_crate,
+                    run_track])
     p.dispatch()
 
 

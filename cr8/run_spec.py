@@ -121,16 +121,16 @@ def run_spec(spec, benchmark_hosts, result_hosts=None):
     ) as executor:
         spec = load_spec(spec)
         try:
-            yield 'Running setUp'
+            print('Running setUp')
             executor.exec_instructions(spec.setup)
-            yield 'Running benchmark'
+            print('Running benchmark')
             if spec.load_data:
                 for data_spec in spec.load_data:
                     executor.run_load_data(data_spec)
             else:
                 executor.run_queries(spec.queries)
         finally:
-            yield 'Running tearDown'
+            print('Running tearDown')
             executor.exec_instructions(spec.teardown)
 
 
