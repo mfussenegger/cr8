@@ -94,7 +94,7 @@ The following command can be used to insert 100k records::
         "name": "string"
     }
     Using insert statement: 
-    insert into demo (country, name) values (?, ?)
+    insert into demo ("country", "name") values (?, ?)
     Will make 1 requests with a bulk size of 1000
     Generating fake data and executing inserts
     <BLANKLINE>
@@ -113,7 +113,7 @@ insert-json
 ``insert-json`` generates an insert statement from a JSON string::
 
     >>> echo '{"name": "Arthur"}' | cr8 insert-json mytable
-    ('insert into mytable (name) values (?)', ['Arthur'])
+    ('insert into mytable ("name") values (?)', ['Arthur'])
     ...
 
 If a Crate host is provided the insert statement will be executed as well.

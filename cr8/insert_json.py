@@ -26,7 +26,7 @@ def to_insert(table, d):
     columns = []
     args = []
     for key, val in d.items():
-        columns.append(key)
+        columns.append('"{}"'.format(key))
         args.append(val)
     stmt = 'insert into {table} ({columns}) values ({params})'.format(
         table=table,
