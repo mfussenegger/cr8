@@ -135,7 +135,7 @@ insert-blob
 A tool to upload a file into a blob table::
 
     >>> cr8 insert-blob localhost:4200 blobtable specs/sample.toml
-    http://localhost:44200/_blobs/blobtable/8dbcce48cde2270915fe088338220581ed736983
+    http://localhost:44200/_blobs/blobtable/cd1ebfd02ae167efd65df7fe346c8388ab1b8f91
 
 run-spec
 --------

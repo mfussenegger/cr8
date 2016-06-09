@@ -3,9 +3,13 @@ statement_files = ["sql/create_countries.sql"]
 
 [[load_data]]
 target = "countries"
-source = "data/countries.json"
+source = "data/countries.json" # path to source file is relative to spec file
+
+# bulk_size and concurrency are optional but should always be defined
 bulk_size = 2
 concurrency = 10
+
+# num records is optional - it result in a progress bar during insert
 num_records = 22
 
 [teardown]
