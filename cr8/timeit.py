@@ -8,9 +8,8 @@ import itertools
 
 from functools import partial
 from time import time
-from crate.client import connect
 
-from .cli import lines_from_stdin, to_int
+from .cli import lines_from_stdin, to_int, to_hosts
 from .metrics import Stats
 from . import aio
 
@@ -40,25 +39,23 @@ class Result:
 class QueryRunner:
     def __init__(self, stmt, repeats, hosts, concurrency):
         self.stmt = stmt
-        self.hosts = hosts
         self.repeats = repeats
         self.concurrency = concurrency
-        self.conn = conn = connect(hosts)
-        cursor = conn.cursor()
-        self.loop = loop = aio.asyncio.get_event_loop()
-        self.execute = partial(aio.execute, loop, cursor)
+        self.loop = aio.asyncio.get_event_loop()
+        self.host = next(iter(hosts))
+        self.client = aio.Client(hosts, conn_pool_limit=concurrency)
 
     def warmup(self, num_warmup):
         statements = itertools.repeat((self.stmt,), num_warmup)
-        aio.run(self.execute, statements, 0, loop=self.loop)
+        aio.run(self.client.execute, statements, 0, loop=self.loop)
 
     def run(self):
-        version_info = self.get_version_info(self.conn.client.active_servers[0])
+        version_info = self.get_version_info(self.host)
 
         started = time()
         statements = itertools.repeat((self.stmt,), self.repeats)
         stats = Stats(min(self.repeats, 1000))
-        measure = partial(aio.measure, stats, self.execute)
+        measure = partial(aio.measure, stats, self.client.execute)
 
         aio.run(measure, statements, self.concurrency, loop=self.loop)
         ended = time()
@@ -76,7 +73,7 @@ class QueryRunner:
         return self
 
     def __exit__(self, *ex):
-        self.conn.close()
+        self.client.close()
 
     @staticmethod
     def get_version_info(server):
@@ -88,7 +85,7 @@ class QueryRunner:
         }
 
 
-@argh.arg('hosts', help='crate hosts', type=str)
+@argh.arg('hosts', help='crate hosts', type=to_hosts)
 @argh.arg('-w', '--warmup', type=to_int)
 @argh.arg('-r', '--repeat', type=to_int)
 @argh.arg('-c', '--concurrency', type=to_int)

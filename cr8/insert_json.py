@@ -6,7 +6,7 @@ import sys
 import json
 from functools import partial
 
-from .cli import dicts_from_stdin, to_int
+from .cli import dicts_from_stdin, to_int, to_hosts
 from .misc import as_bulk_queries
 from . import aio
 from .metrics import Stats
@@ -45,10 +45,10 @@ def print_only(table):
 @argh.arg('table', help='table name that should be used in the statement')
 @argh.arg('--bulk-size', type=to_int)
 @argh.arg('--hosts', help='crate hosts which will be used \
-          to execute the insert statement')
+          to execute the insert statement', type=to_hosts)
 @argh.arg('-c', '--concurrency', type=to_int)
 @argh.wrap_errors([KeyboardInterrupt])
-def insert_json(table, bulk_size=1000, concurrency=100, hosts=None):
+def insert_json(table, bulk_size=1000, concurrency=25, hosts=None):
     """ Converts the given json line (read from stdin) into an insert statement
 
     If hosts are specified the insert statement will be executed on those hosts.
@@ -57,9 +57,7 @@ def insert_json(table, bulk_size=1000, concurrency=100, hosts=None):
     if not hosts:
         return print_only(table)
 
-    from crate.client import connect
     log = partial(print, file=sys.stderr)
-    conn = connect(hosts)
     queries = (to_insert(table, d) for d in dicts_from_stdin())
     bulk_queries = as_bulk_queries(queries, bulk_size)
     log('Executing requests async bulk_size={} concurrency={}'.format(
@@ -67,11 +65,10 @@ def insert_json(table, bulk_size=1000, concurrency=100, hosts=None):
 
     loop = aio.asyncio.get_event_loop()
     stats = Stats()
-    f = partial(aio.execute_many, loop, conn.cursor())
-    f = partial(aio.measure, stats, f)
-    aio.run(f, bulk_queries, concurrency, loop)
+    with aio.Client(hosts, conn_pool_limit=concurrency) as client:
+        f = partial(aio.measure, stats, client.execute_many)
+        aio.run(f, bulk_queries, concurrency, loop)
     yield json.dumps(stats.get(), sort_keys=True, indent=4)
-    conn.close()
 
 
 def main():

@@ -13,8 +13,8 @@ from concurrent.futures import ProcessPoolExecutor
 
 from .insert_json import to_insert
 from .misc import parse_table
-from .aio import asyncio, consume, execute_many
-from .cli import to_int
+from .aio import asyncio, consume, Client
+from .cli import to_int, to_hosts
 
 
 PROVIDER_LIST_URL = 'http://fake-factory.readthedocs.org/en/latest/providers.html'
@@ -108,20 +108,19 @@ def generate_bulk_args(generate_row, bulk_size):
     return [generate_row() for i in range(bulk_size)]
 
 
-async def _produce_data_and_insert(q, cursor, stmt, bulk_args_fun, num_inserts):
-    insert = partial(execute_many, loop, cursor)
+async def _produce_data_and_insert(q, client, stmt, bulk_args_fun, num_inserts):
     executor = ProcessPoolExecutor()
     for i in range(num_inserts):
         args = await asyncio.ensure_future(
             loop.run_in_executor(executor, bulk_args_fun))
-        task = asyncio.ensure_future(insert(stmt, args))
+        task = asyncio.ensure_future(client.execute_many(stmt, args))
         await q.put(task)
     await q.put(None)
 
 
 @argh.arg('fqtable', help='(fully qualified) table name. \
           Either <schema>.<table> or just <table>')
-@argh.arg('hosts', help='crate hosts', type=str)
+@argh.arg('hosts', help='crate hosts', type=to_hosts)
 @argh.arg('num_records', help='number of records to insert', type=to_int)
 @argh.arg('--bulk-size', type=to_int)
 @argh.arg('--concurrency', type=to_int)
@@ -138,7 +137,7 @@ def insert_fake_data(hosts,
                      fqtable,
                      num_records,
                      bulk_size=1000,
-                     concurrency=100,
+                     concurrency=25,
                      mapping_file=None):
     """ fills a table with random data
 
@@ -151,11 +150,10 @@ def insert_fake_data(hosts,
     E.g. a column called `name` will be filled with names.
 
     """
-    conn = connect(hosts)
-    c = conn.cursor()
-
-    schema, table = parse_table(fqtable)
-    columns = retrieve_columns(c, schema, table)
+    with connect(hosts) as conn:
+        c = conn.cursor()
+        schema, table = parse_table(fqtable)
+        columns = retrieve_columns(c, schema, table)
     if not columns:
         sys.exit('Could not find columns for table "{}"'.format(fqtable))
     print('Found schema: ')
@@ -177,10 +175,10 @@ def insert_fake_data(hosts,
 
     print('Generating fake data and executing inserts')
     q = asyncio.Queue(maxsize=concurrency)
-    loop.run_until_complete(asyncio.gather(
-        _produce_data_and_insert(q, conn.cursor(), stmt, bulk_args_fun, num_inserts),
-        consume(q, total=num_inserts)))
-    conn.close()
+    with Client(hosts, conn_pool_limit=concurrency) as client:
+        loop.run_until_complete(asyncio.gather(
+            _produce_data_and_insert(q, client, stmt, bulk_args_fun, num_inserts),
+            consume(q, total=num_inserts)))
 
 
 def main():
