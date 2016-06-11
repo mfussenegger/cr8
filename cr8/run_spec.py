@@ -24,10 +24,10 @@ class Executor:
 
         if result_hosts:
             def process_result(result):
-                conn = connect(result_hosts)
-                cursor = conn.cursor()
-                stmt, args = to_insert('benchmarks', result.__dict__)
-                cursor.execute(stmt, args)
+                with connect(result_hosts) as conn:
+                    cursor = conn.cursor()
+                    stmt, args = to_insert('benchmarks', result.__dict__)
+                    cursor.execute(stmt, args)
                 pprint(result.__dict__)
                 print('')
         else:
@@ -95,35 +95,41 @@ class Executor:
             stmt = query['statement']
             iterations = query.get('iterations', 1)
             concurrency = query.get('concurrency', 1)
-            runner = QueryRunner(
+            with QueryRunner(
                 stmt,
                 repeats=iterations,
                 hosts=self.benchmark_hosts,
                 concurrency=concurrency
-            )
-            result = runner.run()
+            ) as runner:
+                result = runner.run()
             self.process_result(result)
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *ex):
+        self.conn.close()
 
 
 def run_spec(spec, benchmark_hosts, result_hosts=None):
-    executor = Executor(
+    with Executor(
         spec_dir=os.path.dirname(spec),
         benchmark_hosts=benchmark_hosts,
-        result_hosts=result_hosts,
-    )
-    spec = load_spec(spec)
-    try:
-        yield 'Running setUp'
-        executor.exec_instructions(spec.setup)
-        yield 'Running benchmark'
-        if spec.load_data:
-            for data_spec in spec.load_data:
-                executor.run_load_data(data_spec)
-        else:
-            executor.run_queries(spec.queries)
-    finally:
-        yield 'Running tearDown'
-        executor.exec_instructions(spec.teardown)
+        result_hosts=result_hosts
+    ) as executor:
+        spec = load_spec(spec)
+        try:
+            yield 'Running setUp'
+            executor.exec_instructions(spec.setup)
+            yield 'Running benchmark'
+            if spec.load_data:
+                for data_spec in spec.load_data:
+                    executor.run_load_data(data_spec)
+            else:
+                executor.run_queries(spec.queries)
+        finally:
+            yield 'Running tearDown'
+            executor.exec_instructions(spec.teardown)
 
 
 def main():

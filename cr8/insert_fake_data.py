@@ -180,6 +180,7 @@ def insert_fake_data(hosts,
     loop.run_until_complete(asyncio.gather(
         _produce_data_and_insert(q, conn.cursor(), stmt, bulk_args_fun, num_inserts),
         consume(q, total=num_inserts)))
+    conn.close()
 
 
 def main():

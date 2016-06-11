@@ -3,10 +3,8 @@
 
 import json
 import argh
-from pprint import pprint
 from urllib.request import urlopen
 import itertools
-import collections
 
 from functools import partial
 from time import time
@@ -74,6 +72,12 @@ class QueryRunner:
             concurrency=self.concurrency
         )
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *ex):
+        self.conn.close()
+
     @staticmethod
     def get_version_info(server):
         r = urlopen(server)
@@ -93,9 +97,9 @@ def timeit(hosts, stmt=None, warmup=30, repeat=30, concurrency=1):
     """
     num_lines = 0
     for line in lines_from_stdin(stmt):
-        runner = QueryRunner(line, repeat, hosts, concurrency)
-        runner.warmup(warmup)
-        result = runner.run()
+        with QueryRunner(line, repeat, hosts, concurrency) as runner:
+            runner.warmup(warmup)
+            result = runner.run()
         print(result)
         num_lines += 1
     if num_lines == 0:
