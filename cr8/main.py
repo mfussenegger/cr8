@@ -8,6 +8,7 @@ from cr8.insert_json import insert_json
 from cr8.insert_fake_data import insert_fake_data
 from cr8.insert_blob import insert_blob
 from cr8.run_spec import run_spec
+from cr8.run_crate import run_crate
 
 
 def main():
@@ -16,7 +17,8 @@ def main():
                     insert_json,
                     insert_fake_data,
                     insert_blob,
-                    run_spec])
+                    run_spec,
+                    run_crate])
     p.dispatch()
 
 

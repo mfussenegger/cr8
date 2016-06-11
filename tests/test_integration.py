@@ -2,22 +2,22 @@ import os
 import doctest
 import subprocess
 from unittest import main
-from crate.testing.layer import CrateLayer
+from cr8.run_crate import CrateNode, get_crate
 from crate.client import connect
 
 
-layer = CrateLayer.from_uri(
-    uri='https://cdn.crate.io/downloads/releases/crate-0.55.0.tar.gz',
-    name='crate-testing',
-    http_port=44200,
-    directory=os.path.join(os.path.dirname(__file__), '..', 'parts', 'crate'),
-    cleanup=False
-)
+crate_dir = get_crate('latest-testing')
+node = CrateNode(
+    crate_dir=crate_dir,
+    settings={
+        'cluster.name': 'cr8-tests',
+        'http.port': '44200-44250'
+    })
 
 
 def setup(*args):
-    layer.setUp()
-    with connect('localhost:44200') as conn:
+    node.start()
+    with connect(node.http_url) as conn:
         c = conn.cursor()
         c.execute('create table demo (name string, country string) \
                   with (number_of_replicas = 0)')
@@ -29,15 +29,15 @@ def setup(*args):
 
 
 def teardown(*args):
-    with connect('localhost:44200') as conn:
+    with connect(node.http_url) as conn:
         c = conn.cursor()
         c.execute('drop table demo')
         c.execute('drop blob table blobtable')
-    layer.tearDown()
+    node.stop()
 
 
 def transform(s):
-    s = s.replace('localhost:4200', 'localhost:44200')
+    s = s.replace('localhost:4200', node.http_url or 'localhost:44200')
     return (
         r'print(sh("""%s""", stdin=PIPE, stdout=PIPE, stderr=STDOUT, shell=True).stdout.decode("utf-8"))' % s) + '\n'
 

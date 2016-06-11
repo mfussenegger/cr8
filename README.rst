@@ -163,8 +163,8 @@ Usage::
      'runtime_stats': {...
      'started': ...,
      'statement': 'select count(*) from countries',
-     'version_info': {'hash': '4713a5498fadf14b2359e13c641e6734f8189dc5',
-                      'number': '0.55.0'}}
+     'version_info': {'hash': '...',
+                      'number': '...'}}
     <BLANKLINE>
     Running tearDown
     <BLANKLINE>
@@ -172,6 +172,16 @@ Usage::
 
 `-r` is optional and can be used to save the benchmark result into a cluster.
 The cluster must contain the table specified in `sql/benchmarks_table.sql`.
+
+
+run-crate
+---------
+
+Launch a Crate instance::
+
+    > cr8 run-crate 0.55.0
+
+This requires Java 8.
 
 
 Development ☢
