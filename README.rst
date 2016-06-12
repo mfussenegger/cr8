@@ -85,7 +85,7 @@ For example given the table as follows::
         country string
     );
 
-The following command can be used to insert 100k records::
+The following command can be used to insert 1000 records::
 
     >>> cr8 insert-fake-data localhost:4200 demo 1000
     Found schema: 
@@ -105,7 +105,7 @@ faker `providers
 <http://fake-factory.readthedocs.org/en/latest/providers.html>`_ and insert the
 give number of records.
 
-(Currently only top-level string columns are supported)
+(Currently only top-level columns are supported)
 
 insert-json
 -----------
@@ -126,8 +126,6 @@ Or simply print the insert statement generated from a JSON string::
     >>> echo '{"name": "Arthur"}' | cr8 insert-json mytable
     ('insert into mytable ("name") values (?)', ['Arthur'])
     ...
-
-If a Crate host is provided the insert statement will be executed as well.
 
 insert-blob
 -----------
@@ -187,15 +185,7 @@ This requires Java 8.
 Development ☢
 ==============
 
-Tests are run using ``python setup.py test``.
-
-To get a sandboxed environment with all dependencies installed one can either
-use ``venv`` or ``buildout``:
-
-venv
-----
-
-Create a new virtualenv using ``venv`` and active it::
+To get a sandboxed environment with all dependencies installed use ``venv``::
 
     python -m venv .venv
     source .venv/bin/activate
@@ -207,5 +197,7 @@ Install the ``cr8`` package using pip::
 Run ``cr8``::
 
     cr8 -h
+
+Tests are run with ``python -m unittest``
 
 .. _jq: https://stedolan.github.io/jq/
