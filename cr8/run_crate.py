@@ -228,7 +228,7 @@ def _from_versions_json(key):
                 with gzip.open(r, 'rt') as r:
                     versions = json.loads(r.read())
             else:
-                versions = r.read().decode('utf-8')
+                versions = json.loads(r.read().decode('utf-8'))
         return versions[key]
     return retrieve
 
