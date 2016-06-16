@@ -48,10 +48,22 @@ class Spec:
         with open(filename, 'r', encoding='utf-8') as spec_file:
             return Spec.from_dict(toml.loads(spec_file.read()))
 
+    @staticmethod
+    def from_python_file(filename):
+        with open(filename, 'r', encoding='utf-8') as f:
+            global_vars = {
+                'Spec': Spec,
+                'Instructions': Instructions
+            }
+            code = compile(f.read(), filename, 'exec')
+            exec(code, global_vars)
+            return global_vars['spec']
+
 
 spec_loaders = {
     '.json': Spec.from_json_file,
-    '.toml': Spec.from_toml_file
+    '.toml': Spec.from_toml_file,
+    '.py': Spec.from_python_file
 }
 
 

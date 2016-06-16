@@ -171,6 +171,12 @@ Usage::
 `-r` is optional and can be used to save the benchmark result into a cluster.
 The cluster must contain the table specified in `sql/benchmarks_table.sql`.
 
+Writing spec files in python is also supported::
+
+    >>> cr8 run-spec specs/sample.py localhost:44200
+    Running setUp
+    Running benchmark
+    ...
 
 run-crate
 ---------
