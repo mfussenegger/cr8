@@ -10,5 +10,16 @@ statement = "select count(*) from countries"
 iterations = 1000
 concurrency = 2
 
+[[queries]]
+statement = '''select count(*) from countries where "isoNumeric" = ?'''
+args = ["020"]
+iterations = 10
+concurrency = 1
+
+[[queries]]
+statement = '''delete from countries where "countryCode" = ?'''
+bulk_args = [["AE"], ["AF"]]
+# iterations = 1 & concurrency = 1 is the default for queries
+
 [teardown]
 statements = ["drop table countries"]

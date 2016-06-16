@@ -99,7 +99,9 @@ class Executor:
                 stmt,
                 repeats=iterations,
                 hosts=self.benchmark_hosts,
-                concurrency=concurrency
+                concurrency=concurrency,
+                args=query.get('args'),
+                bulk_args=query.get('bulk_args')
             ) as runner:
                 result = runner.run()
             self.process_result(result)

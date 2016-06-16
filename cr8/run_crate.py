@@ -126,7 +126,6 @@ def _wait_until_reachable(url):
                 p = json.loads(r.read().decode('utf-8'))
                 return int(p['status']) == 200
         except Exception as e:
-            log.warning(e)
             return False
     wait_until(cluster_ready, Timeout(60))
 

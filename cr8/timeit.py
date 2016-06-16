@@ -37,13 +37,15 @@ class Result:
 
 
 class QueryRunner:
-    def __init__(self, stmt, repeats, hosts, concurrency):
+    def __init__(self, stmt, repeats, hosts, concurrency, args=None, bulk_args=None):
         self.stmt = stmt
         self.repeats = repeats
         self.concurrency = concurrency
         self.loop = aio.asyncio.get_event_loop()
         self.host = next(iter(hosts))
         self.client = aio.Client(hosts, conn_pool_limit=concurrency)
+        self.bulk_args = bulk_args
+        self.args = args
 
     def warmup(self, num_warmup):
         statements = itertools.repeat((self.stmt,), num_warmup)
@@ -53,9 +55,14 @@ class QueryRunner:
         version_info = self.get_version_info(self.host)
 
         started = time()
-        statements = itertools.repeat((self.stmt,), self.repeats)
+        if self.bulk_args:
+            statements = itertools.repeat((self.stmt, self.bulk_args), self.repeats)
+            f = self.client.execute_many
+        else:
+            statements = itertools.repeat((self.stmt, self.args), self.repeats)
+            f = self.client.execute
         stats = Stats(min(self.repeats, 1000))
-        measure = partial(aio.measure, stats, self.client.execute)
+        measure = partial(aio.measure, stats, f)
 
         aio.run(measure, statements, self.concurrency, loop=self.loop)
         ended = time()
