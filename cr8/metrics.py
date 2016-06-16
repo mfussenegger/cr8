@@ -104,5 +104,5 @@ class Stats:
             # crate doesn't allow dots in column names
             percentile={str(i[0]).replace('.', '_'): i[1] for i in
                         zip(self.plevels, percentiles)},
-            n=count
+            n=self.reservoir.count
         )

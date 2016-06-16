@@ -49,6 +49,12 @@ class StatsTest(TestCase):
         self.assertEqual(result['percentile']['75'], 50.2)
         self.assertEqual(result['percentile']['99'], 234.7)
 
+    def test_n_is_number_of_iterations(self):
+        hist = metrics.Stats(size=2)
+        for i in range(10):
+            hist.measure(i)
+        self.assertEqual(hist.get()['n'], 10)
+
 
 def load_tests(loader, tests, ignore):
     tests.addTests(DocTestSuite(metrics))
