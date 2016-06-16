@@ -209,7 +209,7 @@ class CrateNode(contextlib.ExitStack):
     def stop(self):
         shutil.rmtree(self.data_path)
         if self.process:
-            self.process.kill()
+            self.process.terminate()
             self.process.communicate(timeout=10)
 
     def __enter__(self):
