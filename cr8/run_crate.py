@@ -34,7 +34,8 @@ DEFAULT_SETTINGS = {
 HTTP_ADDRESS_RE = re.compile(
     '.*\[http +\] \[.*\] .*'
     'publish_address {'
-    '(?:inet\[/|\[)?'
+    '(?:inet\[[\w\d\.-]*/|\[)?'
+    '(?:[\w\d\.-]+/)?'
     '(?P<addr>[\d\.:]+)'
     '(?:\])?'
     '}'
@@ -93,6 +94,24 @@ def _get_http_uri(lines):
     ... ]
     >>> _get_http_uri(lines)
     'http://192.168.0.19:4200'
+
+    >>> lines = [
+    ...     "[2016-06-15 22:18:36,639][INFO ][node                     ] [crate] starting ...",
+    ...     "[2016-06-15 22:18:36,755][INFO ][http                     ] [crate] publish_address {localhost/127.0.0.1:42203}, bound_addresses {127.0.0.1:42203}, {[::1]:42203}, {[fe80::1]:42203}",
+    ...     "[2016-06-15 22:18:36,774][INFO ][transport                ] [crate] publish_address {localhost/127.0.0.1:4300}, bound_addresses {127.0.0.1:4300}, {[::1]:4300}, {[fe80::1]:4300}",
+    ...     "[2016-06-15 22:18:36,779][INFO ][discovery                ] [crate] Testing42203/Eroq_ZAgT4CDpF_gzh4tcA",
+    ... ]
+    >>> _get_http_uri(lines)
+    'http://127.0.0.1:42203'
+
+    >>> lines = [
+    ...     "[2016-06-16 10:27:20,074][INFO ][node                     ] [Selene] starting ...",
+    ...     "[2016-06-16 10:27:20,150][INFO ][http                     ] [Selene] bound_address {inet[/192.168.43.105:4200]}, publish_address {inet[Haudis-MacBook-Pro.local/192.168.43.105:4200]}",
+    ...     "[2016-06-16 10:27:20,165][INFO ][transport                ] [Selene] bound_address {inet[/192.168.43.105:4300]}, publish_address {inet[Haudis-MacBook-Pro.local/192.168.43.105:4300]}",
+    ...     "[2016-06-16 10:27:20,185][INFO ][discovery                ] [Selene] crate/h9moKMrATmCElYXjfad5Vw",
+    ... ]
+    >>> _get_http_uri(lines)
+    'http://192.168.43.105:4200'
     """
     for line in lines:
         m = HTTP_ADDRESS_RE.match(line)
