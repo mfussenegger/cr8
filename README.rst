@@ -66,8 +66,8 @@ cluster::
         "started": ...
         "statement": "select name from sys.cluster\n",
         "version_info": {
-            "hash": "4713a5498fadf14b2359e13c641e6734f8189dc5",
-            "number": "0.55.0"
+            "hash": "...",
+            "number": "..."
         }
     }
 
