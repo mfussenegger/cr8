@@ -122,8 +122,8 @@ async def _produce_data_and_insert(q, client, stmt, bulk_args_fun, num_inserts):
           Either <schema>.<table> or just <table>')
 @argh.arg('hosts', help='crate hosts', type=to_hosts)
 @argh.arg('num_records', help='number of records to insert', type=to_int)
-@argh.arg('--bulk-size', type=to_int)
-@argh.arg('--concurrency', type=to_int)
+@argh.arg('-b', '--bulk-size', type=to_int)
+@argh.arg('-c', '--concurrency', type=to_int)
 @argh.arg('--mapping-file',
           type=argparse.FileType('r'),
           help='''JSON file with a column to fake provider mapping.

@@ -43,7 +43,7 @@ def print_only(table):
 
 
 @argh.arg('table', help='table name that should be used in the statement')
-@argh.arg('--bulk-size', type=to_int)
+@argh.arg('-b', '--bulk-size', type=to_int)
 @argh.arg('--hosts', help='crate hosts which will be used \
           to execute the insert statement', type=to_hosts)
 @argh.arg('-c', '--concurrency', type=to_int)
