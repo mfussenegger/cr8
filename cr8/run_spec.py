@@ -1,9 +1,9 @@
 import argh
 import os
+import json
 import itertools
 from time import time
 from functools import partial
-from pprint import pprint
 from crate.client import connect
 
 from cr8 import aio
@@ -29,11 +29,11 @@ class Executor:
                     cursor = conn.cursor()
                     stmt, args = to_insert('benchmarks', result.__dict__)
                     cursor.execute(stmt, args)
-                pprint(result.__dict__)
+                print(result)
                 print('')
         else:
             def process_result(result):
-                pprint(result.__dict__)
+                print(result)
                 print('')
         self.process_result = process_result
 
@@ -91,7 +91,7 @@ class Executor:
 
     def run_queries(self, queries):
         for query in queries:
-            pprint(query)
+            print(json.dumps(query, sort_keys=True, indent=4))
             stmt = query['statement']
             iterations = query.get('iterations', 1)
             concurrency = query.get('concurrency', 1)

@@ -152,17 +152,23 @@ Usage::
     >>> cr8 run-spec specs/sample.toml localhost:44200 -r localhost:44200
     Running setUp
     Running benchmark
-    {'concurrency': 2,
-     'iterations': 1000,
-     'statement': 'select count(*) from countries'}
-    {'bulk_size': None,
-     'concurrency': 2,
-     'ended': ...,
-     'runtime_stats': {...
-     'started': ...,
-     'statement': 'select count(*) from countries',
-     'version_info': {'hash': '...',
-                      'number': '...'}}
+    {
+        "concurrency": 2,
+        "iterations": 1000,
+        "statement": "select count(*) from countries"
+    }
+    {
+        "bulk_size": null,
+        "concurrency": 2,
+        "ended": ...,
+        "runtime_stats": {...
+        "started": ...
+        "statement": "select count(*) from countries",
+        "version_info": {
+            "hash": ...
+            "number": ...
+        }
+    }
     <BLANKLINE>
     Running tearDown
     <BLANKLINE>
