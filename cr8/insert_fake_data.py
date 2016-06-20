@@ -118,37 +118,50 @@ async def _produce_data_and_insert(q, client, stmt, bulk_args_fun, num_inserts):
     await q.put(None)
 
 
-@argh.arg('fqtable', help='(fully qualified) table name. \
-          Either <schema>.<table> or just <table>')
+@argh.arg('fqtable', help='table name')
 @argh.arg('hosts', help='crate hosts', type=to_hosts)
 @argh.arg('num_records', help='number of records to insert', type=to_int)
 @argh.arg('-b', '--bulk-size', type=to_int)
 @argh.arg('-c', '--concurrency', type=to_int)
 @argh.arg('--mapping-file',
           type=argparse.FileType('r'),
-          help='''JSON file with a column to fake provider mapping.
-In the format:
-{
-    "source_column1": ["provider_with_args", ["arg1", "arg"]],
-    "source_column2": "provider_without_args"
-}
-''')
+          help='JSON file with a column to fake provider mapping.')
 def insert_fake_data(hosts,
                      fqtable,
                      num_records,
                      bulk_size=1000,
                      concurrency=25,
                      mapping_file=None):
-    """ fills a table with random data
+    """Generate random data and insert it into a table.
 
-    Insert <num_records> into <fqtable> on <hosts>.
-    Each insert request will contain <bulk_size> items.
+    This will read the table schema and then find suitable random data providers.
+    Which provider is choosen depends on the column name and data type.
 
-    Depending on colum names and data types of the given table an appropriate
-    provider is selected which is used to generate random data.
+    Example:
 
-    E.g. a column called `name` will be filled with names.
+        A column named `name` will map to the `name` provider.
+        A column named `x` of type int will map to `random_int` because there
+        is no `x` provider.
 
+    Available providers are listed here:
+        http://fake-factory.readthedocs.io/en/latest/providers.html
+
+    Args:
+        hosts: <host>:[<port>] of the Crate node
+        fqtable: The table name into which the data should be inserted.
+            Either fully qualified: `<schema>.<table>` or just `<table>`
+        num_records: Number of records to insert.
+            Usually a number but expressions like `1e4` work as well.
+        bulk_size: The bulk size of the insert statements.
+        concurrency: How many operations to run concurrently.
+        mapping_file: A JSON file that defines a mapping from column name to
+            fake-factory provider.
+            The format is as follows:
+            {
+                "column_name": ["provider_with_args", ["arg1", "arg"]],
+                "x": ["provider_with_args", ["arg1"]],
+                "y": "provider_without_args"
+            }
     """
     with connect(hosts) as conn:
         c = conn.cursor()
