@@ -116,6 +116,34 @@ class Executor:
 
 @argh.arg('benchmark_hosts', type=to_hosts)
 def run_spec(spec, benchmark_hosts, result_hosts=None):
+    """Run a spec file, executing the statements on the benchmark_hosts.
+
+    Short example of a spec file:
+
+        [setup]
+        statement_files = ["sql/create_table.sql"]
+
+            [[setup.data_files]]
+            target = "t"
+            source = "data/t.json"
+
+        [[queries]]
+        statement = "select count(*) from t"
+        iterations = 2000
+        concurrency = 10
+
+        [teardown]
+        statements = ["drop table t"]
+
+    See https://github.com/mfussenegger/cr8/tree/master/specs
+    for more examples.
+
+    Args:
+        spec: path to a spec file
+        benchmark_hosts: hostname[:port] pairs of Crate nodes
+        result_hosts: optional hostname[:port] Crate node pairs into which the
+            runtime statistics should be inserted.
+    """
     with Executor(
         spec_dir=os.path.dirname(spec),
         benchmark_hosts=benchmark_hosts,
