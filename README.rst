@@ -113,7 +113,7 @@ insert-json
 ``insert-json`` can be used to insert records from a JSON file::
 
     >>> cat tests/demo.json | cr8 insert-json demo --hosts localhost:4200
-    Executing requests async bulk_size=1000 concurrency=25
+    Executing inserts: bulk_size=1000 concurrency=25
     {
         "max": ...,
         "mean": ...,

@@ -13,14 +13,16 @@ from .metrics import Stats
 
 
 def to_insert(table, d):
-    """ generate a insert statement using the given table and dictionary
+    """Generate an insert statement using the given table and dictionary.
 
-    :param table: table name
-    :type table: string
-    :param d: dictionary containing the columns and values
-    :type d: dict
+    Args:
+        table (str): table name
+        d (dict): dictionary with column names as keys and values as values.
+    Returns:
+        tuple of statement and arguments
 
-    :return: tuple with the statement and arguments
+    >>> to_insert('doc.foobar', {'name': 'Marvin'})
+    ('insert into doc.foobar ("name") values (?)', ['Marvin'])
     """
 
     columns = []
@@ -49,19 +51,23 @@ def print_only(table):
 @argh.arg('-c', '--concurrency', type=to_int)
 @argh.wrap_errors([KeyboardInterrupt])
 def insert_json(table, bulk_size=1000, concurrency=25, hosts=None):
-    """ Converts the given json line (read from stdin) into an insert statement
+    """Insert JSON lines fed into stdin into a Crate cluster.
 
-    If hosts are specified the insert statement will be executed on those hosts.
-    Otherwise the statement and the arguments are printed.
+    If no hosts are specified the statements will be printed.
+
+    Args:
+        table: Target table name.
+        bulk_size: Bulk size of the insert statements.
+        concurrency: Number of operations to run concurrently.
+        hosts: hostname:port pairs of the Crate nodes
     """
     if not hosts:
         return print_only(table)
 
-    log = partial(print, file=sys.stderr)
     queries = (to_insert(table, d) for d in dicts_from_stdin())
     bulk_queries = as_bulk_queries(queries, bulk_size)
-    log('Executing requests async bulk_size={} concurrency={}'.format(
-        bulk_size, concurrency))
+    print('Executing inserts: bulk_size={} concurrency={}'.format(
+        bulk_size, concurrency), file=sys.stderr)
 
     loop = aio.asyncio.get_event_loop()
     stats = Stats()
