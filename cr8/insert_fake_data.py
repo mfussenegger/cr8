@@ -15,6 +15,7 @@ from .insert_json import to_insert
 from .misc import parse_table
 from .aio import asyncio, consume, Client
 from .cli import to_int, to_hosts
+from .fake_providers import GeoSpatialProvider
 
 
 PROVIDER_LIST_URL = 'http://fake-factory.readthedocs.org/en/latest/providers.html'
@@ -54,7 +55,7 @@ class DataFaker:
     _mapping = {
         ('id', 'string'): from_attribute('uuid4'),
         ('id', 'integer'): from_attribute('random_int'),
-        ('id', 'long'): from_attribute('random_int')
+        ('id', 'long'): from_attribute('random_int'),
     }
 
     _type_default = {
@@ -65,11 +66,13 @@ class DataFaker:
         'ip': from_attribute('ipv4'),
         'timestamp': timestamp,
         'string': from_attribute('word'),
-        'boolean': from_attribute('boolean')
+        'boolean': from_attribute('boolean'),
+        'geo_point': from_attribute('geo_point'),
     }
 
     def __init__(self):
         self.fake = Factory.create()
+        self.fake.add_provider(GeoSpatialProvider)
 
     def provider_for_column(self, column_name, data_type):
         provider = getattr(self.fake, column_name, None)

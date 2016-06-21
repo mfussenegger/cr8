@@ -58,6 +58,9 @@ class TestDataFaker(TestCase):
         provider = self.f.provider_for_column('x', 'ip')
         self.assertEqual(provider(), '163.177.121.157')
 
+    def test_geopoint_type_default(self):
+        provider = self.f.provider_for_column('location', 'geo_point')
+        self.assertEqual(provider(), [50.19364744483815, -85.49806405991995])
 
 def load_tests(loader, tests, ignore):
     tests.addTests(DocTestSuite(insert_fake_data))
