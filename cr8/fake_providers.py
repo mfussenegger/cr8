@@ -3,6 +3,35 @@
 
 from faker.generator import random
 from faker.providers import BaseProvider
+from multiprocessing import Value
+
+
+# initialize this early to have a unique count across multiple processes
+# (insert-fake-data is using multiprocessing to generate the fake data)
+# This might lead to strange results if the provider is used other than with
+# insert-fake-data
+counter = Value('i', 0)
+
+
+class AutoIncProvider(BaseProvider):
+
+    """Faker provider that will return incremental numbers.
+
+    >>> from faker import Faker
+    >>> fake = Faker()
+    >>> fake.add_provider(AutoIncProvider)
+
+    >>> fake.auto_inc()
+    1
+
+    >>> fake.auto_inc()
+    2
+    """
+
+    def auto_inc(self):
+        with counter.get_lock():
+            counter.value += 1
+            return counter.value
 
 
 class GeoSpatialProvider(BaseProvider):
@@ -41,4 +70,3 @@ class GeoSpatialProvider(BaseProvider):
             random.uniform(lon_min, lon_max),
             random.uniform(lat_min, lat_max)
         ]
-

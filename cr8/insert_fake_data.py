@@ -15,7 +15,7 @@ from .insert_json import to_insert
 from .misc import parse_table
 from .aio import asyncio, consume, Client
 from .cli import to_int, to_hosts
-from .fake_providers import GeoSpatialProvider
+from .fake_providers import GeoSpatialProvider, AutoIncProvider
 
 
 PROVIDER_LIST_URL = 'http://fake-factory.readthedocs.org/en/latest/providers.html'
@@ -54,8 +54,8 @@ def from_attribute(attr):
 class DataFaker:
     _mapping = {
         ('id', 'string'): from_attribute('uuid4'),
-        ('id', 'integer'): from_attribute('random_int'),
-        ('id', 'long'): from_attribute('random_int'),
+        ('id', 'integer'): from_attribute('auto_inc'),
+        ('id', 'long'): from_attribute('auto_inc'),
     }
 
     _type_default = {
@@ -73,6 +73,7 @@ class DataFaker:
     def __init__(self):
         self.fake = Factory.create()
         self.fake.add_provider(GeoSpatialProvider)
+        self.fake.add_provider(AutoIncProvider)
 
     def provider_for_column(self, column_name, data_type):
         provider = getattr(self.fake, column_name, None)
@@ -154,6 +155,14 @@ def insert_fake_data(hosts=None,
 
     Available providers are listed here:
         http://fake-factory.readthedocs.io/en/latest/providers.html
+
+        There are two additional providers:
+        - auto_inc:
+            Returns unique incrementing numbers.
+            Automatically used for columns named "id" of type int or long
+        - geo_point
+            Returns [<lon>, <lat>]
+            Automatically used for columns of type geo_point
 
     Args:
         hosts: <host>:[<port>] of the Crate node

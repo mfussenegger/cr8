@@ -22,11 +22,11 @@ class TestDataFaker(TestCase):
 
     def test_fake_provider_for_int_id_column(self):
         provider = self.f.provider_for_column('id', 'integer')
-        self.assertEqual(provider(), 1824)
+        self.assertEqual(provider(), 3)
 
     def test_fake_provider_for_long_id_column(self):
         provider = self.f.provider_for_column('id', 'long')
-        self.assertEqual(provider(), 1824)
+        self.assertEqual(provider(), 4)
 
     def test_type_default_provider_for_unknown_int_column(self):
         provider = self.f.provider_for_column(
