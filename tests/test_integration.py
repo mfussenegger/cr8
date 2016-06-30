@@ -1,6 +1,7 @@
 import os
 import doctest
 import subprocess
+import functools
 from unittest import main
 from cr8.run_crate import CrateNode, get_crate
 from crate.client import connect
@@ -39,7 +40,7 @@ def teardown(*args):
 def transform(s):
     s = s.replace('localhost:4200', node.http_url or 'localhost:44200')
     return (
-        r'print(sh("""%s""", stdin=PIPE, stdout=PIPE, stderr=STDOUT, shell=True).stdout.decode("utf-8"))' % s) + '\n'
+        r'print(sh("""%s""").stdout.decode("utf-8"))' % s) + '\n'
 
 
 class Parser(doctest.DocTestParser):
@@ -53,12 +54,19 @@ class Parser(doctest.DocTestParser):
 
 
 def load_tests(loader, tests, ignore):
+    env = os.environ.copy()
+    env['CR8_NO_TQDM'] = 'True'
     tests.addTests(doctest.DocFileSuite(
         os.path.join('..', 'README.rst'),
         globs={
-            'sh': subprocess.run,
-            'STDOUT': subprocess.STDOUT,
-            'PIPE': subprocess.PIPE,
+            'sh': functools.partial(
+                subprocess.run,
+                stdin=subprocess.PIPE,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                shell=True,
+                env=env
+            )
         },
         optionflags=doctest.NORMALIZE_WHITESPACE | doctest.ELLIPSIS,
         setUp=setup,

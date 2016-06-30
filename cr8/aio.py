@@ -1,6 +1,6 @@
 
 import functools
-import sys
+import os
 import asyncio
 import aiohttp
 import json
@@ -16,7 +16,7 @@ tqdm = functools.partial(
     tqdm,
     unit=' requests',
     smoothing=0.1,
-    disable=not sys.stdin.isatty()
+    disable=os.environ.get('CR8_NO_TQDM') == 'True'
 )
 
 
