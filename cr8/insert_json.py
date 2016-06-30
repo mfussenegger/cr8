@@ -44,13 +44,13 @@ def print_only(table):
     print('No hosts provided. Nothing inserted')
 
 
-@argh.arg('table', help='table name that should be used in the statement')
+@argh.arg('--table', help='Target table', required=True)
 @argh.arg('-b', '--bulk-size', type=to_int)
 @argh.arg('--hosts', help='crate hosts which will be used \
           to execute the insert statement', type=to_hosts)
 @argh.arg('-c', '--concurrency', type=to_int)
 @argh.wrap_errors([KeyboardInterrupt])
-def insert_json(table, bulk_size=1000, concurrency=25, hosts=None):
+def insert_json(table=None, bulk_size=1000, concurrency=25, hosts=None):
     """Insert JSON lines fed into stdin into a Crate cluster.
 
     If no hosts are specified the statements will be printed.

@@ -121,17 +121,23 @@ async def _produce_data_and_insert(q, client, stmt, bulk_args_fun, num_inserts):
     await q.put(None)
 
 
-@argh.arg('fqtable', help='table name')
-@argh.arg('hosts', help='crate hosts', type=to_hosts)
-@argh.arg('num_records', help='number of records to insert', type=to_int)
+@argh.arg('--table', help='table name', required=True)
+@argh.arg('--hosts',
+          help='crate hosts',
+          type=to_hosts,
+          default=['http://localhost:4200'])
+@argh.arg('-n', '--num-records',
+          help='number of records to insert',
+          type=to_int,
+          default=1e5)
 @argh.arg('-b', '--bulk-size', type=to_int)
 @argh.arg('-c', '--concurrency', type=to_int)
 @argh.arg('--mapping-file',
           type=argparse.FileType('r'),
           help='JSON file with a column to fake provider mapping.')
-def insert_fake_data(hosts,
-                     fqtable,
-                     num_records,
+def insert_fake_data(hosts=None,
+                     table=None,
+                     num_records=1e5,
                      bulk_size=1000,
                      concurrency=25,
                      mapping_file=None):
@@ -151,7 +157,7 @@ def insert_fake_data(hosts,
 
     Args:
         hosts: <host>:[<port>] of the Crate node
-        fqtable: The table name into which the data should be inserted.
+        table: The table name into which the data should be inserted.
             Either fully qualified: `<schema>.<table>` or just `<table>`
         num_records: Number of records to insert.
             Usually a number but expressions like `1e4` work as well.
@@ -168,10 +174,10 @@ def insert_fake_data(hosts,
     """
     with connect(hosts) as conn:
         c = conn.cursor()
-        schema, table = parse_table(fqtable)
+        schema, table = parse_table(table)
         columns = retrieve_columns(c, schema, table)
     if not columns:
-        sys.exit('Could not find columns for table "{}"'.format(fqtable))
+        sys.exit('Could not find columns for table "{}"'.format(table))
     print('Found schema: ')
     print(json.dumps(columns, sort_keys=True, indent=4))
     mapping = None
@@ -180,7 +186,7 @@ def insert_fake_data(hosts,
     generate_row = create_row_generator(columns, mapping)
     bulk_args_fun = partial(generate_bulk_args, generate_row, bulk_size)
 
-    stmt = to_insert(fqtable, columns)[0]
+    stmt = to_insert(table, columns)[0]
     print('Using insert statement: ')
     print(stmt)
 

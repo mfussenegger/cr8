@@ -92,14 +92,15 @@ class QueryRunner:
         }
 
 
-@argh.arg('hosts', help='crate hosts', type=to_hosts)
+@argh.arg('--hosts', help='crate hosts', type=to_hosts)
 @argh.arg('-w', '--warmup', type=to_int)
 @argh.arg('-r', '--repeat', type=to_int)
 @argh.arg('-c', '--concurrency', type=to_int)
-def timeit(hosts, stmt=None, warmup=30, repeat=30, concurrency=1):
+def timeit(hosts=None, stmt=None, warmup=30, repeat=30, concurrency=1):
     """ runs the given statement a number of times and returns the runtime stats
     """
     num_lines = 0
+    hosts = hosts or ['http://localhost:4200']
     for line in lines_from_stdin(stmt):
         with QueryRunner(line, repeat, hosts, concurrency) as runner:
             runner.warmup(warmup)
