@@ -22,11 +22,19 @@ class TestDataFaker(TestCase):
 
     def test_fake_provider_for_int_id_column(self):
         provider = self.f.provider_for_column('id', 'integer')
-        self.assertEqual(provider(), 1824)
+        self.assertEqual(provider(), 1)
+        self.assertEqual(provider(), 2)
+        provider2 = self.f.provider_for_column('id', 'integer')
+        self.assertEqual(provider2(), 1)
+
+    def test_custom_auto_inc(self):
+        provider = self.f.provider_for_column('auto_inc', 'long')
+        self.assertEqual(provider(), 1)
+        self.assertEqual(provider(), 2)
 
     def test_fake_provider_for_long_id_column(self):
         provider = self.f.provider_for_column('id', 'long')
-        self.assertEqual(provider(), 1824)
+        self.assertEqual(provider(), 1)
 
     def test_type_default_provider_for_unknown_int_column(self):
         provider = self.f.provider_for_column(
@@ -61,6 +69,7 @@ class TestDataFaker(TestCase):
     def test_geopoint_type_default(self):
         provider = self.f.provider_for_column('location', 'geo_point')
         self.assertEqual(provider(), [50.19364744483815, -85.49806405991995])
+
 
 def load_tests(loader, tests, ignore):
     tests.addTests(DocTestSuite(insert_fake_data))

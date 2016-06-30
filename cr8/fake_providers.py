@@ -3,6 +3,21 @@
 
 from faker.generator import random
 from faker.providers import BaseProvider
+from multiprocessing import Value
+
+
+# Not implemented as Provider because with providers it's not possible to have
+# 1 instance per column. So either there would be one shared Counter accross
+# multiple auto_inc columns or there could be duplicate values within one column
+
+def auto_inc(fake):
+    counter = Value('i', 0)
+
+    def next_val():
+        with counter.get_lock():
+            counter.value += 1
+            return counter.value
+    return next_val
 
 
 class GeoSpatialProvider(BaseProvider):
@@ -41,4 +56,3 @@ class GeoSpatialProvider(BaseProvider):
             random.uniform(lon_min, lon_max),
             random.uniform(lat_min, lat_max)
         ]
-

@@ -15,7 +15,7 @@ from .insert_json import to_insert
 from .misc import parse_table
 from .aio import asyncio, consume, Client
 from .cli import to_int, to_hosts
-from .fake_providers import GeoSpatialProvider
+from .fake_providers import GeoSpatialProvider, auto_inc
 
 
 PROVIDER_LIST_URL = 'http://fake-factory.readthedocs.org/en/latest/providers.html'
@@ -54,8 +54,8 @@ def from_attribute(attr):
 class DataFaker:
     _mapping = {
         ('id', 'string'): from_attribute('uuid4'),
-        ('id', 'integer'): from_attribute('random_int'),
-        ('id', 'long'): from_attribute('random_int'),
+        ('id', 'integer'): auto_inc,
+        ('id', 'long'): auto_inc,
     }
 
     _type_default = {
@@ -70,6 +70,10 @@ class DataFaker:
         'geo_point': from_attribute('geo_point'),
     }
 
+    _custom = {
+        'auto_inc': auto_inc
+    }
+
     def __init__(self):
         self.fake = Factory.create()
         self.fake.add_provider(GeoSpatialProvider)
@@ -78,7 +82,10 @@ class DataFaker:
         provider = getattr(self.fake, column_name, None)
         if provider:
             return provider
-        alternative = self._mapping.get((column_name, data_type), None)
+        custom_provider = self._custom.get(column_name)
+        if custom_provider:
+            return custom_provider(self.fake)
+        alternative = self._mapping.get((column_name, data_type))
         if not alternative:
             alternative = self._type_default[data_type]
         return alternative(self.fake)
@@ -154,6 +161,14 @@ def insert_fake_data(hosts=None,
 
     Available providers are listed here:
         http://fake-factory.readthedocs.io/en/latest/providers.html
+
+        Additional providers:
+        - auto_inc:
+            Returns unique incrementing numbers.
+            Automatically used for columns named "id" of type int or long
+        - geo_point
+            Returns [<lon>, <lat>]
+            Automatically used for columns of type geo_point
 
     Args:
         hosts: <host>:[<port>] of the Crate node
