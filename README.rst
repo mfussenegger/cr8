@@ -55,7 +55,7 @@ timeit 🕐
 A tool that can be used to measure the runtime of a given SQL statement on a
 cluster::
 
-    >>> echo "select name from sys.cluster" | cr8 timeit localhost:4200
+    >>> echo "select name from sys.cluster" | cr8 timeit --hosts localhost:4200
     {
         "bulk_size": null,
         "concurrency": 1,
@@ -87,7 +87,7 @@ For example given the table as follows::
 
 The following command can be used to insert 1000 records::
 
-    >>> cr8 insert-fake-data localhost:4200 demo 1000
+    >>> cr8 insert-fake-data --hosts localhost:4200 --table demo --num-records 1000
     Found schema: 
     {
         "country": "string",
@@ -112,7 +112,7 @@ insert-json
 
 ``insert-json`` can be used to insert records from a JSON file::
 
-    >>> cat tests/demo.json | cr8 insert-json demo --hosts localhost:4200
+    >>> cat tests/demo.json | cr8 insert-json --table demo --hosts localhost:4200
     Executing inserts: bulk_size=1000 concurrency=25
     {
         "max": ...,
@@ -123,7 +123,7 @@ insert-json
 
 Or simply print the insert statement generated from a JSON string::
 
-    >>> echo '{"name": "Arthur"}' | cr8 insert-json mytable
+    >>> echo '{"name": "Arthur"}' | cr8 insert-json --table mytable
     ('insert into mytable ("name") values (?)', ['Arthur'])
     ...
 
@@ -132,7 +132,7 @@ insert-blob
 
 A tool to upload a file into a blob table::
 
-    >>> cr8 insert-blob localhost:4200 blobtable specs/sample.toml
+    >>> cr8 insert-blob --hosts localhost:4200 --table blobtable specs/sample.toml
     http://localhost:44200/_blobs/blobtable/433114a08ae9258c8a41ca74b57d0c8670bdece6
 
 run-spec
