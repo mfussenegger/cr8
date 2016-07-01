@@ -24,9 +24,6 @@ create table if not exists benchmarks (
         n integer,
         variance double,
         stdev double,
-        hist array(object (strict) as (
-            bin double,
-            num int
-        ))
+        samples array(double)
     )
 ) clustered into 8 shards with (number_of_replicas = '1-3', column_policy='strict');

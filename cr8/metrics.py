@@ -95,7 +95,6 @@ class Stats:
         return dict(
             min=min_,
             max=max_,
-            hist=get_histogram(values, min_, max_, stdev),
             mean=statistics.mean(values),
             median=statistics.median(values),
             variance=statistics.variance(values),
@@ -104,5 +103,6 @@ class Stats:
             # crate doesn't allow dots in column names
             percentile={str(i[0]).replace('.', '_'): i[1] for i in
                         zip(self.plevels, percentiles)},
-            n=self.reservoir.count
+            n=self.reservoir.count,
+            samples=values
         )
