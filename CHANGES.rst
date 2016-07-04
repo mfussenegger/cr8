@@ -1,4 +1,53 @@
 
+2016-07-04 0.6.0
+================
+
+Breaking
+--------
+
+- ``hosts`` and ``table`` is now always a named argument.
+  This affects ``timeit``, ``insert-json``, ``insert-blob`` and
+  ``insert-fake-data``
+
+
+Features 🍒
+-----------
+
+run-track
+~~~~~~~~~
+
+Added a new ``run-track`` command.
+This command can be used to execute ``track`` files. A ``track`` file is a file
+in ``TOML`` format containing a matrix definition of Crate versions, Crate
+configurations and spec files.
+
+The command will run each listed Crate version with each configuration and run
+all listed spec files against it.
+
+
+Other improvements
+~~~~~~~~~~~~~~~~~~
+
+- Added a new ``run-crate`` command.
+
+- Added a fake-data provider for ``geo_point`` columns.
+
+- Improved the ``--help`` output of most commands.
+
+- Run-spec output is now proper JSON
+
+- Spec files can be written in python
+
+- ``args`` and ``bulk_args`` can now be specified in ``toml`` spec files.
+
+
+Fixes 💩
+--------
+
+- ``runtime_stats['n']`` is no longer capped to 1000
+
+- ``insert-json`` now ignores empty lines instead of causing an error.
+
 
 2016-06-09 0.5.0
 ================
