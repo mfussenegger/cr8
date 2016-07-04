@@ -80,21 +80,21 @@ generate the records using `faker <https://github.com/joke2k/faker>`_.
 
 For example given the table as follows::
 
-    create table demo (
+    create table x.demo (
         name string,
         country string
     );
 
 The following command can be used to insert 1000 records::
 
-    >>> cr8 insert-fake-data --hosts localhost:4200 --table demo --num-records 1000
+    >>> cr8 insert-fake-data --hosts localhost:4200 --table x.demo --num-records 1000
     Found schema: 
     {
         "country": "string",
         "name": "string"
     }
     Using insert statement: 
-    insert into demo ("country", "name") values (?, ?)
+    insert into x.demo ("country", "name") values (?, ?)
     Will make 1 requests with a bulk size of 1000
     Generating fake data and executing inserts
     <BLANKLINE>
@@ -112,7 +112,7 @@ insert-json
 
 ``insert-json`` can be used to insert records from a JSON file::
 
-    >>> cat tests/demo.json | cr8 insert-json --table demo --hosts localhost:4200
+    >>> cat tests/demo.json | cr8 insert-json --table x.demo --hosts localhost:4200
     Executing inserts: bulk_size=1000 concurrency=25
     {
         "max": ...,
