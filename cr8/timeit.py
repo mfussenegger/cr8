@@ -3,11 +3,11 @@
 
 import json
 import argh
-from urllib.request import urlopen
 import itertools
 
 from functools import partial
 from time import time
+from crate.client import connect
 
 from .cli import lines_from_stdin, to_int, to_hosts
 from .metrics import Stats
@@ -84,12 +84,14 @@ class QueryRunner:
 
     @staticmethod
     def get_version_info(server):
-        r = urlopen(server)
-        data = json.loads(r.read().decode('utf-8'))
-        return {
-            'number': data['version']['number'],
-            'hash': data['version']['build_hash']
-        }
+        with connect(server) as conn:
+            c = conn.cursor()
+            c.execute('select version from sys.nodes limit 1')
+            version = c.fetchone()[0]
+            return {
+                'hash': version['build_hash'],
+                'number': version['number']
+            }
 
 
 @argh.arg('--hosts', help='crate hosts', type=to_hosts)
