@@ -20,7 +20,7 @@ def setup(*args):
     node.start()
     with connect(node.http_url) as conn:
         c = conn.cursor()
-        c.execute('create table demo (name string, country string) \
+        c.execute('create table x.demo (name string, country string) \
                   with (number_of_replicas = 0)')
         c.execute('create blob table blobtable with (number_of_replicas = 0)')
         benchmarks_table = os.path.join(os.path.dirname(__file__),
@@ -32,7 +32,7 @@ def setup(*args):
 def teardown(*args):
     with connect(node.http_url) as conn:
         c = conn.cursor()
-        c.execute('drop table demo')
+        c.execute('drop table x.demo')
         c.execute('drop blob table blobtable')
     node.stop()
 

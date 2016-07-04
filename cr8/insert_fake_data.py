@@ -174,8 +174,8 @@ def insert_fake_data(hosts=None,
     """
     with connect(hosts) as conn:
         c = conn.cursor()
-        schema, table = parse_table(table)
-        columns = retrieve_columns(c, schema, table)
+        schema, table_name = parse_table(table)
+        columns = retrieve_columns(c, schema, table_name)
     if not columns:
         sys.exit('Could not find columns for table "{}"'.format(table))
     print('Found schema: ')
