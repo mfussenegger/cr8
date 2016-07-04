@@ -86,6 +86,9 @@ def dicts_from_lines(lines):
     """
     lines = iter(lines)
     for line in lines:
+        line = line.strip()
+        if not line:
+            continue  # skip empty lines
         try:
             yield json.loads(line, object_pairs_hook=OrderedDict)
         except json.decoder.JSONDecodeError:

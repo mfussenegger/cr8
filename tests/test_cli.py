@@ -55,6 +55,18 @@ class CliTest(TestCase):
         d = next(iter(dicts_from_lines(['{\n', '    "name": 10\n', '}\n'])))
         self.assertEqual(d, {"name": 10})
 
+    def test_dicts_from_iterable_with_empty_lines(self):
+        d = list(dicts_from_lines([
+            '',
+            '{"name": 10}',
+            '\n',
+            '',
+            '{"name": 20}\n'
+            '\n'
+        ]))
+        self.assertEqual(d[0], {"name": 10})
+        self.assertEqual(d[1], {"name": 20})
+
     def test_dicts_from_iterator(self):
         d = next(iter(dicts_from_lines(iter(['{\n', '    "name": 10\n', '}\n']))))
         self.assertEqual(d, {"name": 10})
