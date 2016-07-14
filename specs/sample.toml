@@ -7,7 +7,7 @@ statement_files = ["sql/create_countries.sql"]
 
 [[queries]]
 statement = "select count(*) from countries"
-iterations = 1000
+iterations = 100
 concurrency = 2
 
 [[queries]]

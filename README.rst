@@ -145,7 +145,7 @@ insert-blob
 A tool to upload a file into a blob table::
 
     >>> cr8 insert-blob --hosts localhost:4200 --table blobtable specs/sample.toml
-    http://localhost:44200/_blobs/blobtable/433114a08ae9258c8a41ca74b57d0c8670bdece6
+    http://localhost:44200/_blobs/blobtable/b0fbb7eac8a1fdd34ca475d7604c85eabbc3e3b1
 
 run-spec
 --------
@@ -162,13 +162,13 @@ In the `specs` folder is an example spec file.
 Usage::
 
     >>> cr8 run-spec specs/sample.toml localhost:44200 -r localhost:44200
-    Running setUp
-    Running benchmark
-    {
-        "concurrency": 2,
-        "iterations": 1000,
-        "statement": "select count(*) from countries"
-    }
+    # Running setUp
+    # Running benchmark
+    <BLANKLINE>
+    ## Running Query:
+       Statement: select count(*) from countries
+       Concurrency: 2
+       Iterations: 100
     {
         "bulk_size": null,
         "concurrency": 2,
@@ -181,10 +181,9 @@ Usage::
             "number": ...
         }
     }
+    ...
+    # Running tearDown
     <BLANKLINE>
-    Running tearDown
-    <BLANKLINE>
-
 
 `-r` is optional and can be used to save the benchmark result into a cluster.
 The cluster must contain the table specified in `sql/benchmarks_table.sql`.
@@ -192,8 +191,8 @@ The cluster must contain the table specified in `sql/benchmarks_table.sql`.
 Writing spec files in python is also supported::
 
     >>> cr8 run-spec specs/sample.py localhost:44200
-    Running setUp
-    Running benchmark
+    # Running setUp
+    # Running benchmark
     ...
 
 run-crate
@@ -219,8 +218,8 @@ will be executed.
     # Version:  latest-testing
     ## Starting Crate latest-testing, configuration: default.toml
     ### Running spec file:  sample.toml
-    Running setUp
-    Running benchmark
+    # Running setUp
+    # Running benchmark
     ...
 
 

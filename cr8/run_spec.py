@@ -1,6 +1,5 @@
 import argh
 import os
-import json
 import itertools
 from time import time
 from functools import partial
@@ -16,12 +15,13 @@ from .cli import dicts_from_lines, to_hosts
 
 
 class Executor:
-    def __init__(self, spec_dir, benchmark_hosts, result_hosts):
+    def __init__(self, spec_dir, benchmark_hosts, result_hosts, output_fmt=None):
         self.benchmark_hosts = benchmark_hosts
         self.spec_dir = spec_dir
         self.conn = connect(benchmark_hosts)
         self.client = aio.Client(benchmark_hosts)
         self.loop = aio.asyncio.get_event_loop()
+        self.output_fmt = output_fmt
 
         if result_hosts:
             def process_result(result):
@@ -86,22 +86,30 @@ class Executor:
             ended=end,
             stats=stats,
             concurrency=concurrency,
-            bulk_size=bulk_size
+            bulk_size=bulk_size,
+            output_fmt=self.output_fmt
         ))
 
     def run_queries(self, queries):
         for query in queries:
-            print(json.dumps(query, sort_keys=True, indent=4))
             stmt = query['statement']
             iterations = query.get('iterations', 1)
             concurrency = query.get('concurrency', 1)
+            print(('\n## Running Query:\n'
+                   '   Statement: {statement:.70}\n'
+                   '   Concurrency: {concurrency}\n'
+                   '   Iterations: {iterations}'.format(
+                       statement=stmt,
+                       iterations=iterations,
+                       concurrency=concurrency)))
             with QueryRunner(
                 stmt,
                 repeats=iterations,
                 hosts=self.benchmark_hosts,
                 concurrency=concurrency,
                 args=query.get('args'),
-                bulk_args=query.get('bulk_args')
+                bulk_args=query.get('bulk_args'),
+                output_fmt=self.output_fmt
             ) as runner:
                 result = runner.run()
             self.process_result(result)
@@ -115,7 +123,8 @@ class Executor:
 
 
 @argh.arg('benchmark_hosts', type=to_hosts)
-def run_spec(spec, benchmark_hosts, result_hosts=None):
+@argh.arg('-of', '--output-fmt', choices=['full', 'short'], default='full')
+def run_spec(spec, benchmark_hosts, result_hosts=None, output_fmt=None):
     """Run a spec file, executing the statements on the benchmark_hosts.
 
     Short example of a spec file:
@@ -143,24 +152,26 @@ def run_spec(spec, benchmark_hosts, result_hosts=None):
         benchmark_hosts: hostname[:port] pairs of Crate nodes
         result_hosts: optional hostname[:port] Crate node pairs into which the
             runtime statistics should be inserted.
+        output_fmt: output format
     """
     with Executor(
         spec_dir=os.path.dirname(spec),
         benchmark_hosts=benchmark_hosts,
-        result_hosts=result_hosts
+        result_hosts=result_hosts,
+        output_fmt=output_fmt
     ) as executor:
         spec = load_spec(spec)
         try:
-            print('Running setUp')
+            print('# Running setUp')
             executor.exec_instructions(spec.setup)
-            print('Running benchmark')
+            print('# Running benchmark')
             if spec.load_data:
                 for data_spec in spec.load_data:
                     executor.run_load_data(data_spec)
             else:
                 executor.run_queries(spec.queries)
         finally:
-            print('Running tearDown')
+            print('# Running tearDown')
             executor.exec_instructions(spec.teardown)
 
 
