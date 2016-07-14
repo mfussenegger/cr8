@@ -27,7 +27,7 @@ class Executor:
             def process_result(result):
                 with connect(result_hosts) as conn:
                     cursor = conn.cursor()
-                    stmt, args = to_insert('benchmarks', result.__dict__)
+                    stmt, args = to_insert('benchmarks', result.as_dict())
                     cursor.execute(stmt, args)
                 print(result)
                 print('')
