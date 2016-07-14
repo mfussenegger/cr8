@@ -1,3 +1,11 @@
+2016-07-14 0.6.1
+================
+
+Fixes 🙈
+--------
+
+- `insert-fake-data` can now properly insert into tables in a custom schema.
+
 
 2016-07-04 0.6.0
 ================
