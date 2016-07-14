@@ -18,11 +18,23 @@ cr8
    :target: https://pypi.python.org/pypi/cr8/
    :alt: Python Version
 
-A collection of command line tools for `Crate <https://github.com/crate/crate>`_.
-Most of these tools output JSON. In order to pretty-print the output or filter
-it using `jq`_  is recommended.
+A collection of command line tools for `Crate
+<https://github.com/crate/crate>`_ developers (and maybe users as well).
 
-Target audience are mostly developers of Crate and not users.
+Why cr8? 🤔
+===========
+
+1. To quickly produce sample data. Often if someone reports an issue sample
+   data is required to be able to reproduce it.
+   ``insert-fake-data`` and ``insert-json`` address this problem.
+
+2. To benchmark queries & compare runtime across Crate versions.  ``timeit``,
+   ``run-spec`` and ``run-track`` can be used to get runtime statistics of
+   queries.
+   Being able to simulate real-world use-cases is NOT a goal of cr8.
+
+Most of these tools output JSON. To filter or transform the output `jq`_ can be
+used.
 
 Install 💾
 ==========
