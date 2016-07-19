@@ -18,8 +18,6 @@ from .cli import to_int, to_hosts
 from .fake_providers import GeoSpatialProvider, auto_inc
 
 
-PROVIDER_LIST_URL = 'http://fake-factory.readthedocs.org/en/latest/providers.html'
-
 loop = asyncio.get_event_loop()
 
 
