@@ -196,6 +196,10 @@ def insert_fake_data(hosts=None,
     mapping = None
     if mapping_file:
         mapping = json.load(mapping_file)
+
+    bulk_size = min(num_records, bulk_size)
+    num_inserts = int(num_records / bulk_size)
+
     generate_row = create_row_generator(columns, mapping)
     bulk_args_fun = partial(generate_bulk_args, generate_row, bulk_size)
 
@@ -203,8 +207,6 @@ def insert_fake_data(hosts=None,
     print('Using insert statement: ')
     print(stmt)
 
-    bulk_size = min(num_records, bulk_size)
-    num_inserts = int(num_records / bulk_size)
     print('Will make {} requests with a bulk size of {}'.format(
         num_inserts, bulk_size))
 

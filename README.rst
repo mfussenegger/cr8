@@ -100,7 +100,7 @@ For example given the table as follows::
 
 The following command can be used to insert 1000 records::
 
-    >>> cr8 insert-fake-data --hosts localhost:4200 --table x.demo --num-records 1000
+    >>> cr8 insert-fake-data --hosts localhost:4200 --table x.demo --num-records 200
     Found schema: 
     {
         "country": "string",
@@ -109,7 +109,7 @@ The following command can be used to insert 1000 records::
     }
     Using insert statement: 
     insert into x.demo ("country", "id", "name") values (?, ?, ?)
-    Will make 1 requests with a bulk size of 1000
+    Will make 1 requests with a bulk size of 200
     Generating fake data and executing inserts
     <BLANKLINE>
 
