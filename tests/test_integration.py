@@ -20,7 +20,7 @@ def setup(*args):
     node.start()
     with connect(node.http_url) as conn:
         c = conn.cursor()
-        c.execute('create table x.demo (name string, country string) \
+        c.execute('create table x.demo (id int, name string, country string) \
                   with (number_of_replicas = 0)')
         c.execute('create blob table blobtable with (number_of_replicas = 0)')
         benchmarks_table = os.path.join(os.path.dirname(__file__),
@@ -64,6 +64,7 @@ def load_tests(loader, tests, ignore):
                 stdin=subprocess.PIPE,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
+                timeout=30,
                 shell=True,
                 env=env
             )

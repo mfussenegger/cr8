@@ -93,6 +93,7 @@ generate the records using `faker <https://github.com/joke2k/faker>`_.
 For example given the table as follows::
 
     create table x.demo (
+        id int,
         name string,
         country string
     );
@@ -103,10 +104,11 @@ The following command can be used to insert 1000 records::
     Found schema: 
     {
         "country": "string",
+        "id": "integer",
         "name": "string"
     }
     Using insert statement: 
-    insert into x.demo ("country", "name") values (?, ?)
+    insert into x.demo ("country", "id", "name") values (?, ?, ?)
     Will make 1 requests with a bulk size of 1000
     Generating fake data and executing inserts
     <BLANKLINE>
