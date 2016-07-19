@@ -23,10 +23,6 @@ def setup(*args):
         c.execute('create table x.demo (id int, name string, country string) \
                   with (number_of_replicas = 0)')
         c.execute('create blob table blobtable with (number_of_replicas = 0)')
-        benchmarks_table = os.path.join(os.path.dirname(__file__),
-                                        '..', 'sql', 'benchmarks_table.sql')
-        with open(benchmarks_table) as f:
-            c.execute(f.read().strip().rstrip(';'))
 
 
 def teardown(*args):

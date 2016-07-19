@@ -188,7 +188,7 @@ Usage::
     <BLANKLINE>
 
 `-r` is optional and can be used to save the benchmark result into a cluster.
-The cluster must contain the table specified in `sql/benchmarks_table.sql`.
+A table named `benchmarks` will be created if it doesn't exist.
 
 Writing spec files in python is also supported::
 

@@ -14,6 +14,39 @@ from .metrics import Stats
 from .cli import dicts_from_lines, to_hosts
 
 
+BENCHMARK_TABLE = '''
+create table if not exists benchmarks (
+    version_info object (strict) as (
+        number string,
+        hash string
+    ),
+    statement string,
+    started timestamp,
+    ended timestamp,
+    concurrency int,
+    bulk_size int,
+    runtime_stats object (strict) as (
+        avg double,
+        min double,
+        max double,
+        mean double,
+        median double,
+        percentile object as (
+            "50" double,
+            "75" double,
+            "90" double,
+            "99" double,
+            "99_9" double
+        ),
+        n integer,
+        variance double,
+        stdev double,
+        samples array(double)
+    )
+) clustered into 8 shards with (number_of_replicas = '1-3', column_policy='strict')
+'''
+
+
 class Executor:
     def __init__(self, spec_dir, benchmark_hosts, result_hosts, output_fmt=None):
         self.benchmark_hosts = benchmark_hosts
@@ -24,9 +57,14 @@ class Executor:
         self.output_fmt = output_fmt
 
         if result_hosts:
+            table_created = []
+
             def process_result(result):
                 with connect(result_hosts) as conn:
                     cursor = conn.cursor()
+                    if not table_created:
+                        cursor.execute(BENCHMARK_TABLE)
+                        table_created.append(None)
                     stmt, args = to_insert('benchmarks', result.as_dict())
                     cursor.execute(stmt, args)
                 print(result)
