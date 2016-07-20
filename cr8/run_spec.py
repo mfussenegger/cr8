@@ -47,6 +47,13 @@ create table if not exists benchmarks (
 '''
 
 
+def _parse_version(version: str) -> tuple:
+    if not version:
+        return None
+    major, minor, patch = version.split('.', maxsplit=3)
+    return (int(major), int(minor), int(patch))
+
+
 class Executor:
     def __init__(self, spec_dir, benchmark_hosts, result_hosts, output_fmt=None):
         self.benchmark_hosts = benchmark_hosts
@@ -55,6 +62,8 @@ class Executor:
         self.client = aio.Client(benchmark_hosts)
         self.loop = aio.asyncio.get_event_loop()
         self.output_fmt = output_fmt
+        self.server_version = _parse_version(QueryRunner.get_version_info(
+            benchmark_hosts[0])['number'])
 
         if result_hosts:
             table_created = []
@@ -128,11 +137,24 @@ class Executor:
             output_fmt=self.output_fmt
         ))
 
+    def _skip_message(self, min_version, stmt):
+        msg = ('## Skipping (Version {server_version} instead of {min_version}):\n'
+               '   Statement: {statement:.70}')
+        msg = msg.format(
+            statement=stmt,
+            min_version='.'.join((str(x) for x in min_version)),
+            server_version='.'.join((str(x) for x in self.server_version)))
+        return msg
+
     def run_queries(self, queries):
         for query in queries:
             stmt = query['statement']
             iterations = query.get('iterations', 1)
             concurrency = query.get('concurrency', 1)
+            min_version = _parse_version(query.get('min_version'))
+            if min_version and min_version > self.server_version:
+                print(self._skip_message(min_version, stmt))
+                continue
             print(('\n## Running Query:\n'
                    '   Statement: {statement:.70}\n'
                    '   Concurrency: {concurrency}\n'

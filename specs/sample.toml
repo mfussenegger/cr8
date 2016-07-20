@@ -21,5 +21,9 @@ statement = '''delete from countries where "countryCode" = ?'''
 bulk_args = [["AE"], ["AF"]]
 # iterations = 1 & concurrency = 1 is the default for queries
 
+[[queries]]
+statement = 'select 10'
+min_version = '0.80.2'
+
 [teardown]
 statements = ["drop table countries"]
