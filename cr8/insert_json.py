@@ -3,13 +3,13 @@
 
 import argh
 import sys
-import json
 from functools import partial
 
 from .cli import dicts_from_stdin, to_int, to_hosts
 from .misc import as_bulk_queries
 from . import aio
 from .metrics import Stats
+from .timeit import Result
 
 
 def to_insert(table, d):
@@ -49,8 +49,13 @@ def print_only(table):
 @argh.arg('--hosts', help='crate hosts which will be used \
           to execute the insert statement', type=to_hosts)
 @argh.arg('-c', '--concurrency', type=to_int)
+@argh.arg('-of', '--output-fmt', choices=['full', 'short'], default='full')
 @argh.wrap_errors([KeyboardInterrupt])
-def insert_json(table=None, bulk_size=1000, concurrency=25, hosts=None):
+def insert_json(table=None,
+                bulk_size=1000,
+                concurrency=25,
+                hosts=None,
+                output_fmt=None):
     """Insert JSON lines fed into stdin into a Crate cluster.
 
     If no hosts are specified the statements will be printed.
@@ -74,7 +79,7 @@ def insert_json(table=None, bulk_size=1000, concurrency=25, hosts=None):
     with aio.Client(hosts, conn_pool_limit=concurrency) as client:
         f = partial(aio.measure, stats, client.execute_many)
         aio.run(f, bulk_queries, concurrency, loop)
-    yield json.dumps(stats.get(), sort_keys=True, indent=4)
+    print(Result.format_stats(stats.get(), output_fmt))
 
 
 def main():

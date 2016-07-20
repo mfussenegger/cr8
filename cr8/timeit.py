@@ -38,20 +38,29 @@ class Result:
         self.d = self.__dict__.copy()
         output_fmt = output_fmt or 'full'
         if output_fmt == 'full':
-            self.str_func = self.as_json_string
+            self.str_func = partial(self.as_json_string, self.d)
         elif output_fmt == 'short':
-            self.str_func = self.short_output
+            self.str_func = partial(self.short_output, self.runtime_stats)
         else:
             raise ValueError('Invalid output format: {}'.format(output_fmt))
 
-    def as_json_string(self):
-        return json.dumps(self.d, sort_keys=True, indent=4)
+    @staticmethod
+    def as_json_string(d):
+        return json.dumps(d, sort_keys=True, indent=4)
 
     def as_dict(self):
         return self.d
 
-    def short_output(self):
-        stats = self.runtime_stats
+    @staticmethod
+    def format_stats(stats, output_fmt=None):
+        output_fmt = output_fmt or 'full'
+        if output_fmt == 'full':
+            return Result.as_json_string(stats)
+        else:
+            return Result.short_output(stats)
+
+    @staticmethod
+    def short_output(stats):
         output = ('Runtime:\n'
                   '    mean: {mean:.3f} +/- {stdev:.3f}\n'
                   '    min:  {min:.3f}\n'
@@ -62,7 +71,7 @@ class Result:
             min=stats['min'],
             stdev=stats.get('stdev', 0.0)
         )
-        if self.runtime_stats['n'] > 1:
+        if stats['n'] > 1:
             output += (
                 '\n'
                 'Percentile:\n'
