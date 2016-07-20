@@ -214,7 +214,7 @@ A tool to run ``.toml`` track files.
 A track is a matrix definition of node version, configurations and spec files.
 
 For each version and configuration a Crate node will be launched and all specs
-will be executed.
+will be executed::
 
     >>> cr8 run-track tracks/sample.toml
     # Version:  latest-testing
