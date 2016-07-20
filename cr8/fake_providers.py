@@ -12,19 +12,20 @@ from multiprocessing import Manager
 
 
 class Counter:
-    def __init__(self, lock):
-        self.val = 0
+    def __init__(self, value, lock):
+        self.value = value
         self.lock = lock
 
     def __call__(self):
+        val = self.value
         with self.lock:
-            self.val += 1
-            return self.val
+            val.value += 1
+            return val.value
 
 
 def auto_inc(fake):
     manager = Manager()
-    return Counter(manager.Lock())
+    return Counter(manager.Value('i', 0), manager.Lock())
 
 
 class GeoSpatialProvider(BaseProvider):
