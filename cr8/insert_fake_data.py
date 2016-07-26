@@ -80,7 +80,10 @@ class DataFaker:
             return custom_provider(self.fake)
         alternative = self._mapping.get((column_name, data_type))
         if not alternative:
-            alternative = self._type_default[data_type]
+            alternative = self._type_default.get(data_type)
+            if not alternative:
+                msg = 'No fake provider found for column "{col}" with type "{type}"'
+                raise ValueError(msg.format(col=column_name, type=data_type))
         return alternative(self.fake)
 
     def provider_from_mapping(self, column_name, mapping):

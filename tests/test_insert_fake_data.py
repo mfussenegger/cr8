@@ -70,6 +70,12 @@ class TestDataFaker(TestCase):
         provider = self.f.provider_for_column('location', 'geo_point')
         self.assertEqual(provider(), [50.19364744483815, -85.49806405991995])
 
+    def test_invalid_provider_for_column(self):
+        msg = 'No fake provider found for column "x" with type "y"'
+        with self.assertRaises(ValueError) as cm:
+            self.f.provider_for_column('x', 'y')
+        self.assertEqual(str(cm.exception), msg)
+
 
 def load_tests(loader, tests, ignore):
     tests.addTests(DocTestSuite(insert_fake_data))
