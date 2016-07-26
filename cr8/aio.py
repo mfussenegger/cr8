@@ -5,6 +5,7 @@ import asyncio
 import aiohttp
 import json
 import itertools
+import hashlib
 try:
     import uvloop
     asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
@@ -25,7 +26,7 @@ async def _exec(session, url, data):
         r = await resp.json()
         if 'error' in r:
             raise ValueError(r['error']['message'])
-        return r['duration']
+        return r
 
 
 class Client:
@@ -55,10 +56,31 @@ class Client:
         self.close()
 
 
+class ResultVerifier:
+
+    def __init__(self):
+        self.checksum = None
+
+    def verify(self, rows):
+        new_checksum = hashlib.sha256(
+            '\n'.join([str(r) for r in rows]).encode('utf-8')).hexdigest()
+        if self.checksum and self.checksum != new_checksum:
+            raise ValueError('Different result checksum: {c1} != {c2}'.format(
+                c1=self.checksum,
+                c2=new_checksum))
+        self.checksum = new_checksum
+        return self.checksum
+
+    async def call(self, f, *args, **kws):
+        result = await f(*args, **kws)
+        result['checksum'] = self.verify(result['rows'])
+        return result
+
+
 async def measure(stats, f, *args, **kws):
-    duration = await f(*args, **kws)
-    stats.measure(duration)
-    return duration
+    result = await f(*args, **kws)
+    stats.measure(result['duration'])
+    return result
 
 
 async def map_async(q, corof, iterable):

@@ -96,7 +96,8 @@ class QueryRunner:
                  concurrency,
                  args=None,
                  bulk_args=None,
-                 output_fmt=None):
+                 output_fmt=None,
+                 verify_result_checksum=False):
         self.stmt = stmt
         self.repeats = repeats
         self.concurrency = concurrency
@@ -106,6 +107,7 @@ class QueryRunner:
         self.bulk_args = bulk_args
         self.args = args
         self.output_fmt = output_fmt
+        self.verify_result_checksum = verify_result_checksum
 
     def warmup(self, num_warmup):
         statements = itertools.repeat((self.stmt,), num_warmup)
@@ -122,9 +124,12 @@ class QueryRunner:
             statements = itertools.repeat((self.stmt, self.args), self.repeats)
             f = self.client.execute
         stats = Stats(min(self.repeats, 1000))
-        measure = partial(aio.measure, stats, f)
+        f = partial(aio.measure, stats, f)
+        if self.verify_result_checksum:
+            verifier = aio.ResultVerifier()
+            f = partial(verifier.call, f)
 
-        aio.run(measure, statements, self.concurrency, loop=self.loop)
+        aio.run(f, statements, self.concurrency, loop=self.loop)
         ended = time()
 
         return Result(
@@ -160,12 +165,14 @@ class QueryRunner:
 @argh.arg('-r', '--repeat', type=to_int)
 @argh.arg('-c', '--concurrency', type=to_int)
 @argh.arg('-of', '--output-fmt', choices=['full', 'short'], default='full')
+@argh.arg('--verify-result-checksum', default=False)
 def timeit(hosts=None,
            stmt=None,
            warmup=30,
            repeat=30,
            concurrency=1,
-           output_fmt=None):
+           output_fmt=None,
+           verify_result_checksum=False):
     """ runs the given statement a number of times and returns the runtime stats
     """
     num_lines = 0
@@ -175,7 +182,8 @@ def timeit(hosts=None,
                          repeat,
                          hosts=hosts,
                          concurrency=concurrency,
-                         output_fmt=output_fmt) as runner:
+                         output_fmt=output_fmt,
+                         verify_result_checksum=verify_result_checksum) as runner:
             runner.warmup(warmup)
             result = runner.run()
         print(result)
