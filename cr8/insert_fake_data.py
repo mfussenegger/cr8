@@ -5,6 +5,7 @@ import sys
 import json
 import argh
 import argparse
+import operator
 from faker import Factory
 from functools import partial
 from collections import OrderedDict
@@ -43,29 +44,23 @@ def timestamp(fake):
     return partial(x1000, fake.unix_time)
 
 
-def from_attribute(attr):
-    def func(fake):
-        return getattr(fake, attr)
-    return func
-
-
 class DataFaker:
     _mapping = {
-        ('id', 'string'): from_attribute('uuid4'),
+        ('id', 'string'): operator.attrgetter('uuid4'),
         ('id', 'integer'): auto_inc,
         ('id', 'long'): auto_inc,
     }
 
     _type_default = {
-        'integer': from_attribute('random_int'),
-        'long': from_attribute('random_int'),
-        'float': from_attribute('pyfloat'),
-        'double': from_attribute('pydecimal'),
-        'ip': from_attribute('ipv4'),
+        'integer': operator.attrgetter('random_int'),
+        'long': operator.attrgetter('random_int'),
+        'float': operator.attrgetter('pyfloat'),
+        'double': operator.attrgetter('pydecimal'),
+        'ip': operator.attrgetter('ipv4'),
         'timestamp': timestamp,
-        'string': from_attribute('word'),
-        'boolean': from_attribute('boolean'),
-        'geo_point': from_attribute('geo_point'),
+        'string': operator.attrgetter('word'),
+        'boolean': operator.attrgetter('boolean'),
+        'geo_point': operator.attrgetter('geo_point'),
     }
 
     _custom = {
