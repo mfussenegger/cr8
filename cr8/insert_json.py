@@ -74,11 +74,10 @@ def insert_json(table=None,
     print('Executing inserts: bulk_size={} concurrency={}'.format(
         bulk_size, concurrency), file=sys.stderr)
 
-    loop = aio.asyncio.get_event_loop()
     stats = Stats()
     with aio.Client(hosts, conn_pool_limit=concurrency) as client:
         f = partial(aio.measure, stats, client.execute_many)
-        aio.run(f, bulk_queries, concurrency, loop)
+        aio.run(f, bulk_queries, concurrency)
     print(Result.format_stats(stats.get(), output_fmt))
 
 

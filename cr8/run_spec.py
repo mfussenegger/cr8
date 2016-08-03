@@ -60,7 +60,6 @@ class Executor:
         self.spec_dir = spec_dir
         self.conn = connect(benchmark_hosts)
         self.client = aio.Client(benchmark_hosts)
-        self.loop = aio.asyncio.get_event_loop()
         self.output_fmt = output_fmt
         self.server_version = _parse_version(QueryRunner.get_version_info(
             benchmark_hosts[0])['number'])
@@ -99,13 +98,11 @@ class Executor:
         for stmt in statements:
             cursor.execute(stmt)
 
-        loop = self.loop
         for data_file in instructions.data_files:
             inserts = as_bulk_queries(self._to_inserts(data_file),
                                       data_file.get('bulk_size', 5000))
             concurrency = data_file.get('concurrency', 25)
-            aio.run(self.client.execute_many,
-                    inserts, concurrency=concurrency, loop=loop)
+            aio.run(self.client.execute_many, inserts, concurrency=concurrency)
             cursor.execute('refresh table {target}'.format(target=data_file['target']))
 
     def run_load_data(self, data_spec):
@@ -123,7 +120,6 @@ class Executor:
         aio.run(f,
                 inserts,
                 concurrency=concurrency,
-                loop=self.loop,
                 num_items=num_records)
         end = time()
         self.process_result(Result(

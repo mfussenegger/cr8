@@ -83,8 +83,8 @@ async def run_sync(coro, iterable, total=None):
         await coro(*i)
 
 
-def run(coro, iterable, concurrency, loop=None, num_items=None):
-    loop = loop or asyncio.get_event_loop()
+def run(coro, iterable, concurrency, num_items=None):
+    loop = asyncio.get_event_loop()
     if concurrency == 1:
         return loop.run_until_complete(run_sync(coro, iterable, total=num_items))
     q = asyncio.Queue(maxsize=concurrency)
