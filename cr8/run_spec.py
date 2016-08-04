@@ -11,7 +11,8 @@ from .bench_spec import load_spec
 from .timeit import QueryRunner, Result
 from .misc import as_bulk_queries, as_statements, get_lines
 from .metrics import Stats
-from .cli import dicts_from_lines, to_hosts
+from .cli import dicts_from_lines
+from . import clients
 
 
 BENCHMARK_TABLE = '''
@@ -59,10 +60,10 @@ class Executor:
         self.benchmark_hosts = benchmark_hosts
         self.spec_dir = spec_dir
         self.conn = connect(benchmark_hosts)
-        self.client = aio.Client(benchmark_hosts)
+        self.client = clients.client(benchmark_hosts)
         self.output_fmt = output_fmt
-        self.server_version = _parse_version(QueryRunner.get_version_info(
-            benchmark_hosts[0])['number'])
+        self.server_version = _parse_version(
+            QueryRunner.get_version_info(benchmark_hosts)['number'])
 
         if result_hosts:
             table_created = []
@@ -178,7 +179,7 @@ class Executor:
         self.client.close()
 
 
-@argh.arg('benchmark_hosts', type=to_hosts)
+@argh.arg('benchmark_hosts', type=str)
 @argh.arg('-of', '--output-fmt', choices=['full', 'short'], default='full')
 def run_spec(spec, benchmark_hosts, result_hosts=None, output_fmt=None):
     """Run a spec file, executing the statements on the benchmark_hosts.

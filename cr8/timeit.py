@@ -9,7 +9,8 @@ from functools import partial
 from time import time
 from crate.client import connect
 
-from .cli import lines_from_stdin, to_int, to_hosts
+from .cli import lines_from_stdin, to_int
+from .clients import client
 from .metrics import Stats
 from . import aio
 
@@ -100,8 +101,8 @@ class QueryRunner:
         self.stmt = stmt
         self.repeats = repeats
         self.concurrency = concurrency
-        self.host = next(iter(hosts))
-        self.client = aio.Client(hosts, conn_pool_limit=concurrency)
+        self.hosts = hosts
+        self.client = client(hosts, concurrency=concurrency)
         self.bulk_args = bulk_args
         self.args = args
         self.output_fmt = output_fmt
@@ -111,7 +112,7 @@ class QueryRunner:
         aio.run(self.client.execute, statements, 0)
 
     def run(self):
-        version_info = self.get_version_info(self.host)
+        version_info = self.get_version_info(self.hosts)
 
         started = time()
         if self.bulk_args:
@@ -143,8 +144,8 @@ class QueryRunner:
         self.client.close()
 
     @staticmethod
-    def get_version_info(server):
-        with connect(server) as conn:
+    def get_version_info(hosts):
+        with connect(hosts) as conn:
             c = conn.cursor()
             c.execute('select version from sys.nodes limit 1')
             version = c.fetchone()[0]
@@ -154,7 +155,7 @@ class QueryRunner:
             }
 
 
-@argh.arg('--hosts', help='crate hosts', type=to_hosts)
+@argh.arg('--hosts', help='crate hosts', type=str)
 @argh.arg('-w', '--warmup', type=to_int)
 @argh.arg('-r', '--repeat', type=to_int)
 @argh.arg('-c', '--concurrency', type=to_int)
@@ -168,7 +169,6 @@ def timeit(hosts=None,
     """ runs the given statement a number of times and returns the runtime stats
     """
     num_lines = 0
-    hosts = hosts or ['http://localhost:4200']
     for line in lines_from_stdin(stmt):
         with QueryRunner(line,
                          repeat,

@@ -4,12 +4,11 @@
 
 import argh
 from crate.client import connect
-from cr8.cli import to_hosts
 
 
 @argh.arg('filename', help='path/filename of the file that should be uploaded')
 @argh.arg('--table', help='name of the blob table', required=True)
-@argh.arg('--hosts', type=to_hosts,
+@argh.arg('--hosts', type=str,
           help='crate hosts to which the file should be uploaded to',
           default=['http://localhost:4200'])
 def insert_blob(filename, hosts=None, table=None):

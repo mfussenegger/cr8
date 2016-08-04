@@ -3,7 +3,6 @@ import os
 import toml
 from glob import glob
 from .run_spec import run_spec
-from .cli import to_hosts
 from .run_crate import CrateNode, get_crate
 
 
@@ -25,7 +24,7 @@ class Executor:
             print('### Running spec file: ', os.path.basename(spec))
             run_spec(
                 spec,
-                to_hosts(benchmark_host),
+                benchmark_host,
                 self.result_hosts,
                 output_fmt=self.output_fmt)
 
@@ -48,7 +47,7 @@ class Executor:
                     self._run_specs(track['specs'], node.http_url)
 
 
-@argh.arg('-r', '--result_hosts', type=to_hosts)
+@argh.arg('-r', '--result_hosts', type=str)
 @argh.arg('-of', '--output-fmt', choices=['full', 'short'], default='full')
 def run_track(track, result_hosts=None, crate_root=None, output_fmt=None):
     """Execute a track file"""

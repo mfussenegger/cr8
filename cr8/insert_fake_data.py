@@ -14,10 +14,10 @@ from concurrent.futures import ProcessPoolExecutor
 
 from .insert_json import to_insert
 from .misc import parse_table
-from .aio import asyncio, consume, Client
-from .cli import to_int, to_hosts
+from .aio import asyncio, consume
+from .cli import to_int
 from .fake_providers import GeoSpatialProvider, auto_inc
-
+from . import clients
 
 loop = asyncio.get_event_loop()
 
@@ -125,10 +125,7 @@ async def _produce_data_and_insert(q, client, stmt, bulk_args_fun, num_inserts):
 
 
 @argh.arg('--table', help='table name', required=True)
-@argh.arg('--hosts',
-          help='crate hosts',
-          type=to_hosts,
-          default=['http://localhost:4200'])
+@argh.arg('--hosts', help='crate hosts', type=str)
 @argh.arg('-n', '--num-records',
           help='number of records to insert',
           type=to_int,
@@ -210,7 +207,7 @@ def insert_fake_data(hosts=None,
 
     print('Generating fake data and executing inserts')
     q = asyncio.Queue(maxsize=concurrency)
-    with Client(hosts, conn_pool_limit=concurrency) as client:
+    with clients.client(hosts, concurrency=concurrency) as client:
         loop.run_until_complete(asyncio.gather(
             _produce_data_and_insert(q, client, stmt, bulk_args_fun, num_inserts),
             consume(q, total=num_inserts)))

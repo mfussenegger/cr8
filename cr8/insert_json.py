@@ -5,9 +5,9 @@ import argh
 import sys
 from functools import partial
 
-from .cli import dicts_from_stdin, to_int, to_hosts
+from .cli import dicts_from_stdin, to_int
 from .misc import as_bulk_queries
-from . import aio
+from . import aio, clients
 from .metrics import Stats
 from .timeit import Result
 
@@ -47,7 +47,7 @@ def print_only(table):
 @argh.arg('--table', help='Target table', required=True)
 @argh.arg('-b', '--bulk-size', type=to_int)
 @argh.arg('--hosts', help='crate hosts which will be used \
-          to execute the insert statement', type=to_hosts)
+          to execute the insert statement', type=str)
 @argh.arg('-c', '--concurrency', type=to_int)
 @argh.arg('-of', '--output-fmt', choices=['full', 'short'], default='full')
 @argh.wrap_errors([KeyboardInterrupt])
@@ -75,7 +75,7 @@ def insert_json(table=None,
         bulk_size, concurrency), file=sys.stderr)
 
     stats = Stats()
-    with aio.Client(hosts, conn_pool_limit=concurrency) as client:
+    with clients.client(hosts, concurrency=concurrency) as client:
         f = partial(aio.measure, stats, client.execute_many)
         aio.run(f, bulk_queries, concurrency)
     print(Result.format_stats(stats.get(), output_fmt))

@@ -3,37 +3,6 @@ import sys
 import json
 import ast
 from collections import OrderedDict
-from typing import List, Union, Iterable
-
-
-def to_http_uri(s: str) -> str:
-    """Prefix the string with 'http://' if there is no schema."""
-    if not s.startswith(('http://', 'https://')):
-        return 'http://' + s
-    return s
-
-
-def to_hosts(hosts: Union[Iterable[str], str]) -> List[str]:
-    """Convert a string of whitespace or comma separated hosts into a list of hosts.
-
-    Hosts may also already be a list or other iterable.
-    Each host will be prefixed with 'http://' if it is not already there.
-
-    >>> to_hosts('n1:4200,n2:4200')
-    ['http://n1:4200', 'http://n2:4200']
-
-    >>> to_hosts('n1:4200 n2:4200')
-    ['http://n1:4200', 'http://n2:4200']
-
-    >>> to_hosts('https://n1:4200')
-    ['https://n1:4200']
-
-    >>> to_hosts(['http://n1:4200', 'n2:4200'])
-    ['http://n1:4200', 'http://n2:4200']
-    """
-    if isinstance(hosts, str):
-        hosts = hosts.replace(',', ' ').split()
-    return [to_http_uri(i) for i in hosts]
 
 
 def to_int(s):
