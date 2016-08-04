@@ -104,5 +104,5 @@ class Stats:
             percentile={str(i[0]).replace('.', '_'): i[1] for i in
                         zip(self.plevels, percentiles)},
             n=self.reservoir.count,
-            samples=values
+            samples=self.reservoir.values
         )
