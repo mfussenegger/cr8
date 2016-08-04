@@ -61,7 +61,7 @@ async def measure(stats, f, *args, **kws):
     return duration
 
 
-async def map_async(q, corof, iterable):
+async def qmap(q, corof, iterable):
     for i in iterable:
         task = asyncio.ensure_future(corof(*i))
         await q.put(task)
@@ -78,7 +78,7 @@ async def consume(q, total=None):
             t.update(1)
 
 
-async def run_sync(coro, iterable, total=None):
+async def map(coro, iterable, total=None):
     for i in tqdm(iterable, total=total):
         await coro(*i)
 
@@ -86,8 +86,8 @@ async def run_sync(coro, iterable, total=None):
 def run(coro, iterable, concurrency, num_items=None):
     loop = asyncio.get_event_loop()
     if concurrency == 1:
-        return loop.run_until_complete(run_sync(coro, iterable, total=num_items))
+        return loop.run_until_complete(map(coro, iterable, total=num_items))
     q = asyncio.Queue(maxsize=concurrency)
     loop.run_until_complete(asyncio.gather(
-        map_async(q, coro, iterable),
+        qmap(q, coro, iterable),
         consume(q, total=num_items)))
