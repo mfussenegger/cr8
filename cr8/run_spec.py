@@ -62,8 +62,8 @@ class Executor:
         self.conn = connect(benchmark_hosts)
         self.client = clients.client(benchmark_hosts)
         self.output_fmt = output_fmt
-        self.server_version = _parse_version(
-            QueryRunner.get_version_info(benchmark_hosts)['number'])
+        self.server_version_info = aio.run(self.client.get_server_version)
+        self.server_version = _parse_version(self.server_version_info['number'])
 
         if result_hosts:
             table_created = []
@@ -103,7 +103,7 @@ class Executor:
             inserts = as_bulk_queries(self._to_inserts(data_file),
                                       data_file.get('bulk_size', 5000))
             concurrency = data_file.get('concurrency', 25)
-            aio.run(self.client.execute_many, inserts, concurrency=concurrency)
+            aio.run_many(self.client.execute_many, inserts, concurrency=concurrency)
             cursor.execute('refresh table {target}'.format(target=data_file['target']))
 
     def run_load_data(self, data_spec):
@@ -118,13 +118,13 @@ class Executor:
         stats = Stats()
         f = partial(aio.measure, stats, self.client.execute_many)
         start = time()
-        aio.run(f,
-                inserts,
-                concurrency=concurrency,
-                num_items=num_records)
+        aio.run_many(f,
+                     inserts,
+                     concurrency=concurrency,
+                     num_items=num_records)
         end = time()
         self.process_result(Result(
-            version_info=QueryRunner.get_version_info(self.conn.client.active_servers[0]),
+            version_info=self.server_version_info,
             statement=statement,
             started=start,
             ended=end,

@@ -59,6 +59,15 @@ class HttpClient:
         data = json.dumps(dict(stmt=stmt, bulk_args=bulk_args))
         return await _exec(self.session, next(self.urls), data)
 
+    async def get_server_version(self):
+        async with self.session.get(self.hosts[0] + '/') as resp:
+            r = await resp.json()
+            version = r['version']
+            return {
+                'hash': version['build_hash'],
+                'number': version['number']
+            }
+
     def close(self):
         self.session.close()
 

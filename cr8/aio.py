@@ -45,7 +45,12 @@ async def map(coro, iterable, total=None):
         await coro(*i)
 
 
-def run(coro, iterable, concurrency, num_items=None):
+def run(coro):
+    loop = asyncio.get_event_loop()
+    return loop.run_until_complete(coro())
+
+
+def run_many(coro, iterable, concurrency, num_items=None):
     loop = asyncio.get_event_loop()
     if concurrency == 1:
         return loop.run_until_complete(map(coro, iterable, total=num_items))

@@ -77,7 +77,7 @@ def insert_json(table=None,
     stats = Stats()
     with clients.client(hosts, concurrency=concurrency) as client:
         f = partial(aio.measure, stats, client.execute_many)
-        aio.run(f, bulk_queries, concurrency)
+        aio.run_many(f, bulk_queries, concurrency)
     print(Result.format_stats(stats.get(), output_fmt))
 
 

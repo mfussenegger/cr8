@@ -7,7 +7,6 @@ import itertools
 
 from functools import partial
 from time import time
-from crate.client import connect
 
 from .cli import lines_from_stdin, to_int
 from .clients import client
@@ -109,11 +108,10 @@ class QueryRunner:
 
     def warmup(self, num_warmup):
         statements = itertools.repeat((self.stmt,), num_warmup)
-        aio.run(self.client.execute, statements, 0)
+        aio.run_many(self.client.execute, statements, 0)
 
     def run(self):
-        version_info = self.get_version_info(self.hosts)
-
+        version_info = aio.run(self.client.get_server_version)
         started = time()
         if self.bulk_args:
             statements = itertools.repeat((self.stmt, self.bulk_args), self.repeats)
@@ -124,7 +122,7 @@ class QueryRunner:
         stats = Stats(min(self.repeats, 1000))
         measure = partial(aio.measure, stats, f)
 
-        aio.run(measure, statements, self.concurrency)
+        aio.run_many(measure, statements, self.concurrency)
         ended = time()
 
         return Result(
@@ -142,17 +140,6 @@ class QueryRunner:
 
     def __exit__(self, *ex):
         self.client.close()
-
-    @staticmethod
-    def get_version_info(hosts):
-        with connect(hosts) as conn:
-            c = conn.cursor()
-            c.execute('select version from sys.nodes limit 1')
-            version = c.fetchone()[0]
-            return {
-                'hash': version['build_hash'],
-                'number': version['number']
-            }
 
 
 @argh.arg('--hosts', help='crate hosts', type=str)
