@@ -1,3 +1,4 @@
+- Added Crate build date column to version_info in benchmark result table
 
 2016-07-04 0.6.0
 ================
