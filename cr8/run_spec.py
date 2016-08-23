@@ -19,7 +19,8 @@ BENCHMARK_TABLE = '''
 create table if not exists benchmarks (
     version_info object (strict) as (
         number string,
-        hash string
+        hash string,
+        date timestamp
     ),
     statement string,
     started timestamp,

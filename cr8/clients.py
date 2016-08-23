@@ -1,6 +1,7 @@
 import json
 import aiohttp
 import itertools
+from datetime import datetime
 from typing import List, Union, Iterable
 
 
@@ -65,7 +66,8 @@ class HttpClient:
             version = r['version']
             return {
                 'hash': version['build_hash'],
-                'number': version['number']
+                'number': version['number'],
+                'date': datetime.strptime(version['build_timestamp'][:10], '%Y-%m-%d').isoformat(),
             }
 
     def close(self):
