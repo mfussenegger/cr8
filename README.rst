@@ -79,6 +79,7 @@ cluster::
         "started": ...
         "statement": "select name from sys.cluster\n",
         "version_info": {
+            "date": "20...",
             "hash": "...",
             "number": "..."
         }
@@ -183,6 +184,7 @@ Usage::
         "started": ...
         "statement": "select count(*) from countries",
         "version_info": {
+            "date": "20...",
             "hash": ...
             "number": ...
         }

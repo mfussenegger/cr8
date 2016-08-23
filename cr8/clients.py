@@ -1,6 +1,7 @@
 import json
 import aiohttp
 import itertools
+from datetime import datetime
 from typing import List, Union, Iterable
 
 
@@ -68,6 +69,21 @@ def _plain_or_callable(obj):
     return obj() if callable(obj) else obj
 
 
+def _date_or_none(d: str) -> str:
+    """Return a date as if, if valid, otherwise None
+
+    >>> _date_or_none('2017-02-27')
+    '2017-02-27'
+
+    >>> _date_or_none('NA')
+    """
+    try:
+        datetime.strptime(d, '%Y-%m-%d')
+        return d
+    except ValueError:
+        return None
+
+
 class HttpClient:
     def __init__(self, hosts, conn_pool_limit=25):
         self.hosts = hosts
@@ -94,7 +110,8 @@ class HttpClient:
             version = r['version']
             return {
                 'hash': version['build_hash'],
-                'number': version['number']
+                'number': version['number'],
+                'date': _date_or_none(version['build_timestamp'][:10])
             }
 
     def close(self):

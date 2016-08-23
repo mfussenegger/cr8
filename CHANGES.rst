@@ -1,3 +1,5 @@
+- Added Crate build date column to version_info in benchmark result table
+
 - Added ``meta`` object column to results table.
   It's now possible to add a name to the spec so the benchmark results can easily
   be identified by this spec label.
