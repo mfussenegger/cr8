@@ -75,6 +75,7 @@ cluster::
         "runtime_stats": {
             ...
         },
+        "spec_name": null,
         "started": ...
         "statement": "select name from sys.cluster\n",
         "version_info": {
@@ -176,6 +177,7 @@ Usage::
         "concurrency": 2,
         "ended": ...,
         "runtime_stats": {...
+        "spec_name": "sample.toml",
         "started": ...
         "statement": "select count(*) from countries",
         "version_info": {

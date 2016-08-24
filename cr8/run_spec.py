@@ -22,6 +22,7 @@ create table if not exists benchmarks (
         hash string
     ),
     statement string,
+    spec_name string,
     started timestamp,
     ended timestamp,
     concurrency int,
@@ -106,7 +107,7 @@ class Executor:
             aio.run_many(self.client.execute_many, inserts, concurrency=concurrency)
             cursor.execute('refresh table {target}'.format(target=data_file['target']))
 
-    def run_load_data(self, data_spec):
+    def run_load_data(self, data_spec, spec_name=None):
         inserts = self._to_inserts(data_spec)
         statement = next(iter(inserts))[0]
         bulk_size = data_spec.get('bulk_size', 5000)
@@ -126,6 +127,7 @@ class Executor:
         self.process_result(Result(
             version_info=self.server_version_info,
             statement=statement,
+            spec_name=spec_name,
             started=start,
             ended=end,
             stats=stats,
@@ -143,7 +145,7 @@ class Executor:
             server_version='.'.join((str(x) for x in self.server_version)))
         return msg
 
-    def run_queries(self, queries):
+    def run_queries(self, queries, spec_name=None):
         for query in queries:
             stmt = query['statement']
             iterations = query.get('iterations', 1)
@@ -161,6 +163,7 @@ class Executor:
                        concurrency=concurrency)))
             with QueryRunner(
                 stmt,
+                spec_name,
                 repeats=iterations,
                 hosts=self.benchmark_hosts,
                 concurrency=concurrency,
@@ -224,9 +227,9 @@ def run_spec(spec, benchmark_hosts, result_hosts=None, output_fmt=None):
             print('# Running benchmark')
             if spec.load_data:
                 for data_spec in spec.load_data:
-                    executor.run_load_data(data_spec)
+                    executor.run_load_data(data_spec, spec.name)
             else:
-                executor.run_queries(spec.queries)
+                executor.run_queries(spec.queries, spec.name)
         finally:
             print('# Running tearDown')
             executor.exec_instructions(spec.teardown)
