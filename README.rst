@@ -72,6 +72,7 @@ cluster::
         "bulk_size": null,
         "concurrency": 1,
         "ended": ...
+        "meta": null,
         "runtime_stats": {
             ...
         },
@@ -175,6 +176,9 @@ Usage::
         "bulk_size": null,
         "concurrency": 2,
         "ended": ...,
+        "meta": {
+            "name": "sample.toml"
+        },
         "runtime_stats": {...
         "started": ...
         "statement": "select count(*) from countries",
