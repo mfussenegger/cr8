@@ -25,7 +25,7 @@ class Result:
                  bulk_size=None,
                  output_fmt=None):
         self.version_info = version_info
-        self.statement = statement
+        self.statement = str(statement)
         # need ts in ms in crate
         self.started = int(started * 1000)
         self.ended = int(ended * 1000)

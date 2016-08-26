@@ -156,7 +156,7 @@ class Executor:
                    '   Statement: {statement:.70}\n'
                    '   Concurrency: {concurrency}\n'
                    '   Iterations: {iterations}'.format(
-                       statement=stmt,
+                       statement=str(stmt),
                        iterations=iterations,
                        concurrency=concurrency)))
             with QueryRunner(
