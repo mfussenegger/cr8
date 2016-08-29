@@ -18,6 +18,7 @@ class Result:
     def __init__(self,
                  version_info,
                  statement,
+                 meta,
                  started,
                  ended,
                  stats,
@@ -26,6 +27,7 @@ class Result:
                  output_fmt=None):
         self.version_info = version_info
         self.statement = statement
+        self.meta = meta
         # need ts in ms in crate
         self.started = int(started * 1000)
         self.ended = int(ended * 1000)
@@ -91,6 +93,7 @@ class Result:
 class QueryRunner:
     def __init__(self,
                  stmt,
+                 meta,
                  repeats,
                  hosts,
                  concurrency,
@@ -98,6 +101,7 @@ class QueryRunner:
                  bulk_args=None,
                  output_fmt=None):
         self.stmt = stmt
+        self.meta = meta
         self.repeats = repeats
         self.concurrency = concurrency
         self.hosts = hosts
@@ -127,6 +131,7 @@ class QueryRunner:
 
         return Result(
             statement=self.stmt,
+            meta=self.meta,
             version_info=version_info,
             started=started,
             ended=ended,
@@ -158,6 +163,7 @@ def timeit(hosts=None,
     num_lines = 0
     for line in lines_from_stdin(stmt):
         with QueryRunner(line,
+                         None,
                          repeat,
                          hosts=hosts,
                          concurrency=concurrency,

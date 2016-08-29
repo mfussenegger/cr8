@@ -1,5 +1,6 @@
 
 import os
+from os.path import basename
 import json
 import toml
 
@@ -23,30 +24,35 @@ class Instructions:
 
 
 class Spec:
-    def __init__(self, setup, teardown, queries=None, load_data=None):
+    def __init__(self, setup, teardown, queries=None, load_data=None, meta=None, **metadata):
         self.setup = setup
         self.teardown = teardown
         self.queries = queries
         self.load_data = load_data
+        self.meta = metadata
+        if meta:
+            self.meta.update(meta)
 
     @staticmethod
-    def from_dict(d):
+    def from_dict(d, **metadata):
         return Spec(
             setup=Instructions.from_dict(d.get('setup', {})),
             teardown=Instructions.from_dict(d.get('teardown', {})),
+            meta=d.get('meta', {}),
             queries=d.get('queries', []),
-            load_data=d.get('load_data', [])
+            load_data=d.get('load_data', []),
+            **metadata
         )
 
     @staticmethod
     def from_json_file(filename):
         with open(filename, 'r', encoding='utf-8') as spec_file:
-            return Spec.from_dict(json.load(spec_file))
+            return Spec.from_dict(json.load(spec_file), name=basename(filename))
 
     @staticmethod
     def from_toml_file(filename):
         with open(filename, 'r', encoding='utf-8') as spec_file:
-            return Spec.from_dict(toml.loads(spec_file.read()))
+            return Spec.from_dict(toml.loads(spec_file.read()), name=basename(filename))
 
     @staticmethod
     def from_python_file(filename):
@@ -57,7 +63,9 @@ class Spec:
             }
             code = compile(f.read(), filename, 'exec')
             exec(code, global_vars)
-            return global_vars['spec']
+            spec = global_vars['spec']
+            spec.meta['name'] = spec.meta.get('name', basename(filename))
+            return spec
 
 
 spec_loaders = {

@@ -1,3 +1,6 @@
+- Added ``meta`` object column to results table.
+  It's now possible to add a name to the spec so the benchmark results can easily
+  be identified by this spec label.
 
 2016-07-04 0.6.0
 ================
