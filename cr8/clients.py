@@ -42,10 +42,8 @@ async def _exec(session, url, data):
         return r['duration']
 
 
-def gen_stmt(stmt):
-    if callable(stmt):
-        return stmt()
-    return stmt
+def plain_or_callable(obj):
+    return obj and callable(obj) and obj() or obj
 
 
 class HttpClient:
@@ -56,13 +54,13 @@ class HttpClient:
         self.session = aiohttp.ClientSession(connector=conn)
 
     async def execute(self, stmt, args=None):
-        payload = {'stmt': gen_stmt(stmt)}
+        payload = {'stmt': plain_or_callable(stmt)}
         if args:
-            payload['args'] = args
+            payload['args'] = plain_or_callable(args)
         return await _exec(self.session, next(self.urls), json.dumps(payload))
 
     async def execute_many(self, stmt, bulk_args):
-        data = json.dumps(dict(stmt=gen_stmt(stmt), bulk_args=bulk_args))
+        data = json.dumps(dict(stmt=plain_or_callable(stmt), bulk_args=plain_or_callable(bulk_args)))
         return await _exec(self.session, next(self.urls), data)
 
     async def get_server_version(self):
