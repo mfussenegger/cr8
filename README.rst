@@ -72,10 +72,10 @@ cluster::
         "bulk_size": null,
         "concurrency": 1,
         "ended": ...
+        "meta": null,
         "runtime_stats": {
             ...
         },
-        "spec_name": null,
         "started": ...
         "statement": "select name from sys.cluster\n",
         "version_info": {
@@ -176,8 +176,10 @@ Usage::
         "bulk_size": null,
         "concurrency": 2,
         "ended": ...,
+        "meta": {
+            "name": "sample.toml"
+        },
         "runtime_stats": {...
-        "spec_name": "sample.toml",
         "started": ...
         "statement": "select count(*) from countries",
         "version_info": {

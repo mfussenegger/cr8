@@ -1,4 +1,4 @@
-- Added ``spec_name`` column to results table.
+- Added ``meta`` object column to results table.
   It's now possible to add a name to the spec so the benchmark results can easily
   be identified by this spec label.
 

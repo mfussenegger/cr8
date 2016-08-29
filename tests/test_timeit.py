@@ -10,7 +10,7 @@ class ResultTest(TestCase):
         stats.measure(23.4)
         result = Result(
             version_info={},
-            spec_name=None,
+            meta=None,
             statement='select name from sys.cluster',
             started=10,
             ended=20,
@@ -33,7 +33,7 @@ class ResultTest(TestCase):
         stats.measure(15.9)
         result = Result(
             version_info={},
-            spec_name=None,
+            meta=None,
             statement='select name from sys.cluster',
             started=10,
             ended=20,

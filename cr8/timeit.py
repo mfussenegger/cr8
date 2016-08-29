@@ -18,7 +18,7 @@ class Result:
     def __init__(self,
                  version_info,
                  statement,
-                 spec_name,
+                 meta,
                  started,
                  ended,
                  stats,
@@ -27,7 +27,7 @@ class Result:
                  output_fmt=None):
         self.version_info = version_info
         self.statement = statement
-        self.spec_name = spec_name
+        self.meta = meta
         # need ts in ms in crate
         self.started = int(started * 1000)
         self.ended = int(ended * 1000)
@@ -93,7 +93,7 @@ class Result:
 class QueryRunner:
     def __init__(self,
                  stmt,
-                 spec_name,
+                 meta,
                  repeats,
                  hosts,
                  concurrency,
@@ -101,7 +101,7 @@ class QueryRunner:
                  bulk_args=None,
                  output_fmt=None):
         self.stmt = stmt
-        self.spec_name = spec_name
+        self.meta = meta
         self.repeats = repeats
         self.concurrency = concurrency
         self.hosts = hosts
@@ -131,7 +131,7 @@ class QueryRunner:
 
         return Result(
             statement=self.stmt,
-            spec_name=self.spec_name,
+            meta=self.meta,
             version_info=version_info,
             started=started,
             ended=ended,
@@ -151,11 +151,9 @@ class QueryRunner:
 @argh.arg('-w', '--warmup', type=to_int)
 @argh.arg('-r', '--repeat', type=to_int)
 @argh.arg('-c', '--concurrency', type=to_int)
-@argh.arg('-l', '--label', type=str)
 @argh.arg('-of', '--output-fmt', choices=['full', 'short'], default='full')
 def timeit(hosts=None,
            stmt=None,
-           label=None,
            warmup=30,
            repeat=30,
            concurrency=1,
@@ -165,7 +163,7 @@ def timeit(hosts=None,
     num_lines = 0
     for line in lines_from_stdin(stmt):
         with QueryRunner(line,
-                         label,
+                         None,
                          repeat,
                          hosts=hosts,
                          concurrency=concurrency,
