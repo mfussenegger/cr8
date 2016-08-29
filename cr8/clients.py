@@ -42,8 +42,30 @@ async def _exec(session, url, data):
         return r['duration']
 
 
-def plain_or_callable(obj):
-    return obj and callable(obj) and obj() or obj
+def _plain_or_callable(obj):
+    """Returns the value of the called object of obj is a callable,
+    otherwise the plain object.
+    Returns None if obj is None.
+
+    >>> obj = None
+    >>> _plain_or_callable(obj)
+
+    >>> stmt = 'select * from sys.nodes'
+    >>> _plain_or_callable(stmt)
+    'select * from sys.nodes'
+
+    >>> def _args():
+    ...     return [1, 'name']
+    >>> _plain_or_callable(_args)
+    [1, 'name']
+
+    >>> class BulkArgsGenerator:
+    ...     def __call__(self):
+    ...         return [[1, 'foo'], [2, 'bar'], [3, 'foobar']]
+    >>> _plain_or_callable(BulkArgsGenerator())
+    [[1, 'foo'], [2, 'bar'], [3, 'foobar']]
+    """
+    return obj() if callable(obj) else obj
 
 
 class HttpClient:
@@ -54,13 +76,16 @@ class HttpClient:
         self.session = aiohttp.ClientSession(connector=conn)
 
     async def execute(self, stmt, args=None):
-        payload = {'stmt': plain_or_callable(stmt)}
+        payload = {'stmt': _plain_or_callable(stmt)}
         if args:
-            payload['args'] = plain_or_callable(args)
+            payload['args'] = _plain_or_callable(args)
         return await _exec(self.session, next(self.urls), json.dumps(payload))
 
     async def execute_many(self, stmt, bulk_args):
-        data = json.dumps(dict(stmt=plain_or_callable(stmt), bulk_args=plain_or_callable(bulk_args)))
+        data = json.dumps(dict(
+            stmt=_plain_or_callable(stmt),
+            bulk_args=_plain_or_callable(bulk_args)
+        ))
         return await _exec(self.session, next(self.urls), data)
 
     async def get_server_version(self):
