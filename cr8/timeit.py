@@ -8,10 +8,10 @@ import itertools
 from functools import partial
 from time import time
 
-from .cli import lines_from_stdin, to_int, Log
+from .cli import lines_from_stdin, to_int
 from .clients import client
 from .metrics import Stats
-from . import aio
+from . import aio, log
 
 
 class Result:
@@ -170,7 +170,7 @@ def timeit(hosts=None,
                          output_fmt=output_fmt) as runner:
             runner.warmup(warmup)
             result = runner.run()
-        Log.stdout(result)
+        log.stdout(result)
         num_lines += 1
     if num_lines == 0:
         raise SystemExit(

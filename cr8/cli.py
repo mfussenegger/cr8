@@ -75,17 +75,3 @@ def dicts_from_stdin():
     yield from dicts_from_lines(sys.stdin)
 
 dicts_from_stdin.__doc__ = dicts_from_lines.__doc__
-
-
-class Log:
-
-    @staticmethod
-    def stdout(*message):
-        '''Print to /dev/stdout'''
-        print(*message, file=sys.stdout)
-
-    @staticmethod
-    def stderr(*message):
-        '''Print to /dev/stderr'''
-        print(*message, file=sys.stderr)
-

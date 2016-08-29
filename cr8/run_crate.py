@@ -15,7 +15,6 @@ import io
 import tarfile
 from typing import Dict, Any
 from urllib.request import urlopen
-from .cli import Log
 
 
 log = logging.getLogger(__file__)
@@ -337,7 +336,7 @@ def run_crate(version, env=None, setting=None, crate_root=None):
         try:
             node.process.communicate()
         except KeyboardInterrupt:
-            Log.stderr('Stopping Crate...')
+            log.info('Stopping Crate...')
 
 
 if __name__ == "__main__":
