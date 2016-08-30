@@ -159,9 +159,6 @@ class CrateNode(contextlib.ExitStack):
 
         Args:
             crate_dir: Path to the extracted Crate tarball
-            data_path: Path to the data directory for Crate.
-                This is optional and if not specified a tempfolder
-                will be used. This directory is always removed on stop.
             env: Environment variables with which the Crate process will be
                 started.
             settings: Additional Crate settings.
@@ -174,7 +171,7 @@ class CrateNode(contextlib.ExitStack):
         start_script = 'crate.bat' if sys.platform == 'win32' else 'crate'
 
         settings = _get_settings(settings)
-        self.data_path = data_path or tempfile.mkdtemp()
+        self.data_path = settings.get('path.data') or tempfile.mkdtemp()
         log.info('Work dir: %s (removed on stop)', self.data_path)
         settings['path.data'] = self.data_path
         args = ['-Des.{0}={1}'.format(k, v) for k, v in settings.items()]
