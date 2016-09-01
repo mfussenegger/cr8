@@ -24,35 +24,36 @@ class Instructions:
 
 
 class Spec:
-    def __init__(self, setup, teardown, queries=None, load_data=None, meta=None, **metadata):
+    def __init__(self, setup, teardown, queries=None, load_data=None, meta=None):
         self.setup = setup
         self.teardown = teardown
         self.queries = queries
         self.load_data = load_data
-        self.meta = metadata
-        if meta:
-            self.meta.update(meta)
+        self.meta = meta or {}
 
     @staticmethod
-    def from_dict(d, **metadata):
+    def from_dict(d):
         return Spec(
             setup=Instructions.from_dict(d.get('setup', {})),
             teardown=Instructions.from_dict(d.get('teardown', {})),
             meta=d.get('meta', {}),
             queries=d.get('queries', []),
             load_data=d.get('load_data', []),
-            **metadata
         )
 
     @staticmethod
     def from_json_file(filename):
         with open(filename, 'r', encoding='utf-8') as spec_file:
-            return Spec.from_dict(json.load(spec_file), name=basename(filename))
+            spec = Spec.from_dict(json.load(spec_file))
+            spec.meta.setdefault('name', basename(filename))
+            return spec
 
     @staticmethod
     def from_toml_file(filename):
         with open(filename, 'r', encoding='utf-8') as spec_file:
-            return Spec.from_dict(toml.loads(spec_file.read()), name=basename(filename))
+            spec = Spec.from_dict(toml.loads(spec_file.read()))
+            spec.meta.setdefault('name', basename(filename))
+            return spec
 
     @staticmethod
     def from_python_file(filename):
@@ -64,7 +65,7 @@ class Spec:
             code = compile(f.read(), filename, 'exec')
             exec(code, global_vars)
             spec = global_vars['spec']
-            spec.meta['name'] = spec.meta.get('name', basename(filename))
+            spec.meta.setdefault('name', basename(filename))
             return spec
 
 
