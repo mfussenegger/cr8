@@ -74,5 +74,4 @@ def dicts_from_stdin():
         raise SystemExit('Expected json input via stdin')
     yield from dicts_from_lines(sys.stdin)
 
-
 dicts_from_stdin.__doc__ = dicts_from_lines.__doc__

@@ -336,7 +336,7 @@ def run_crate(version, env=None, setting=None, crate_root=None):
         try:
             node.process.communicate()
         except KeyboardInterrupt:
-            print('Stopping Crate...')
+            log.info('Stopping Crate...')
 
 
 if __name__ == "__main__":

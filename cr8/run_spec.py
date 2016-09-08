@@ -12,7 +12,7 @@ from .timeit import QueryRunner, Result
 from .misc import as_bulk_queries, as_statements, get_lines
 from .metrics import Stats
 from .cli import dicts_from_lines
-from . import clients
+from . import clients, log
 
 
 BENCHMARK_TABLE = '''
@@ -79,12 +79,12 @@ class Executor:
                         table_created.append(None)
                     stmt, args = to_insert('benchmarks', result.as_dict())
                     cursor.execute(stmt, args)
-                print(result)
-                print('')
+                log.stdout(result)
+                log.stderr('')
         else:
             def process_result(result):
-                print(result)
-                print('')
+                log.stdout(result)
+                log.stderr('')
         self.process_result = process_result
 
     def _to_inserts(self, data_spec):
@@ -154,9 +154,9 @@ class Executor:
             concurrency = query.get('concurrency', 1)
             min_version = _parse_version(query.get('min_version'))
             if min_version and min_version > self.server_version:
-                print(self._skip_message(min_version, stmt))
+                log.stderr(self._skip_message(min_version, stmt))
                 continue
-            print(('\n## Running Query:\n'
+            log.stderr(('\n## Running Query:\n'
                    '   Statement: {statement:.70}\n'
                    '   Concurrency: {concurrency}\n'
                    '   Iterations: {iterations}'.format(
@@ -224,16 +224,16 @@ def run_spec(spec, benchmark_hosts, result_hosts=None, output_fmt=None):
     ) as executor:
         spec = load_spec(spec)
         try:
-            print('# Running setUp')
+            log.stderr('# Running setUp')
             executor.exec_instructions(spec.setup)
-            print('# Running benchmark')
+            log.stderr('# Running benchmark')
             if spec.load_data:
                 for data_spec in spec.load_data:
                     executor.run_load_data(data_spec, spec.meta)
             else:
                 executor.run_queries(spec.queries, spec.meta)
         finally:
-            print('# Running tearDown')
+            log.stderr('# Running tearDown')
             executor.exec_instructions(spec.teardown)
 
 

@@ -4,6 +4,7 @@ import toml
 from glob import glob
 from .run_spec import run_spec
 from .run_crate import CrateNode, get_crate
+from . import log
 
 
 class Executor:
@@ -21,7 +22,7 @@ class Executor:
     def _run_specs(self, specs, benchmark_host):
         specs = self._expand_paths(specs)
         for spec in specs:
-            print('### Running spec file: ', os.path.basename(spec))
+            log.stderr('### Running spec file: ', os.path.basename(spec))
             run_spec(
                 spec,
                 benchmark_host,
@@ -32,9 +33,9 @@ class Executor:
         configurations = list(self._expand_paths(track['configurations']))
         versions = track['versions']
         for version in versions:
-            print('# Version: ', version)
+            log.stderr('# Version: ', version)
             for c, configuration in enumerate(configurations):
-                print('## Starting Crate {0}, configuration: {1}'.format(
+                log.stderr('## Starting Crate {0}, configuration: {1}'.format(
                     os.path.basename(version),
                     os.path.basename(configuration)
                 ))

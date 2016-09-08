@@ -1,3 +1,6 @@
+ - Print info messages and benchmark results to different outputs, so results
+   can be piped into other programs such as ``jq`` or another python script.
+
 - Added ``meta`` object column to results table.
   It's now possible to add a name to the spec so the benchmark results can easily
   be identified by this spec label.
