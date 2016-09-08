@@ -112,7 +112,7 @@ class QueryRunner:
 
     def warmup(self, num_warmup):
         statements = itertools.repeat((self.stmt,), num_warmup)
-        aio.run_many(self.client.execute, statements, 0)
+        aio.run_many(self.client.execute, statements, 0, num_items=num_warmup)
 
     def run(self):
         version_info = aio.run(self.client.get_server_version)
@@ -126,7 +126,8 @@ class QueryRunner:
         stats = Stats(min(self.repeats, 1000))
         measure = partial(aio.measure, stats, f)
 
-        aio.run_many(measure, statements, self.concurrency)
+        aio.run_many(
+            measure, statements, self.concurrency, num_items=self.repeats)
         ended = time()
 
         return Result(
