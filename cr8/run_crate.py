@@ -188,7 +188,7 @@ class CrateNode(contextlib.ExitStack):
             self.cmd,
             stdin=subprocess.DEVNULL,
             stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
+            stderr=subprocess.DEVNULL,
             env=self.env,
             universal_newlines=True
         ))
