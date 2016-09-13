@@ -203,10 +203,10 @@ class CrateNode(contextlib.ExitStack):
         log.info('Cluster is ready')
 
     def stop(self):
-        shutil.rmtree(self.data_path)
         if self.process:
             self.process.terminate()
             self.process.communicate(timeout=10)
+        shutil.rmtree(self.data_path)
 
     def __enter__(self):
         return self
