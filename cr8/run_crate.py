@@ -15,6 +15,7 @@ import io
 import tarfile
 from typing import Dict, Any
 from urllib.request import urlopen
+from .exceptions import NoHttpAddressAvailable
 
 
 log = logging.getLogger(__file__)
@@ -172,8 +173,11 @@ class CrateNode(contextlib.ExitStack):
 
         settings = _get_settings(settings)
         self.data_path = settings.get('path.data') or tempfile.mkdtemp()
+        self.logs_path = settings.get('path.logs') or os.path.join(crate_dir, 'logs')
+        self.cluster_name = settings.get('cluster.name') or 'cr8'
         log.info('Work dir: %s (removed on stop)', self.data_path)
         settings['path.data'] = self.data_path
+        settings['cluster.name'] = self.cluster_name
         args = ['-Des.{0}={1}'.format(k, v) for k, v in settings.items()]
         self.cmd = [
             os.path.join(crate_dir, 'bin', start_script)] + args
@@ -187,17 +191,13 @@ class CrateNode(contextlib.ExitStack):
         self.process = proc = self.enter_context(subprocess.Popen(
             self.cmd,
             stdin=subprocess.DEVNULL,
-            stdout=subprocess.PIPE,
+            stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
             env=self.env,
             universal_newlines=True
         ))
         log.info('PID: %s', proc.pid)
-        self.http_url = _get_http_uri(proc.stdout)
-        if not self.http_url:
-            log.warn("Couldn't get HTTP URL")
-            return
-
+        self._obtain_http_url()
         log.info('HTTP: %s', self.http_url)
         _wait_until_reachable(self.http_url)
         log.info('Cluster is ready')
@@ -213,6 +213,34 @@ class CrateNode(contextlib.ExitStack):
 
     def __exit__(self, *ex):
         self.stop()
+
+    def _obtain_http_url(self):
+        """
+        Read Crate log file to obtain HTTP address of node
+        """
+        def wait(waited, wait_time=0.25):
+            time.sleep(wait_time)
+            return waited + wait_time
+
+        logfile = os.path.join(self.logs_path, self.cluster_name + '.log')
+
+        def logfile_exists():
+            return os.path.exists(logfile)
+        wait_until(logfile_exists, Timeout(10))
+
+        time_waited = 0
+        with open(logfile, encoding='utf-8') as fp:
+            pos = 0
+            while not self.http_url:
+                fp.seek(pos)
+                if pos > 10000 or time_waited > 30:
+                    # don't wait forever
+                    # if HTTP url could not be obtained within the first 10000 bytes
+                    # or within 30 seconds it's probably not there
+                    raise NoHttpAddressAvailable("Couldn't get HTTP URL")
+                self.http_url = _get_http_uri(iter(fp.readline, ''))
+                pos = fp.tell()
+                time_waited = wait(time_waited)
 
 
 def _download_and_extract(uri, crate_root):
@@ -332,9 +360,11 @@ def run_crate(version, env=None, setting=None, crate_root=None):
     if env:
         env = dict(i.split('=') for i in env)
     with CrateNode(crate_dir=crate_dir, env=env, settings=settings) as node:
-        node.start()
         try:
+            node.start()
             node.process.communicate()
+        except NoHttpAddressAvailable as ex:
+            print(ex)
         except KeyboardInterrupt:
             print('Stopping Crate...')
 
