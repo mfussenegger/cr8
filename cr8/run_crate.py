@@ -222,10 +222,13 @@ class CrateNode(contextlib.ExitStack):
             time.sleep(wait_time)
             return waited + wait_time
 
-        time_waited = 0
         logfile = os.path.join(self.logs_path, self.cluster_name + '.log')
-        while not os.path.exists(logfile):
-            time_waited = wait(time_waited)
+
+        def logfile_exists():
+            return os.path.exists(logfile)
+        wait_until(logfile_exists, Timeout(10))
+
+        time_waited = 0
         with open(logfile, encoding='utf-8') as fp:
             pos = 0
             while not self.http_url:
