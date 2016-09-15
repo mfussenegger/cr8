@@ -43,8 +43,8 @@ class Executor:
                 with CrateNode(crate_dir=crate_dir,
                                env=configuration.get('env'),
                                settings=configuration.get('settings')) as node:
-                    if node.start():
-                        self._run_specs(track['specs'], node.http_url)
+                    node.start()
+                    self._run_specs(track['specs'], node.http_url)
 
 
 @argh.arg('-r', '--result_hosts', type=str)

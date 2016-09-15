@@ -197,15 +197,10 @@ class CrateNode(contextlib.ExitStack):
             universal_newlines=True
         ))
         log.info('PID: %s', proc.pid)
-        try:
-            self._obtain_http_url()
-        except NoHttpAddressAvailable as ex:
-            log.error(ex)
-            return False
+        self._obtain_http_url()
         log.info('HTTP: %s', self.http_url)
         _wait_until_reachable(self.http_url)
         log.info('Cluster is ready')
-        return True
 
     def stop(self):
         if self.process:
@@ -362,12 +357,13 @@ def run_crate(version, env=None, setting=None, crate_root=None):
     if env:
         env = dict(i.split('=') for i in env)
     with CrateNode(crate_dir=crate_dir, env=env, settings=settings) as node:
-        if node.start():
-            try:
-                node.process.communicate()
-            except KeyboardInterrupt:
-                pass
-        print('Stopping Crate...')
+        try:
+            node.start()
+            node.process.communicate()
+        except NoHttpAddressAvailable as ex:
+            print(ex)
+        except KeyboardInterrupt:
+            print('Stopping Crate...')
 
 
 if __name__ == "__main__":
