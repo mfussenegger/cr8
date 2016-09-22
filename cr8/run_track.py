@@ -7,11 +7,12 @@ from .run_crate import CrateNode, get_crate
 
 
 class Executor:
-    def __init__(self, track_dir, result_hosts=None, crate_root=None, output_fmt=None):
+    def __init__(self, track_dir, result_hosts=None, crate_root=None, output_fmt=None, fail_fast=None):
         self.track_dir = track_dir
         self.result_hosts = result_hosts
         self.crate_root = crate_root
         self.output_fmt = output_fmt
+        self.fail_fast = fail_fast
 
     def _expand_paths(self, paths):
         paths = (os.path.join(self.track_dir, path) for path in paths)
@@ -22,11 +23,19 @@ class Executor:
         specs = self._expand_paths(specs)
         for spec in specs:
             print('### Running spec file: ', os.path.basename(spec))
-            run_spec(
-                spec,
-                benchmark_host,
-                self.result_hosts,
-                output_fmt=self.output_fmt)
+            try:
+                run_spec(
+                    spec,
+                    benchmark_host,
+                    self.result_hosts,
+                    output_fmt=self.output_fmt)
+            except:
+                if self.fail_fast:
+                    raise
+                else:
+                    print('WARNING: Spec file failed due to the following exception:')
+                    import traceback
+                    traceback.print_exc()
 
     def execute(self, track):
         configurations = list(self._expand_paths(track['configurations']))
@@ -49,13 +58,15 @@ class Executor:
 
 @argh.arg('-r', '--result_hosts', type=str)
 @argh.arg('-of', '--output-fmt', choices=['full', 'short'], default='full')
-def run_track(track, result_hosts=None, crate_root=None, output_fmt=None):
+@argh.arg('--failfast', action='store_true')
+def run_track(track, result_hosts=None, crate_root=None, output_fmt=None, failfast=False):
     """Execute a track file"""
     executor = Executor(
         track_dir=os.path.dirname(track),
         result_hosts=result_hosts,
         crate_root=crate_root,
-        output_fmt=output_fmt
+        output_fmt=output_fmt,
+        fail_fast=failfast
     )
     executor.execute(toml.load(track))
 

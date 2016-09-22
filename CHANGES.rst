@@ -1,3 +1,7 @@
+- Breaking: The ``run-track`` subcommand now does not fail any more if a single
+  spec file of the track fails. To achieve the same behaviour as before, you
+  can use the ``--failfast`` command line option.
+
 - Added Crate build date column to version_info in benchmark result table
 
 - Added ``meta`` object column to results table.
