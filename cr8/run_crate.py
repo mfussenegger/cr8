@@ -346,8 +346,8 @@ def get_crate(version, crate_root=None):
 @argh.arg('version', help='Crate version to run. Concrete version like\
           "0.55.0", an alias or an URI pointing to a Crate tarball. Supported\
           aliases are: [{0}]'.format(', '.join(_version_lookups.keys())))
-@argh.arg('-e', '--env', nargs='*')
-@argh.arg('-s', '--setting', nargs='*')
+@argh.arg('-e', '--env', action='append')
+@argh.arg('-s', '--setting', action='append')
 def run_crate(version, env=None, setting=None, crate_root=None):
     """Launch a crate instance"""
     init_logging()
