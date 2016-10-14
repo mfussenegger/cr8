@@ -2,9 +2,16 @@ import json
 import aiohttp
 import itertools
 import calendar
+import time
 from datetime import datetime, date
 from typing import List, Union, Iterable
 from decimal import Decimal
+from urllib.parse import urlparse, parse_qs
+
+try:
+    import aiopg
+except ImportError:
+    aiopg = None
 
 
 class CrateJsonEncoder(json.JSONEncoder):
@@ -113,6 +120,97 @@ def _date_or_none(d: str) -> str:
         return None
 
 
+def _to_dsn(hosts):
+    """Convert a host URI into a dsn for aiopg.
+
+    >>> _to_dsn('aiopg://myhostname:4242/mydb')
+    'dbname=mydb host=myhostname port=4242'
+
+    >>> _to_dsn('aiopg://myhostname:4242')
+    'dbname=doc host=myhostname port=4242'
+
+    >>> _to_dsn('aiopg://myhostname:4242/doc?sslmode=require')
+    'dbname=doc host=myhostname port=4242 sslmode=require'
+
+    >>> _to_dsn('myhostname')
+    Traceback (most recent call last):
+        ...
+    ValueError: Port is missing
+    """
+    p = urlparse(hosts)
+    try:
+        host, port = p.netloc.split(':', maxsplit=1)
+    except ValueError:
+        raise ValueError('Port is missing')
+    dsn = 'dbname={dbname} host={host} port={port}'.format(
+        dbname=p.path[1:] if p.path else 'doc',
+        host=host,
+        port=port)
+    if p.query:
+        dsn += ' ' + ' '.join(k + '=' + v[0] for k, v in parse_qs(p.query).items())
+    return dsn
+
+
+class AiopgClient:
+    def __init__(self, hosts, pool_size=25):
+        self.dsn = _to_dsn(hosts)
+        self.pool_size = pool_size
+        self._pool = None
+
+    async def _get_pool(self):
+        if not self._pool:
+            self._pool = await aiopg.create_pool(
+                self.dsn,
+                timeout=10,
+                maxsize=self.pool_size,
+                enable_hstore=False,
+                enable_uuid=False
+            )
+        return self._pool
+
+    async def execute(self, stmt, args=None):
+        start = time.time()
+        pool = await self._get_pool()
+        with (await pool.cursor()) as cur:
+            await cur.execute(stmt, args)
+            rows = await cur.fetchall()
+            return {
+                'duration': (time.time() - start) * 1000.,
+                'rows': rows
+            }
+
+    async def execute_many(self, stmt, bulk_args):
+        start = time.time()
+        pool = await self._get_pool()
+        with (await pool.cursor()) as cur:
+            await cur.executemany(stmt, bulk_args)
+            rows = await cur.fetchall()
+            return {
+                'duration': (time.time() - start) * 1000.,
+                'rows': rows
+            }
+
+    async def get_server_version(self):
+        pool = await self._get_pool()
+        with (await pool.cursor()) as cur:
+            await cur.execute('select version from sys.nodes')
+            for (version,) in cur:
+                return {
+                    'hash': version['build_hash'],
+                    'number': version['number']
+                }
+
+    def close(self):
+        if self._pool:
+            self._pool.close()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *exs):
+        self.close()
+
+
 class HttpClient:
     def __init__(self, hosts, conn_pool_limit=25):
         self.hosts = hosts
@@ -165,4 +263,8 @@ class HttpClient:
 
 def client(hosts, concurrency=25):
     hosts = hosts or 'localhost:4200'
+    if hosts.startswith('aiopg://'):
+        if not aiopg:
+            raise ValueError('Cannot use "aiopg" scheme if aiopg is not available')
+        return AiopgClient(hosts, pool_size=concurrency)
     return HttpClient(_to_http_hosts(hosts), conn_pool_limit=concurrency)
