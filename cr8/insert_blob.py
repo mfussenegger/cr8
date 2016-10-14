@@ -11,6 +11,7 @@ from crate.client import connect
 @argh.arg('--hosts', type=str,
           help='crate hosts to which the file should be uploaded to',
           default=['http://localhost:4200'])
+@argh.wrap_errors([KeyboardInterrupt])
 def insert_blob(filename, hosts=None, table=None):
     """ uploads a file into a blob table """
     conn = connect(hosts)

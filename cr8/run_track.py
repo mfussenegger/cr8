@@ -59,6 +59,7 @@ class Executor:
 @argh.arg('-r', '--result_hosts', type=str)
 @argh.arg('-of', '--output-fmt', choices=['full', 'short'], default='full')
 @argh.arg('--failfast', action='store_true')
+@argh.wrap_errors([KeyboardInterrupt])
 def run_track(track, result_hosts=None, crate_root=None, output_fmt=None, failfast=False):
     """Execute a track file"""
     executor = Executor(
