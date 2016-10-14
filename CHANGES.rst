@@ -1,12 +1,54 @@
-- Breaking: The ``run-track`` subcommand now does not fail any more if a single
+
+2016-10-14 0.7.0
+================
+
+Breaking (but only a little)
+----------------------------
+
+- The ``run-track`` subcommand now does not fail any more if a single
   spec file of the track fails. To achieve the same behaviour as before, you
   can use the ``--failfast`` command line option.
 
-- Added Crate build date column to version_info in benchmark result table
+Improvements
+------------
+
+- Added a ``--output-fmt`` option to most commands.
+  This option can be used to get a succinct output.
+
+- Added a new ``auto_inc`` fake data provider for ``insert-fake-data``.
+  This provider may be a bit slow. This is due to the fact that the fake data
+  generation utilizes multiple processes and this provider requires
+  synchronization. But it's still awesome.
+
+- Spec files now support a ``min_version`` setting.
+  This can be used to skip certain queries if the server doesn't meet the
+  ``min_version`` requirement.
+
+- Improved the error handling a bit.
+
+- Statements and arguments in spec files can now be defines as callables.
 
 - Added ``meta`` object column to results table.
-  It's now possible to add a name to the spec so the benchmark results can easily
-  be identified by this spec label.
+  It's now possible to add a name to the spec so the benchmark results can
+  easily be identified by this spec label.
+
+- Added Crate build date column to version_info in benchmark result table.
+
+- ``timeit`` now shows a progress bar.
+
+- The ``--setting`` and ``-env`` options of ``run-crate`` are now repeatable.
+
+
+Fixes
+-----
+
+- Fixed an issue with the ``num-records`` option of ``insert-fake-data``.
+  It didn't work correctly if the number of records specified was smaller than
+  the bulk size.
+
+- Fixed some issues with the way Crate is launched using ``run-track``.
+  If Crate produced a lot of logging output it could get stuck.
+
 
 2016-07-04 0.6.0
 ================
