@@ -187,6 +187,7 @@ class Executor:
 
 @argh.arg('benchmark_hosts', type=str)
 @argh.arg('-of', '--output-fmt', choices=['full', 'short'], default='full')
+@argh.wrap_errors([KeyboardInterrupt])
 def run_spec(spec, benchmark_hosts, result_hosts=None, output_fmt=None):
     """Run a spec file, executing the statements on the benchmark_hosts.
 
