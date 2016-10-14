@@ -13,7 +13,7 @@ from crate.client import connect
           default=['http://localhost:4200'])
 @argh.wrap_errors([KeyboardInterrupt])
 def insert_blob(filename, hosts=None, table=None):
-    """ uploads a file into a blob table """
+    """Upload a file into a blob table """
     conn = connect(hosts)
     container = conn.get_blob_container(table)
     with open(filename, 'rb') as f:

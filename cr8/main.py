@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import argh
+import argparse
 
 from cr8 import __version__
 from cr8.timeit import timeit
@@ -14,7 +15,7 @@ from cr8.run_track import run_track
 
 
 def main():
-    p = argh.ArghParser()
+    p = argh.ArghParser(formatter_class=argparse.RawTextHelpFormatter)
     p.add_argument(
         '--version', action='version', version="%(prog)s " + __version__)
     p.add_commands([timeit,

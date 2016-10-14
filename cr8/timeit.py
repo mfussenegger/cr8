@@ -159,7 +159,7 @@ def timeit(hosts=None,
            repeat=30,
            concurrency=1,
            output_fmt=None):
-    """ runs the given statement a number of times and returns the runtime stats
+    """Run the given statement a number of times and return the runtime stats
     """
     num_lines = 0
     for line in lines_from_stdin(stmt):
