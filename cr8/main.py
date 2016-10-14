@@ -3,6 +3,7 @@
 
 import argh
 
+from cr8 import __version__
 from cr8.timeit import timeit
 from cr8.insert_json import insert_json
 from cr8.insert_fake_data import insert_fake_data
@@ -14,6 +15,8 @@ from cr8.run_track import run_track
 
 def main():
     p = argh.ArghParser()
+    p.add_argument(
+        '--version', action='version', version="%(prog)s " + __version__)
     p.add_commands([timeit,
                     insert_json,
                     insert_fake_data,
