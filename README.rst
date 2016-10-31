@@ -43,10 +43,11 @@ Python >= 3.5.1 is required to use the command line tools.
 
 Install them using `pip <https://pip.pypa.io/en/stable/>`_::
 
-    pip install cr8
+    python3.5 -m pip install --user cr8
 
 (Users of Python 3.5.0 might run into `this AssertionError
 <http://bugs.python.org/issue25233>`_.)
+
 
 Usage
 =====
