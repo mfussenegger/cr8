@@ -7,7 +7,7 @@ from cr8.run_crate import CrateNode, get_crate
 from crate.client import connect
 
 
-crate_dir = get_crate('latest-nightly')
+crate_dir = get_crate('latest-testing')
 node = CrateNode(
     crate_dir=crate_dir,
     settings={
@@ -26,11 +26,13 @@ def setup(*args):
 
 
 def teardown(*args):
-    with connect(node.http_url) as conn:
-        c = conn.cursor()
-        c.execute('drop table x.demo')
-        c.execute('drop blob table blobtable')
-    node.stop()
+    try:
+        with connect(node.http_url) as conn:
+            c = conn.cursor()
+            c.execute('drop table x.demo')
+            c.execute('drop blob table blobtable')
+    finally:
+        node.stop()
 
 
 def transform(s):
