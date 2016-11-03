@@ -4,6 +4,18 @@ from typing import Tuple, Iterator
 from collections import defaultdict
 
 
+def parse_version(version: str) -> tuple:
+    """Parse a string formatted X.Y.Z version number into a tuple
+
+    >>> parse_version('10.2.3')
+    (10, 2, 3)
+    """
+    if not version:
+        return None
+    major, minor, patch = version.split('.', maxsplit=3)
+    return (int(major), int(minor), int(patch))
+
+
 def parse_table(fq_table: str) -> Tuple[str, str]:
     """Parse a tablename into tuple(<schema>, <table>).
 

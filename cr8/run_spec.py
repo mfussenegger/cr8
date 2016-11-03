@@ -9,7 +9,7 @@ from cr8 import aio
 from .insert_json import to_insert
 from .bench_spec import load_spec
 from .timeit import QueryRunner, Result
-from .misc import as_bulk_queries, as_statements, get_lines
+from .misc import as_bulk_queries, as_statements, get_lines, parse_version
 from .metrics import Stats
 from .cli import dicts_from_lines
 from . import clients
@@ -52,13 +52,6 @@ create table if not exists benchmarks (
 '''
 
 
-def _parse_version(version: str) -> tuple:
-    if not version:
-        return None
-    major, minor, patch = version.split('.', maxsplit=3)
-    return (int(major), int(minor), int(patch))
-
-
 class Executor:
     def __init__(self, spec_dir, benchmark_hosts, result_hosts, output_fmt=None):
         self.benchmark_hosts = benchmark_hosts
@@ -67,7 +60,7 @@ class Executor:
         self.client = clients.client(benchmark_hosts)
         self.output_fmt = output_fmt
         self.server_version_info = aio.run(self.client.get_server_version)
-        self.server_version = _parse_version(self.server_version_info['number'])
+        self.server_version = parse_version(self.server_version_info['number'])
 
         if result_hosts:
             table_created = []
@@ -153,7 +146,7 @@ class Executor:
             stmt = query['statement']
             iterations = query.get('iterations', 1)
             concurrency = query.get('concurrency', 1)
-            min_version = _parse_version(query.get('min_version'))
+            min_version = parse_version(query.get('min_version'))
             if min_version and min_version > self.server_version:
                 print(self._skip_message(min_version, stmt))
                 continue

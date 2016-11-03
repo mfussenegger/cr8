@@ -13,7 +13,7 @@ from crate.client import connect
 from concurrent.futures import ProcessPoolExecutor
 
 from .insert_json import to_insert
-from .misc import parse_table
+from .misc import parse_table, parse_version
 from .aio import asyncio, consume
 from .cli import to_int
 from .fake_providers import GeoSpatialProvider, auto_inc
@@ -22,11 +22,26 @@ from . import clients
 loop = asyncio.get_event_loop()
 
 
+SELLECT_COLS = """
+select
+    column_name,
+    data_type
+from
+    information_schema.columns
+where
+    is_generated = false
+    and {schema_column_name} = ?
+    and table_name = ?
+order by ordinal_position asc
+"""
+
+
 def retrieve_columns(cursor, schema, table):
-    cursor.execute(
-        'select column_name, data_type from information_schema.columns \
-        where is_generated = false and schema_name = ? and table_name = ? \
-        order by ordinal_position asc', (schema, table))
+    cursor.execute("select min(version['number']) from sys.nodes")
+    version = parse_version(cursor.fetchone()[0])
+    stmt = SELLECT_COLS.format(
+        schema_column_name='table_schema' if version >= (0, 57, 0) else 'schema_name')
+    cursor.execute(stmt, (schema, table))
     return OrderedDict(cursor.fetchall())
 
 
