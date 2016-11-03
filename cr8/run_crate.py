@@ -13,9 +13,9 @@ import time
 import gzip
 import io
 import tarfile
+import threading
 from typing import Dict, Any
 from urllib.request import urlopen
-from .exceptions import NoHttpAddressAvailable
 
 
 log = logging.getLogger(__file__)
@@ -32,8 +32,8 @@ DEFAULT_SETTINGS = {
     'udc.enabled': False
 }
 
-HTTP_ADDRESS_RE = re.compile(
-    '.*\[http +\] \[.*\] .*'
+ADDRESS_RE = re.compile(
+    '.*\[(?P<protocol>http|psql|transport) +\] \[.*\] .*'
     'publish_address {'
     '(?:inet\[[\w\d\.-]*/|\[)?'
     '(?:[\w\d\.-]+/)?'
@@ -41,6 +41,22 @@ HTTP_ADDRESS_RE = re.compile(
     '(?:\])?'
     '}'
 )
+
+
+class OutputMonitor:
+
+    def __init__(self):
+        self.consumers = []
+
+    def consume(self, iterable):
+        for line in iterable:
+            for consumer in self.consumers:
+                consumer.send(line)
+
+    def start(self, proc):
+        out_thread = threading.Thread(target=self.consume, args=(proc.stdout,))
+        out_thread.daemon = True
+        out_thread.start()
 
 
 class Timeout:
@@ -63,72 +79,31 @@ class Timeout:
         self._timeout_expired = timeout_expired
 
     def __call__(self):
-        return not self._timeout_expired()
+        if self._timeout_expired():
+            raise TimeoutError()
+        return True
 
 
-def wait_until(f, condition):
-    """Calls f while condition returns True until f returns a truthy value
+def wait_until(predicate, timeout=30):
+    """Wait until predicate returns a truthy value or the timeout is reached.
 
-    >>> wait_until(lambda: True, lambda: True)
+    >>> wait_until(lambda: True, timeout=10)
     """
-    while condition():
-        r = f()
+    not_expired = Timeout(timeout)
+    while not_expired():
+        r = predicate()
         if r:
             break
 
 
-def _get_http_uri(lines):
-    """Get the http publish_address from lines that contain Crate log output.
-
-    >>> lines = [
-    ...     "[2016-06-11 19:10:16,141][INFO ][node                     ] [Ankhi] initialized",
-    ...     "[2016-06-11 19:10:16,141][INFO ][node                     ] [Ankhi] starting ...",
-    ...     "[2016-06-11 19:10:16,171][INFO ][http                     ] [Ankhi] publish_address {10.68.2.10:4200}, bound_addresses {[::]:4200}",
-    ...     "[2016-06-11 19:10:16,188][INFO ][discovery                ] [Ankhi] crate/GJAvonoFSfS3Y1IaUPTqfA"
-    ... ]
-    >>> _get_http_uri(lines)
-    'http://10.68.2.10:4200'
-
-    >>> lines = [
-    ...     "[2016-06-11 21:26:53,798][INFO ][node                     ] [Rex Mundi] starting ...",
-    ...     "[2016-06-11 21:26:53,828][INFO ][http                     ] [Rex Mundi] bound_address {inet[/0:0:0:0:0:0:0:0:4200]}, publish_address {inet[/192.168.0.19:4200]}",
-    ... ]
-    >>> _get_http_uri(lines)
-    'http://192.168.0.19:4200'
-
-    >>> lines = [
-    ...     "[2016-06-15 22:18:36,639][INFO ][node                     ] [crate] starting ...",
-    ...     "[2016-06-15 22:18:36,755][INFO ][http                     ] [crate] publish_address {localhost/127.0.0.1:42203}, bound_addresses {127.0.0.1:42203}, {[::1]:42203}, {[fe80::1]:42203}",
-    ...     "[2016-06-15 22:18:36,774][INFO ][transport                ] [crate] publish_address {localhost/127.0.0.1:4300}, bound_addresses {127.0.0.1:4300}, {[::1]:4300}, {[fe80::1]:4300}",
-    ...     "[2016-06-15 22:18:36,779][INFO ][discovery                ] [crate] Testing42203/Eroq_ZAgT4CDpF_gzh4tcA",
-    ... ]
-    >>> _get_http_uri(lines)
-    'http://127.0.0.1:42203'
-
-    >>> lines = [
-    ...     "[2016-06-16 10:27:20,074][INFO ][node                     ] [Selene] starting ...",
-    ...     "[2016-06-16 10:27:20,150][INFO ][http                     ] [Selene] bound_address {inet[/192.168.43.105:4200]}, publish_address {inet[Haudis-MacBook-Pro.local/192.168.43.105:4200]}",
-    ...     "[2016-06-16 10:27:20,165][INFO ][transport                ] [Selene] bound_address {inet[/192.168.43.105:4300]}, publish_address {inet[Haudis-MacBook-Pro.local/192.168.43.105:4300]}",
-    ...     "[2016-06-16 10:27:20,185][INFO ][discovery                ] [Selene] crate/h9moKMrATmCElYXjfad5Vw",
-    ... ]
-    >>> _get_http_uri(lines)
-    'http://192.168.43.105:4200'
-    """
-    for line in lines:
-        m = HTTP_ADDRESS_RE.match(line)
-        if m:
-            return 'http://' + m.group('addr')
-
-
-def _wait_until_reachable(url):
-    def cluster_ready():
-        try:
-            with urlopen(url) as r:
-                p = json.loads(r.read().decode('utf-8'))
-                return int(p['status']) == 200
-        except Exception as e:
-            return False
-    wait_until(cluster_ready, Timeout(60))
+def cluster_state_200(url):
+    try:
+        with urlopen(url) as r:
+            p = json.loads(r.read().decode('utf-8'))
+            return int(p['status']) == 200
+    except Exception as e:
+        log.debug(e)
+        return False
 
 
 def _get_settings(settings=None):
@@ -167,15 +142,16 @@ class CrateNode(contextlib.ExitStack):
         super().__init__()
         self.crate_dir = crate_dir
         self.env = env
+        self.monitor = OutputMonitor()
         self.process = None  # type: subprocess.Popen
         self.http_url = None  # type: str
+        self._has_http_url = threading.Event()
         start_script = 'crate.bat' if sys.platform == 'win32' else 'crate'
 
         settings = _get_settings(settings)
         self.data_path = settings.get('path.data') or tempfile.mkdtemp()
         self.logs_path = settings.get('path.logs') or os.path.join(crate_dir, 'logs')
         self.cluster_name = settings.get('cluster.name') or 'cr8'
-        log.info('Work dir: %s (removed on stop)', self.data_path)
         settings['path.data'] = self.data_path
         settings['cluster.name'] = self.cluster_name
         args = ['-Des.{0}={1}'.format(k, v) for k, v in settings.items()]
@@ -191,16 +167,33 @@ class CrateNode(contextlib.ExitStack):
         self.process = proc = self.enter_context(subprocess.Popen(
             self.cmd,
             stdin=subprocess.DEVNULL,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
             env=self.env,
             universal_newlines=True
         ))
-        log.info('PID: %s', proc.pid)
-        self._obtain_http_url()
-        log.info('HTTP: %s', self.http_url)
-        _wait_until_reachable(self.http_url)
-        log.info('Cluster is ready')
+        log.info(
+            ('Crate launched:\n'
+             '\tPID: %s\n'
+             '\tLogs: %s\n'
+             '\tData: %s (removed on stop)\n'),
+            proc.pid,
+            os.path.join(self.logs_path, self.cluster_name + '.log'),
+            self.data_path
+        )
+        self.monitor.consumers.append(AddrConsumer(self._set_addr))
+        self.monitor.start(proc)
+
+        wait_until(
+            lambda: self.http_url and cluster_state_200(self.http_url),
+            timeout=30
+        )
+        log.info('Cluster ready to process requests')
+
+    def _set_addr(self, protocol, addr):
+        log.info('{0:10}: {1}'.format(protocol.capitalize(), addr))
+        if protocol == 'http':
+            self.http_url = 'http://' + addr
 
     def stop(self):
         if self.process:
@@ -214,33 +207,16 @@ class CrateNode(contextlib.ExitStack):
     def __exit__(self, *ex):
         self.stop()
 
-    def _obtain_http_url(self):
-        """
-        Read Crate log file to obtain HTTP address of node
-        """
-        def wait(waited, wait_time=0.25):
-            time.sleep(wait_time)
-            return waited + wait_time
 
-        logfile = os.path.join(self.logs_path, self.cluster_name + '.log')
+class AddrConsumer:
 
-        def logfile_exists():
-            return os.path.exists(logfile)
-        wait_until(logfile_exists, Timeout(10))
+    def __init__(self, on_addr):
+        self.on_addr = on_addr
 
-        time_waited = 0
-        with open(logfile, encoding='utf-8') as fp:
-            pos = 0
-            while not self.http_url:
-                fp.seek(pos)
-                if pos > 10000 or time_waited > 30:
-                    # don't wait forever
-                    # if HTTP url could not be obtained within the first 10000 bytes
-                    # or within 30 seconds it's probably not there
-                    raise NoHttpAddressAvailable("Couldn't get HTTP URL")
-                self.http_url = _get_http_uri(iter(fp.readline, ''))
-                pos = fp.tell()
-                time_waited = wait(time_waited)
+    def send(self, line):
+        m = ADDRESS_RE.match(line)
+        if m:
+            self.on_addr(m.group('protocol'), m.group('addr'))
 
 
 def _download_and_extract(uri, crate_root):
@@ -362,9 +338,7 @@ def run_crate(version, env=None, setting=None, crate_root=None):
     with CrateNode(crate_dir=crate_dir, env=env, settings=settings) as node:
         try:
             node.start()
-            node.process.communicate()
-        except NoHttpAddressAvailable as ex:
-            print(ex)
+            node.process.wait()
         except KeyboardInterrupt:
             print('Stopping Crate...')
 
