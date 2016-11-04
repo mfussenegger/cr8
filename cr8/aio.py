@@ -18,9 +18,10 @@ tqdm = functools.partial(
 
 
 async def measure(stats, f, *args, **kws):
-    duration = await f(*args, **kws)
+    r = await f(*args, **kws)
+    duration = r['duration']
     stats.measure(duration)
-    return duration
+    return r
 
 
 async def qmap(q, corof, iterable):
@@ -45,9 +46,13 @@ async def map(coro, iterable, total=None):
         await coro(*i)
 
 
-def run(coro):
+def run(coro, *args):
     loop = asyncio.get_event_loop()
-    return loop.run_until_complete(coro())
+    if args:
+        gen = coro(*args)
+    else:
+        gen = coro()
+    return loop.run_until_complete(gen)
 
 
 def run_many(coro, iterable, concurrency, num_items=None):

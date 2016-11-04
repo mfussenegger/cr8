@@ -40,7 +40,7 @@ async def _exec(session, url, data):
         r = await resp.json()
         if 'error' in r:
             raise ValueError(r['error']['message'])
-        return r['duration']
+        return r
 
 
 def _plain_or_callable(obj):

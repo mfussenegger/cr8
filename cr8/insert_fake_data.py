@@ -9,7 +9,6 @@ import operator
 from faker import Factory
 from functools import partial
 from collections import OrderedDict
-from crate.client import connect
 from concurrent.futures import ProcessPoolExecutor
 
 from .insert_json import to_insert
@@ -17,7 +16,7 @@ from .misc import parse_table, parse_version
 from .aio import asyncio, consume
 from .cli import to_int
 from .fake_providers import GeoSpatialProvider, auto_inc
-from . import clients
+from . import clients, aio
 
 loop = asyncio.get_event_loop()
 
@@ -36,13 +35,13 @@ order by ordinal_position asc
 """
 
 
-def retrieve_columns(cursor, schema, table):
-    cursor.execute("select min(version['number']) from sys.nodes")
-    version = parse_version(cursor.fetchone()[0])
+def retrieve_columns(client, schema, table):
+    r = aio.run(client.execute, "select min(version['number']) from sys.nodes")
+    version = parse_version(r['rows'][0][0])
     stmt = SELLECT_COLS.format(
         schema_column_name='table_schema' if version >= (0, 57, 0) else 'schema_name')
-    cursor.execute(stmt, (schema, table))
-    return OrderedDict(cursor.fetchall())
+    r = aio.run(client.execute, stmt, (schema, table))
+    return OrderedDict(r['rows'])
 
 
 def generate_row(fakers):
@@ -196,10 +195,9 @@ def insert_fake_data(hosts=None,
                 "y": "provider_without_args"
             }
     """
-    with connect(hosts) as conn:
-        c = conn.cursor()
+    with clients.client(hosts, concurrency=1) as client:
         schema, table_name = parse_table(table)
-        columns = retrieve_columns(c, schema, table_name)
+        columns = retrieve_columns(client, schema, table_name)
     if not columns:
         sys.exit('Could not find columns for table "{}"'.format(table))
     print('Found schema: ')
