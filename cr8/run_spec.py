@@ -174,8 +174,15 @@ class Executor:
 
 @argh.arg('benchmark_hosts', type=str)
 @argh.arg('-of', '--output-fmt', choices=['full', 'short'], default='full')
+@argh.arg('--action',
+          choices=['setup', 'teardown', 'queries', 'load_data'],
+          action='append')
 @argh.wrap_errors([KeyboardInterrupt])
-def run_spec(spec, benchmark_hosts, result_hosts=None, output_fmt=None):
+def run_spec(spec,
+             benchmark_hosts,
+             result_hosts=None,
+             output_fmt=None,
+             action=None):
     """Run a spec file, executing the statements on the benchmark_hosts.
 
     Short example of a spec file:
@@ -204,6 +211,11 @@ def run_spec(spec, benchmark_hosts, result_hosts=None, output_fmt=None):
         result_hosts: optional hostname[:port] Crate node pairs into which the
             runtime statistics should be inserted.
         output_fmt: output format
+        action: Optional action to execute.
+            Default is to execute all actions - setup, queries and teardown.
+            If present only the specified action will be executed.
+            The argument can be provided multiple times to execute more than
+            one action.
     """
     with Executor(
         spec_dir=os.path.dirname(spec),
@@ -213,17 +225,19 @@ def run_spec(spec, benchmark_hosts, result_hosts=None, output_fmt=None):
     ) as executor:
         spec = load_spec(spec)
         try:
-            print('# Running setUp')
-            executor.exec_instructions(spec.setup)
+            if not action or 'setup' in action:
+                print('# Running setUp')
+                executor.exec_instructions(spec.setup)
             print('# Running benchmark')
-            if spec.load_data:
+            if not action or 'load_data' in action and spec.load_data:
                 for data_spec in spec.load_data:
                     executor.run_load_data(data_spec, spec.meta)
-            else:
+            if not action or 'queries' in action and spec.queries:
                 executor.run_queries(spec.queries, spec.meta)
         finally:
-            print('# Running tearDown')
-            executor.exec_instructions(spec.teardown)
+            if not action or 'teardown' in action:
+                print('# Running tearDown')
+                executor.exec_instructions(spec.teardown)
 
 
 def main():
