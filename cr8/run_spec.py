@@ -3,7 +3,6 @@ import os
 import itertools
 from time import time
 from functools import partial
-from crate.client import connect
 
 from cr8 import aio
 from .insert_json import to_insert
@@ -56,8 +55,7 @@ class Executor:
     def __init__(self, spec_dir, benchmark_hosts, result_hosts, output_fmt=None):
         self.benchmark_hosts = benchmark_hosts
         self.spec_dir = spec_dir
-        self.conn = connect(benchmark_hosts)
-        self.client = clients.client(benchmark_hosts)
+        self.client = client = clients.client(benchmark_hosts)
         self.output_fmt = output_fmt
         self.server_version_info = aio.run(self.client.get_server_version)
         self.server_version = parse_version(self.server_version_info['number'])
@@ -66,13 +64,11 @@ class Executor:
             table_created = []
 
             def process_result(result):
-                with connect(result_hosts) as conn:
-                    cursor = conn.cursor()
-                    if not table_created:
-                        cursor.execute(BENCHMARK_TABLE)
-                        table_created.append(None)
-                    stmt, args = to_insert('benchmarks', result.as_dict())
-                    cursor.execute(stmt, args)
+                if not table_created:
+                    aio.run(client.execute, BENCHMARK_TABLE)
+                    table_created.append(None)
+                stmt, args = to_insert('benchmarks', result.as_dict())
+                aio.run(client.execute, stmt, args)
                 print(result)
                 print('')
         else:
@@ -88,20 +84,19 @@ class Executor:
         return (to_insert(target, d) for d in dicts)
 
     def exec_instructions(self, instructions):
-        cursor = self.conn.cursor()
         filenames = instructions.statement_files
         filenames = (os.path.join(self.spec_dir, i) for i in filenames)
         lines = (line for fn in filenames for line in get_lines(fn))
         statements = itertools.chain(as_statements(lines), instructions.statements)
         for stmt in statements:
-            cursor.execute(stmt)
+            aio.run(self.client.execute, stmt)
 
         for data_file in instructions.data_files:
             inserts = as_bulk_queries(self._to_inserts(data_file),
                                       data_file.get('bulk_size', 5000))
             concurrency = data_file.get('concurrency', 25)
             aio.run_many(self.client.execute_many, inserts, concurrency=concurrency)
-            cursor.execute('refresh table {target}'.format(target=data_file['target']))
+            aio.run(self.client.execute, 'refresh table {target}'.format(target=data_file['target']))
 
     def run_load_data(self, data_spec, meta=None):
         inserts = self._to_inserts(data_spec)
@@ -174,7 +169,6 @@ class Executor:
         return self
 
     def __exit__(self, *ex):
-        self.conn.close()
         self.client.close()
 
 
