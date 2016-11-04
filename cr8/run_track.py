@@ -19,7 +19,7 @@ class Executor:
         paths = (os.path.abspath(path) for path in paths)
         return (p for path in paths for p in glob(path))
 
-    def _run_specs(self, specs, benchmark_host):
+    def _run_specs(self, specs, benchmark_host, action=None):
         specs = self._expand_paths(specs)
         for spec in specs:
             print('### Running spec file: ', os.path.basename(spec))
@@ -28,7 +28,8 @@ class Executor:
                     spec,
                     benchmark_host,
                     self.result_hosts,
-                    output_fmt=self.output_fmt)
+                    output_fmt=self.output_fmt,
+                    action=action)
             except:
                 if self.fail_fast:
                     raise
@@ -36,6 +37,18 @@ class Executor:
                     print('WARNING: Spec file failed due to the following exception:')
                     import traceback
                     traceback.print_exc()
+
+    def _execute_specs(self, specs, benchmark_host):
+        if isinstance(specs, list):
+            self._run_specs(specs, benchmark_host)
+        else:
+            fixtures = specs.get('fixtures', [])
+            queries = specs.get('queries', [])
+            full = specs.get('full', [])
+            self._run_specs(fixtures, benchmark_host, action=['setup'])
+            self._run_specs(queries, benchmark_host, action=['queries'])
+            self._run_specs(fixtures, benchmark_host, action=['teardown'])
+            self._run_specs(full, benchmark_host)
 
     def execute(self, track):
         configurations = list(self._expand_paths(track['configurations']))
@@ -53,7 +66,7 @@ class Executor:
                                env=configuration.get('env'),
                                settings=configuration.get('settings')) as node:
                     node.start()
-                    self._run_specs(track['specs'], node.http_url)
+                    self._execute_specs(track['specs'], node.http_url)
 
 
 @argh.arg('-r', '--result_hosts', type=str)

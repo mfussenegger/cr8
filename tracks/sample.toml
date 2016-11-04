@@ -4,6 +4,25 @@ versions = [
 configurations = [
     "default.toml"
 ]
-specs = [
+
+# old format:
+# specs = ["../rel/path/to/spec.toml"]
+
+# new format
+[specs]
+# fixtures: list of specs, but only setup/teardown will be executed.
+# After the setup, the specs listed in *queries* will be run
+# and after them the teardown is executed.
+#
+# Use this to avoid repeating the same setup
+fixtures = [
     "../specs/sample.toml"
+]
+queries = [
+    "../specs/sample.toml"
+]
+
+# list of specs - similar to the old specs list everything is run in those
+full = [
+    "../specs/sample_insert.toml"
 ]
