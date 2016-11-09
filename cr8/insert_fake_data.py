@@ -6,6 +6,7 @@ import json
 import argh
 import argparse
 import operator
+import math
 from faker import Factory
 from functools import partial
 from collections import OrderedDict
@@ -124,18 +125,21 @@ def create_row_generator(columns, mapping=None):
     return partial(generate_row, fakers)
 
 
-def generate_bulk_args(generate_row, bulk_size):
-    return [generate_row() for i in range(bulk_size)]
-
-
 async def _exec_many(client, stmt, args_coro):
     return await client.execute_many(stmt, await args_coro)
 
 
-async def _produce_data_and_insert(q, client, stmt, bulk_args_fun, num_inserts):
+def _create_bulk_args(row_fun, req_size):
+    return [row_fun() for i in range(req_size)]
+
+
+async def _produce_data_and_insert(q, client, stmt, row_fun, num_records, bulk_size):
     executor = ProcessPoolExecutor()
-    for i in range(num_inserts):
-        args_coro = loop.run_in_executor(executor, bulk_args_fun)
+    while num_records > 0:
+        req_size = min(num_records, bulk_size)
+        num_records -= req_size
+        args_coro = loop.run_in_executor(
+            executor, _create_bulk_args, row_fun, req_size)
         task = asyncio.ensure_future(_exec_many(client, stmt, args_coro))
         await q.put(task)
     await q.put(None)
@@ -210,10 +214,9 @@ def insert_fake_data(hosts=None,
         mapping = json.load(mapping_file)
 
     bulk_size = min(num_records, bulk_size)
-    num_inserts = int(num_records / bulk_size)
+    num_inserts = int(math.ceil(num_records / bulk_size))
 
-    generate_row = create_row_generator(columns, mapping)
-    bulk_args_fun = partial(generate_bulk_args, generate_row, bulk_size)
+    generate_row_fun = create_row_generator(columns, mapping)
 
     stmt = to_insert(table, columns)[0]
     print('Using insert statement: ')
@@ -226,7 +229,7 @@ def insert_fake_data(hosts=None,
     q = asyncio.Queue(maxsize=concurrency)
     with clients.client(hosts, concurrency=concurrency) as client:
         loop.run_until_complete(asyncio.gather(
-            _produce_data_and_insert(q, client, stmt, bulk_args_fun, num_inserts),
+            _produce_data_and_insert(q, client, stmt, generate_row_fun, num_records, bulk_size),
             consume(q, total=num_inserts)))
 
 
