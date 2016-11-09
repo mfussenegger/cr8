@@ -128,12 +128,15 @@ def generate_bulk_args(generate_row, bulk_size):
     return [generate_row() for i in range(bulk_size)]
 
 
+async def _exec_many(client, stmt, args_coro):
+    return await client.execute_many(stmt, await args_coro)
+
+
 async def _produce_data_and_insert(q, client, stmt, bulk_args_fun, num_inserts):
     executor = ProcessPoolExecutor()
     for i in range(num_inserts):
-        args = await asyncio.ensure_future(
-            loop.run_in_executor(executor, bulk_args_fun))
-        task = asyncio.ensure_future(client.execute_many(stmt, args))
+        args_coro = loop.run_in_executor(executor, bulk_args_fun)
+        task = asyncio.ensure_future(_exec_many(client, stmt, args_coro))
         await q.put(task)
     await q.put(None)
 
