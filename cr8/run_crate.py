@@ -281,8 +281,8 @@ def _get_latest_nightly_uri():
 
 
 _version_lookups = {
-    'latest': _from_versions_json('crate-java'),
-    'latest-stable': _from_versions_json('crate-java'),
+    'latest': _from_versions_json('crate'),
+    'latest-stable': _from_versions_json('crate'),
     'latest-testing': _from_versions_json('crate_testing'),
     'latest-nightly': _get_latest_nightly_uri
 }
