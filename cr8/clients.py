@@ -125,4 +125,5 @@ class HttpClient:
 
 
 def client(hosts, concurrency=25):
+    hosts = hosts or 'localhost:4200'
     return HttpClient(_to_http_hosts(hosts), conn_pool_limit=concurrency)
