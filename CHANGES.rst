@@ -1,4 +1,38 @@
 
+2016-11-10 0.8.0
+================
+
+insert-fake-data improvements
+-----------------------------
+
+- Multiple cores are now utilized better for fake data generation.
+
+- Adopted internal queries to be compatible with Crate versions > ``0.57``.
+
+- ``insert-fake-data`` will now insert the accurate number of rows specified
+  instead of rounding to the nearest bulk size.
+
+Miscellaneous
+-------------
+
+- ``run-crate latest-stable`` now correctly launches the latest released stable
+  version of Crate.
+  It incorrectly retrieved the version of the latest Java client release.
+
+- ``run-crate`` now outputs the postgres port if found in the logs.
+
+- Added a ``--action`` argument to ``run-spec`` which can be used to only run a
+  subset of a spec file.
+
+- Extended the track-file format to allow re-using a setup across multiple spec
+  files.
+
+- Added a ``--version`` option.
+  Best feature ever.
+
+- Changed the ``--help`` output formatting so it's easier to read.
+
+
 2016-10-14 0.7.0
 ================
 
