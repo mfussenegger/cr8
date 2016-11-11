@@ -55,7 +55,8 @@ class Executor:
     def __init__(self, spec_dir, benchmark_hosts, result_hosts, output_fmt=None):
         self.benchmark_hosts = benchmark_hosts
         self.spec_dir = spec_dir
-        self.client = client = clients.client(benchmark_hosts)
+        self.client = clients.client(benchmark_hosts)
+        self.result_client = clients.client(result_hosts)
         self.output_fmt = output_fmt
         self.server_version_info = aio.run(self.client.get_server_version)
         self.server_version = parse_version(self.server_version_info['number'])
@@ -65,10 +66,10 @@ class Executor:
 
             def process_result(result):
                 if not table_created:
-                    aio.run(client.execute, BENCHMARK_TABLE)
+                    aio.run(self.result_client.execute, BENCHMARK_TABLE)
                     table_created.append(None)
                 stmt, args = to_insert('benchmarks', result.as_dict())
-                aio.run(client.execute, stmt, args)
+                aio.run(self.result_client.execute, stmt, args)
                 print(result)
                 print('')
         else:
@@ -170,6 +171,7 @@ class Executor:
 
     def __exit__(self, *ex):
         self.client.close()
+        self.result_client.close()
 
 
 @argh.arg('benchmark_hosts', type=str)
@@ -229,10 +231,10 @@ def run_spec(spec,
                 print('# Running setUp')
                 executor.exec_instructions(spec.setup)
             print('# Running benchmark')
-            if not action or 'load_data' in action and spec.load_data:
+            if spec.load_data and (not action or 'load_data' in action):
                 for data_spec in spec.load_data:
                     executor.run_load_data(data_spec, spec.meta)
-            if not action or 'queries' in action and spec.queries:
+            if spec.queries and (not action or 'queries' in action):
                 executor.run_queries(spec.queries, spec.meta)
         finally:
             if not action or 'teardown' in action:
