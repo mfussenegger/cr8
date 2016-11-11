@@ -1,4 +1,11 @@
 
+2016-11-12 0.8.1
+================
+
+- Fixed a regression that caused ``run-spec`` to save results into ``hosts``
+  instead of ``result-hosts``.
+
+
 2016-11-10 0.8.0
 ================
 
