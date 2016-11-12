@@ -34,6 +34,7 @@ create table if not exists benchmarks (
         min double,
         max double,
         mean double,
+        error_margin double,
         median double,
         percentile object as (
             "50" double,

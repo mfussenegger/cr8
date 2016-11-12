@@ -63,25 +63,27 @@ class Result:
 
     @staticmethod
     def short_output(stats):
-        output = ('Runtime:\n'
-                  '    mean: {mean:.3f} +/- {stdev:.3f}\n'
-                  '    min:  {min:.3f}\n'
-                  '    max:  {max:.3f}')
+        output = ('Runtime (in ms):\n'
+                  '    mean:    {mean:.3f} ± {error_margin:.3f}')
         values = dict(
             mean=stats['mean'],
-            max=stats['max'],
-            min=stats['min'],
-            stdev=stats.get('stdev', 0.0)
+            error_margin=stats.get('error_margin', 0.0),
         )
         if stats['n'] > 1:
             output += (
                 '\n'
+                '    min/max: {min:.3f} → {max:.3f}\n'
                 'Percentile:\n'
-                '    50:   {p50:.3f}\n'
+                '    50:   {p50:.3f} ± {stdev:.3f} (stdev)\n'
+                '    95:   {p95:.3f}\n'
                 '    99.9: {p999:.3f}'
             )
             values.update(dict(
+                max=stats['max'],
+                min=stats['min'],
+                stdev=stats['stdev'],
                 p50=stats['percentile']['50'],
+                p95=stats['percentile']['95'],
                 p999=stats['percentile']['99_9']
             ))
         return output.format(**values)

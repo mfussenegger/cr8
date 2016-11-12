@@ -70,6 +70,21 @@ def get_histogram(sorted_values, min_, max_, stdev):
     return [dict(zip(keys, v)) for v in items]
 
 
+_z_map = {
+    80: 1.282,
+    85: 1.440,
+    90: 1.645,
+    95: 1.960,
+    99: 2.576,
+    99.5: 2.807,
+    99.9: 3.291,
+}
+
+
+def error_margin(confidence_level, stdev, sample_size):
+    return _z_map[confidence_level] * (stdev / math.sqrt(sample_size))
+
+
 class Stats:
     plevels = [50, 75, 90, 95, 99, 99.9]
 
@@ -98,6 +113,7 @@ class Stats:
             mean=statistics.mean(values),
             median=statistics.median(values),
             variance=statistics.variance(values),
+            error_margin=error_margin(95, stdev, self.reservoir.count),
             stdev=stdev,
             # replace . with _ so that the output can be inserted into crate
             # crate doesn't allow dots in column names

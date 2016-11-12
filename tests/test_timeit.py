@@ -19,10 +19,8 @@ class ResultTest(TestCase):
             output_fmt='short')
         self.assertEqual(
             str(result),
-            ('Runtime:\n'
-             '    mean: 23.400 +/- 0.000\n'
-             '    min:  23.400\n'
-             '    max:  23.400')
+            ('Runtime (in ms):\n'
+             '    mean:    23.400 ± 0.000')
         )
 
     def test_short_result_output_with_more_measurements(self):
@@ -42,11 +40,11 @@ class ResultTest(TestCase):
             output_fmt='short')
         self.assertEqual(
             str(result),
-            ('Runtime:\n'
-             '    mean: 30.125 +/- 14.121\n'
-             '    min:  15.900\n'
-             '    max:  48.700\n'
+            ('Runtime (in ms):\n'
+             '    mean:    30.125 ± 13.839\n'
+             '    min/max: 15.900 → 48.700\n'
              'Percentile:\n'
-             '    50:   23.400\n'
+             '    50:   23.400 ± 14.121 (stdev)\n'
+             '    95:   48.700\n'
              '    99.9: 48.700')
         )
