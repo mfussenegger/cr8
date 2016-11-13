@@ -50,7 +50,7 @@ def print_only(table):
           to execute the insert statement', type=str)
 @argh.arg('-c', '--concurrency', type=to_int)
 @argh.arg('-of', '--output-fmt', choices=['full', 'short'], default='full')
-@argh.wrap_errors([KeyboardInterrupt])
+@argh.wrap_errors([KeyboardInterrupt] + clients.client_errors)
 def insert_json(table=None,
                 bulk_size=1000,
                 concurrency=25,

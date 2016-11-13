@@ -32,13 +32,19 @@ async def qmap(q, corof, iterable):
 
 
 async def consume(q, total=None):
+    last_error = None
     with tqdm(total=total) as t:
         while True:
             task = await q.get()
             if task is None:
                 break
-            await task
+            try:
+                await task
+            except Exception as e:
+                last_error = e
             t.update(1)
+        if last_error:
+            raise last_error
 
 
 async def map(coro, iterable, total=None):
@@ -61,5 +67,4 @@ def run_many(coro, iterable, concurrency, num_items=None):
         return loop.run_until_complete(map(coro, iterable, total=num_items))
     q = asyncio.Queue(maxsize=concurrency)
     loop.run_until_complete(asyncio.gather(
-        qmap(q, coro, iterable),
-        consume(q, total=num_items)))
+        qmap(q, coro, iterable), consume(q, total=num_items)))

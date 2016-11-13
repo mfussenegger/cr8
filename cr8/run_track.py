@@ -4,6 +4,7 @@ import toml
 from glob import glob
 from .run_spec import run_spec
 from .run_crate import CrateNode, get_crate
+from .clients import client_errors
 
 
 class Executor:
@@ -72,7 +73,7 @@ class Executor:
 @argh.arg('-r', '--result_hosts', type=str)
 @argh.arg('-of', '--output-fmt', choices=['full', 'short'], default='full')
 @argh.arg('--failfast', action='store_true')
-@argh.wrap_errors([KeyboardInterrupt])
+@argh.wrap_errors([KeyboardInterrupt] + client_errors)
 def run_track(track, result_hosts=None, crate_root=None, output_fmt=None, failfast=False):
     """Execute a track file"""
     executor = Executor(

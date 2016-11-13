@@ -156,7 +156,7 @@ async def _produce_data_and_insert(q, client, stmt, row_fun, num_records, bulk_s
 @argh.arg('--mapping-file',
           type=argparse.FileType('r'),
           help='JSON file with a column to fake provider mapping.')
-@argh.wrap_errors([KeyboardInterrupt])
+@argh.wrap_errors([KeyboardInterrupt] + clients.client_errors)
 def insert_fake_data(hosts=None,
                      table=None,
                      num_records=1e5,
