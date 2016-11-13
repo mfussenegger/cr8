@@ -180,7 +180,7 @@ class Executor:
 @argh.arg('--action',
           choices=['setup', 'teardown', 'queries', 'load_data'],
           action='append')
-@argh.wrap_errors([KeyboardInterrupt])
+@argh.wrap_errors([KeyboardInterrupt] + clients.client_errors)
 def run_spec(spec,
              benchmark_hosts,
              result_hosts=None,

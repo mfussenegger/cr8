@@ -5,6 +5,18 @@ from datetime import datetime
 from typing import List, Union, Iterable
 
 
+class SqlException(Exception):
+
+    def __init__(self, message):
+        self.message = message
+
+
+client_errors = [
+    SqlException,
+    aiohttp.errors.ClientError
+]
+
+
 def _to_http_uri(s: str) -> str:
     """Prefix the string with 'http://' if there is no schema."""
     if not s.startswith(('http://', 'https://')):
@@ -39,7 +51,7 @@ async def _exec(session, url, data):
     async with session.post(url, data=data) as resp:
         r = await resp.json()
         if 'error' in r:
-            raise ValueError(r['error']['message'])
+            raise SqlException(r['error']['message'])
         return r
 
 

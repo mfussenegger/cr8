@@ -9,7 +9,7 @@ from functools import partial
 from time import time
 
 from .cli import lines_from_stdin, to_int
-from .clients import client
+from .clients import client, client_errors
 from .metrics import Stats
 from . import aio
 
@@ -155,6 +155,7 @@ class QueryRunner:
 @argh.arg('-r', '--repeat', type=to_int)
 @argh.arg('-c', '--concurrency', type=to_int)
 @argh.arg('-of', '--output-fmt', choices=['full', 'short'], default='full')
+@argh.wrap_errors([KeyboardInterrupt] + client_errors)
 def timeit(hosts=None,
            stmt=None,
            warmup=30,
