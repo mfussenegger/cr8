@@ -15,7 +15,8 @@ from cr8.run_track import run_track
 
 
 def main():
-    p = argh.ArghParser(formatter_class=argparse.RawTextHelpFormatter)
+    p = argh.ArghParser(
+        prog='cr8', formatter_class=argparse.RawTextHelpFormatter)
     p.add_argument(
         '--version', action='version', version="%(prog)s " + __version__)
     p.add_commands([timeit,

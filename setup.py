@@ -19,7 +19,7 @@ setup(
     long_description=readme,
     entry_points={
         'console_scripts': [
-            'cr8 = cr8.main:main',
+            'cr8 = cr8.__main__:main',
         ]
     },
     packages=['cr8'],
