@@ -52,6 +52,26 @@ create table if not exists benchmarks (
 '''
 
 
+def _result_to_crate(client):
+    table_created = []
+
+    def save_result(result):
+        if not table_created:
+            aio.run(client.execute, BENCHMARK_TABLE)
+            table_created.append(None)
+        stmt, args = to_insert('benchmarks', result.as_dict())
+        aio.run(client.execute, stmt, args)
+        print(result)
+        print('')
+
+    return save_result
+
+
+def _print_result(result):
+    print(result)
+    print('')
+
+
 class Executor:
     def __init__(self, spec_dir, benchmark_hosts, result_hosts, output_fmt=None):
         self.benchmark_hosts = benchmark_hosts
@@ -61,23 +81,10 @@ class Executor:
         self.output_fmt = output_fmt
         self.server_version_info = aio.run(self.client.get_server_version)
         self.server_version = parse_version(self.server_version_info['number'])
-
         if result_hosts:
-            table_created = []
-
-            def process_result(result):
-                if not table_created:
-                    aio.run(self.result_client.execute, BENCHMARK_TABLE)
-                    table_created.append(None)
-                stmt, args = to_insert('benchmarks', result.as_dict())
-                aio.run(self.result_client.execute, stmt, args)
-                print(result)
-                print('')
+            self.process_result = _result_to_crate(self.result_client)
         else:
-            def process_result(result):
-                print(result)
-                print('')
-        self.process_result = process_result
+            self.process_result = _print_result
 
     def _to_inserts(self, data_spec):
         target = data_spec['target']
@@ -112,10 +119,8 @@ class Executor:
         stats = Stats()
         f = partial(aio.measure, stats, self.client.execute_many)
         start = time()
-        aio.run_many(f,
-                     inserts,
-                     concurrency=concurrency,
-                     num_items=num_records)
+        aio.run_many(
+            f, inserts, concurrency=concurrency, num_items=num_records)
         end = time()
         self.process_result(Result(
             version_info=self.server_version_info,
