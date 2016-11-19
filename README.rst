@@ -21,6 +21,23 @@ cr8
 A collection of command line tools for `Crate
 <https://github.com/crate/crate>`_ developers (and maybe users as well).
 
+TOC
+====
+
+- `Why cr8? 🤔`_
+- `Install 💾`_
+- `Usage`_
+- `Sub-commands`_
+    - `timeit 🕐`_
+    - `insert-fake-data`_
+    - `insert-json`_
+    - `insert-blob`_
+    - `run-spec`_
+    - `run-crate`_
+    - `run-track`_
+- `Development ☢`_
+
+
 Why cr8? 🤔
 ===========
 
