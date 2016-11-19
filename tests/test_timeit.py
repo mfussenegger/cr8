@@ -1,5 +1,5 @@
 from unittest import TestCase
-from cr8.timeit import Result
+from cr8.engine import Result
 from cr8.metrics import Stats
 
 

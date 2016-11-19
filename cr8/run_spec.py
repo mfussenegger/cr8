@@ -7,7 +7,7 @@ from functools import partial
 from cr8 import aio
 from .insert_json import to_insert
 from .bench_spec import load_spec
-from .timeit import QueryRunner, Result
+from .engine import Runner, Result
 from .misc import as_bulk_queries, as_statements, get_lines, parse_version
 from .metrics import Stats
 from .cli import dicts_from_lines
@@ -159,15 +159,15 @@ class Executor:
                        statement=str(stmt),
                        iterations=iterations,
                        concurrency=concurrency)))
-            with QueryRunner(
-                stmt,
-                meta,
-                repeats=iterations,
-                hosts=self.benchmark_hosts,
-                concurrency=concurrency,
-                args=query.get('args'),
-                bulk_args=query.get('bulk_args'),
-                output_fmt=self.output_fmt
+            with Runner(
+                    stmt,
+                    meta,
+                    repeats=iterations,
+                    hosts=self.benchmark_hosts,
+                    concurrency=concurrency,
+                    args=query.get('args'),
+                    bulk_args=query.get('bulk_args'),
+                    output_fmt=self.output_fmt
             ) as runner:
                 result = runner.run()
             self.process_result(result)

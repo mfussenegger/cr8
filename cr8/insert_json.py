@@ -9,7 +9,7 @@ from .cli import dicts_from_stdin, to_int
 from .misc import as_bulk_queries
 from . import aio, clients
 from .metrics import Stats
-from .timeit import Result
+from .engine import Result
 
 
 def to_insert(table, d):
