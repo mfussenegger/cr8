@@ -1,5 +1,5 @@
 from unittest import TestCase
-from cr8.engine import Result, TimedStats
+from cr8.log import format_stats
 from cr8.metrics import Stats
 
 
@@ -8,15 +8,8 @@ class ResultTest(TestCase):
     def test_short_result_output_with_only_1_measurement(self):
         stats = Stats(1)
         stats.measure(23.4)
-        result = Result(
-            version_info={},
-            meta=None,
-            statement='select name from sys.cluster',
-            timed_stats=TimedStats(10, 20, stats),
-            concurrency=1,
-            output_fmt='short')
         self.assertEqual(
-            str(result),
+            format_stats(stats.get(), 'short'),
             ('Runtime (in ms):\n'
              '    mean:    23.400 ± 0.000')
         )
@@ -27,15 +20,8 @@ class ResultTest(TestCase):
         stats.measure(48.7)
         stats.measure(32.5)
         stats.measure(15.9)
-        result = Result(
-            version_info={},
-            meta=None,
-            statement='select name from sys.cluster',
-            timed_stats=TimedStats(10, 20, stats),
-            concurrency=1,
-            output_fmt='short')
         self.assertEqual(
-            str(result),
+            format_stats(stats.get(), 'short'),
             ('Runtime (in ms):\n'
              '    mean:    30.125 ± 13.839\n'
              '    min/max: 15.900 → 48.700\n'

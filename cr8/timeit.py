@@ -5,6 +5,7 @@ import argh
 
 from . import aio
 from .cli import lines_from_stdin, to_int
+from .log import Logger
 from .clients import client_errors
 from .engine import Runner, Result
 
@@ -24,16 +25,16 @@ def timeit(hosts=None,
     """Run the given statement a number of times and return the runtime stats
     """
     num_lines = 0
+    log = Logger(output_fmt)
     for line in lines_from_stdin(stmt):
         with Runner(hosts, concurrency) as runner:
             runner.warmup(line, warmup)
             timed_stats = runner.run(line, repeat)
-            print(Result(
+            log.result(Result(
                 version_info=aio.run(runner.client.get_server_version),
                 statement=line,
                 timed_stats=timed_stats,
-                concurrency=concurrency,
-                output_fmt=output_fmt
+                concurrency=concurrency
             ))
         num_lines += 1
     if num_lines == 0:

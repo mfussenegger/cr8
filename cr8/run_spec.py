@@ -9,6 +9,7 @@ from .bench_spec import load_spec
 from .engine import Runner, Result, run_and_measure
 from .misc import as_bulk_queries, as_statements, get_lines, parse_version
 from .cli import dicts_from_lines
+from .log import Logger
 from . import clients
 
 
@@ -50,7 +51,7 @@ create table if not exists benchmarks (
 '''
 
 
-def _result_to_crate(client):
+def _result_to_crate(log, client):
     table_created = []
 
     def save_result(result):
@@ -59,34 +60,28 @@ def _result_to_crate(client):
             table_created.append(None)
         stmt, args = to_insert('benchmarks', result.as_dict())
         aio.run(client.execute, stmt, args)
-        print(result)
-        print('')
+        log.result(result)
 
     return save_result
 
 
-def _print_result(result):
-    print(result)
-    print('')
-
-
 class Executor:
-    def __init__(self, spec_dir, benchmark_hosts, result_hosts, output_fmt=None):
+    def __init__(self, spec_dir, benchmark_hosts, result_hosts, log):
         self.benchmark_hosts = benchmark_hosts
         self.spec_dir = spec_dir
         self.client = clients.client(benchmark_hosts)
         self.result_client = clients.client(result_hosts)
         self.server_version_info = aio.run(self.client.get_server_version)
         self.server_version = parse_version(self.server_version_info['number'])
+        self.log = log
         self.create_result = partial(
             Result,
-            output_fmt=output_fmt,
             version_info=self.server_version_info
         )
         if result_hosts:
-            self.process_result = _result_to_crate(self.result_client)
+            self.process_result = _result_to_crate(self.log, self.result_client)
         else:
-            self.process_result = _print_result
+            self.process_result = log.result
 
     def _to_inserts(self, data_spec):
         target = data_spec['target']
@@ -146,15 +141,15 @@ class Executor:
             bulk_args = query.get('bulk_args')
             min_version = parse_version(query.get('min_version'))
             if min_version and min_version > self.server_version:
-                print(self._skip_message(min_version, stmt))
+                self.log.info(self._skip_message(min_version, stmt))
                 continue
-            print(('\n## Running Query:\n'
-                   '   Statement: {statement:.70}\n'
-                   '   Concurrency: {concurrency}\n'
-                   '   Iterations: {iterations}'.format(
-                       statement=str(stmt),
-                       iterations=iterations,
-                       concurrency=concurrency)))
+            self.log.info(('\n## Running Query:\n'
+                           '   Statement: {statement:.70}\n'
+                           '   Concurrency: {concurrency}\n'
+                           '   Iterations: {iterations}'.format(
+                               statement=str(stmt),
+                               iterations=iterations,
+                               concurrency=concurrency)))
             with Runner(self.benchmark_hosts, concurrency) as runner:
                 timed_stats = runner.run(stmt, iterations, args, bulk_args)
             self.process_result(self.create_result(
@@ -218,18 +213,19 @@ def run_spec(spec,
             The argument can be provided multiple times to execute more than
             one action.
     """
+    log = Logger(output_fmt)
     with Executor(
         spec_dir=os.path.dirname(spec),
         benchmark_hosts=benchmark_hosts,
         result_hosts=result_hosts,
-        output_fmt=output_fmt
+        log=log
     ) as executor:
         spec = load_spec(spec)
         try:
             if not action or 'setup' in action:
-                print('# Running setUp')
+                log.info('# Running setUp')
                 executor.exec_instructions(spec.setup)
-            print('# Running benchmark')
+            log.info('# Running benchmark')
             if spec.load_data and (not action or 'load_data' in action):
                 for data_spec in spec.load_data:
                     executor.run_load_data(data_spec, spec.meta)
@@ -237,7 +233,7 @@ def run_spec(spec,
                 executor.run_queries(spec.queries, spec.meta)
         finally:
             if not action or 'teardown' in action:
-                print('# Running tearDown')
+                log.info('# Running tearDown')
                 executor.exec_instructions(spec.teardown)
 
 
