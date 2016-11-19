@@ -1,5 +1,5 @@
 from unittest import TestCase
-from cr8.engine import Result
+from cr8.engine import Result, TimedStats
 from cr8.metrics import Stats
 
 
@@ -12,9 +12,7 @@ class ResultTest(TestCase):
             version_info={},
             meta=None,
             statement='select name from sys.cluster',
-            started=10,
-            ended=20,
-            stats=stats,
+            timed_stats=TimedStats(10, 20, stats),
             concurrency=1,
             output_fmt='short')
         self.assertEqual(
@@ -33,9 +31,7 @@ class ResultTest(TestCase):
             version_info={},
             meta=None,
             statement='select name from sys.cluster',
-            started=10,
-            ended=20,
-            stats=stats,
+            timed_stats=TimedStats(10, 20, stats),
             concurrency=1,
             output_fmt='short')
         self.assertEqual(

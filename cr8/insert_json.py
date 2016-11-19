@@ -9,7 +9,7 @@ from .cli import dicts_from_stdin, to_int
 from .misc import as_bulk_queries
 from . import aio, clients
 from .metrics import Stats
-from .engine import Result
+from .engine import format_stats
 
 
 def to_insert(table, d):
@@ -78,7 +78,7 @@ def insert_json(table=None,
     with clients.client(hosts, concurrency=concurrency) as client:
         f = partial(aio.measure, stats, client.execute_many)
         aio.run_many(f, bulk_queries, concurrency)
-    print(Result.format_stats(stats.get(), output_fmt))
+    print(format_stats(stats.get(), output_fmt))
 
 
 def main():

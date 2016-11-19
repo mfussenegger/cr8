@@ -118,14 +118,12 @@ class Executor:
         num_records = data_spec.get('num_records')
         if num_records:
             num_records = max(1, int(num_records / bulk_size))
-        started, ended, stats = run_and_measure(
+        timed_stats = run_and_measure(
             self.client.execute_many, inserts, concurrency, num_records)
         self.process_result(self.create_result(
             statement=statement,
             meta=meta,
-            started=started,
-            ended=ended,
-            stats=stats,
+            timed_stats=timed_stats,
             concurrency=concurrency,
             bulk_size=bulk_size,
         ))
@@ -158,13 +156,11 @@ class Executor:
                        iterations=iterations,
                        concurrency=concurrency)))
             with Runner(self.benchmark_hosts, concurrency) as runner:
-                started, ended, stats = runner.run(stmt, iterations, args, bulk_args)
+                timed_stats = runner.run(stmt, iterations, args, bulk_args)
             self.process_result(self.create_result(
                 statement=stmt,
                 meta=meta,
-                started=started,
-                ended=ended,
-                stats=stats,
+                timed_stats=timed_stats,
                 concurrency=concurrency,
                 bulk_size=len(bulk_args) if bulk_args else None
             ))

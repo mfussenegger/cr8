@@ -27,13 +27,11 @@ def timeit(hosts=None,
     for line in lines_from_stdin(stmt):
         with Runner(hosts, concurrency) as runner:
             runner.warmup(line, warmup)
-            started, ended, stats = runner.run(line, repeat)
+            timed_stats = runner.run(line, repeat)
             print(Result(
                 version_info=aio.run(runner.client.get_server_version),
                 statement=line,
-                started=started,
-                ended=ended,
-                stats=stats,
+                timed_stats=timed_stats,
                 concurrency=concurrency,
                 output_fmt=output_fmt
             ))
