@@ -168,16 +168,44 @@ class Executor:
         self.result_client.close()
 
 
+def do_run_spec(spec, benchmark_hosts, log, result_hosts=None, action=None):
+    with Executor(
+        spec_dir=os.path.dirname(spec),
+        benchmark_hosts=benchmark_hosts,
+        result_hosts=result_hosts,
+        log=log
+    ) as executor:
+        spec = load_spec(spec)
+        try:
+            if not action or 'setup' in action:
+                log.info('# Running setUp')
+                executor.exec_instructions(spec.setup)
+            log.info('# Running benchmark')
+            if spec.load_data and (not action or 'load_data' in action):
+                for data_spec in spec.load_data:
+                    executor.run_load_data(data_spec, spec.meta)
+            if spec.queries and (not action or 'queries' in action):
+                executor.run_queries(spec.queries, spec.meta)
+        finally:
+            if not action or 'teardown' in action:
+                log.info('# Running tearDown')
+                executor.exec_instructions(spec.teardown)
+
+
 @argh.arg('benchmark_hosts', type=str)
 @argh.arg('-of', '--output-fmt', choices=['full', 'short'], default='full')
 @argh.arg('--action',
           choices=['setup', 'teardown', 'queries', 'load_data'],
           action='append')
+@argh.arg('--logfile-info', help='Redirect info messages to a file')
+@argh.arg('--logfile-result', help='Redirect benchmark results to a file')
 @argh.wrap_errors([KeyboardInterrupt] + clients.client_errors)
 def run_spec(spec,
              benchmark_hosts,
              result_hosts=None,
              output_fmt=None,
+             logfile_info=None,
+             logfile_result=None,
              action=None):
     """Run a spec file, executing the statements on the benchmark_hosts.
 
@@ -213,28 +241,10 @@ def run_spec(spec,
             The argument can be provided multiple times to execute more than
             one action.
     """
-    log = Logger(output_fmt)
-    with Executor(
-        spec_dir=os.path.dirname(spec),
-        benchmark_hosts=benchmark_hosts,
-        result_hosts=result_hosts,
-        log=log
-    ) as executor:
-        spec = load_spec(spec)
-        try:
-            if not action or 'setup' in action:
-                log.info('# Running setUp')
-                executor.exec_instructions(spec.setup)
-            log.info('# Running benchmark')
-            if spec.load_data and (not action or 'load_data' in action):
-                for data_spec in spec.load_data:
-                    executor.run_load_data(data_spec, spec.meta)
-            if spec.queries and (not action or 'queries' in action):
-                executor.run_queries(spec.queries, spec.meta)
-        finally:
-            if not action or 'teardown' in action:
-                log.info('# Running tearDown')
-                executor.exec_instructions(spec.teardown)
+    with Logger(output_fmt=output_fmt,
+                logfile_info=logfile_info,
+                logfile_result=logfile_result) as log:
+        do_run_spec(spec, benchmark_hosts, log, result_hosts, action)
 
 
 def main():

@@ -28,10 +28,8 @@ class Result:
         self.concurrency = concurrency
         self.bulk_size = bulk_size
 
-        self.d = self.__dict__.copy()
-
     def as_dict(self):
-        return self.d
+        return self.__dict__
 
 
 def run_and_measure(f, statements, concurrency, num_items=None):

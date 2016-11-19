@@ -1,7 +1,10 @@
 import json
+import sys
+import contextlib
 from functools import partial
 
 
+_wopen = partial(open, mode='w', encoding='utf-8')
 to_jsonstr = partial(json.dumps, sort_keys=True, indent=4)
 
 
@@ -40,16 +43,23 @@ def format_stats(stats, output_fmt=None):
     return _format_short(stats)
 
 
-class Logger:
+class Logger(contextlib.ExitStack):
 
-    def __init__(self, output_fmt='full'):
-        self.output_fmt = output_fmt
-
-    def info(self, msg):
-        print(msg)
-
-    def result(self, result):
-        if self.output_fmt == 'full':
-            print(to_jsonstr(result.as_dict()))
+    def __init__(self,
+                 output_fmt='full',
+                 logfile_info=None,
+                 logfile_result=None):
+        super().__init__()
+        info_output = self._open(logfile_info)
+        result_output = self._open(logfile_result)
+        self.info = partial(print, file=info_output)
+        presult = partial(print, file=result_output)
+        if output_fmt == 'full':
+            self.result = lambda r: presult(to_jsonstr(r.as_dict()))
         else:
-            print(_format_short(result.runtime_stats))
+            self.result = lambda r: presult(_format_short(r.runtime_stats))
+
+    def _open(self, filepath):
+        if filepath:
+            return self.enter_context(_wopen(filepath))
+        return sys.stdout
