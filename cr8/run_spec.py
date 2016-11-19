@@ -1,15 +1,13 @@
 import argh
 import os
 import itertools
-from time import time
 from functools import partial
 
 from cr8 import aio
 from .insert_json import to_insert
 from .bench_spec import load_spec
-from .engine import Runner, Result
+from .engine import Runner, Result, run_and_measure
 from .misc import as_bulk_queries, as_statements, get_lines, parse_version
-from .metrics import Stats
 from .cli import dicts_from_lines
 from . import clients
 
@@ -78,9 +76,13 @@ class Executor:
         self.spec_dir = spec_dir
         self.client = clients.client(benchmark_hosts)
         self.result_client = clients.client(result_hosts)
-        self.output_fmt = output_fmt
         self.server_version_info = aio.run(self.client.get_server_version)
         self.server_version = parse_version(self.server_version_info['number'])
+        self.create_result = partial(
+            Result,
+            output_fmt=output_fmt,
+            version_info=self.server_version_info
+        )
         if result_hosts:
             self.process_result = _result_to_crate(self.result_client)
         else:
@@ -113,25 +115,19 @@ class Executor:
         bulk_size = data_spec.get('bulk_size', 5000)
         inserts = as_bulk_queries(self._to_inserts(data_spec), bulk_size)
         concurrency = data_spec.get('concurrency', 25)
-        num_records = data_spec.get('num_records', None)
+        num_records = data_spec.get('num_records')
         if num_records:
             num_records = max(1, int(num_records / bulk_size))
-        stats = Stats()
-        f = partial(aio.measure, stats, self.client.execute_many)
-        start = time()
-        aio.run_many(
-            f, inserts, concurrency=concurrency, num_items=num_records)
-        end = time()
-        self.process_result(Result(
-            version_info=self.server_version_info,
+        started, ended, stats = run_and_measure(
+            self.client.execute_many, inserts, concurrency, num_records)
+        self.process_result(self.create_result(
             statement=statement,
             meta=meta,
-            started=start,
-            ended=end,
+            started=started,
+            ended=ended,
             stats=stats,
             concurrency=concurrency,
             bulk_size=bulk_size,
-            output_fmt=self.output_fmt
         ))
 
     def _skip_message(self, min_version, stmt):
@@ -148,6 +144,8 @@ class Executor:
             stmt = query['statement']
             iterations = query.get('iterations', 1)
             concurrency = query.get('concurrency', 1)
+            args = query.get('args')
+            bulk_args = query.get('bulk_args')
             min_version = parse_version(query.get('min_version'))
             if min_version and min_version > self.server_version:
                 print(self._skip_message(min_version, stmt))
@@ -159,18 +157,17 @@ class Executor:
                        statement=str(stmt),
                        iterations=iterations,
                        concurrency=concurrency)))
-            with Runner(
-                    stmt,
-                    meta,
-                    repeats=iterations,
-                    hosts=self.benchmark_hosts,
-                    concurrency=concurrency,
-                    args=query.get('args'),
-                    bulk_args=query.get('bulk_args'),
-                    output_fmt=self.output_fmt
-            ) as runner:
-                result = runner.run()
-            self.process_result(result)
+            with Runner(self.benchmark_hosts, concurrency) as runner:
+                started, ended, stats = runner.run(stmt, iterations, args, bulk_args)
+            self.process_result(self.create_result(
+                statement=stmt,
+                meta=meta,
+                started=started,
+                ended=ended,
+                stats=stats,
+                concurrency=concurrency,
+                bulk_size=len(bulk_args) if bulk_args else None
+            ))
 
     def __enter__(self):
         return self

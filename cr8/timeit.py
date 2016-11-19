@@ -3,9 +3,10 @@
 
 import argh
 
+from . import aio
 from .cli import lines_from_stdin, to_int
 from .clients import client_errors
-from .engine import Runner
+from .engine import Runner, Result
 
 
 @argh.arg('--hosts', help='crate hosts', type=str)
@@ -24,15 +25,18 @@ def timeit(hosts=None,
     """
     num_lines = 0
     for line in lines_from_stdin(stmt):
-        with Runner(line,
-                    None,
-                    repeat,
-                    hosts=hosts,
-                    concurrency=concurrency,
-                    output_fmt=output_fmt) as runner:
-            runner.warmup(warmup)
-            result = runner.run()
-        print(result)
+        with Runner(hosts, concurrency) as runner:
+            runner.warmup(line, warmup)
+            started, ended, stats = runner.run(line, repeat)
+            print(Result(
+                version_info=aio.run(runner.client.get_server_version),
+                statement=line,
+                started=started,
+                ended=ended,
+                stats=stats,
+                concurrency=concurrency,
+                output_fmt=output_fmt
+            ))
         num_lines += 1
     if num_lines == 0:
         raise SystemExit(

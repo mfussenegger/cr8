@@ -13,11 +13,11 @@ class Result:
     def __init__(self,
                  version_info,
                  statement,
-                 meta,
                  started,
                  ended,
                  stats,
                  concurrency,
+                 meta=None,
                  bulk_size=None,
                  output_fmt=None):
         self.version_info = version_info
@@ -87,59 +87,32 @@ class Result:
         return self.str_func()
 
 
-def run_and_measure(f, statements, concurrency, iterations):
-    stats = Stats(min(iterations, 1000))
+def run_and_measure(f, statements, concurrency, num_items=None):
+    stats = Stats(min(num_items or 1000, 1000))
     measure = partial(aio.measure, stats, f)
     started = time()
-    aio.run_many(measure, statements, concurrency, num_items=iterations)
+    aio.run_many(measure, statements, concurrency, num_items=num_items)
     ended = time()
     return started, ended, stats
 
 
 class Runner:
-    def __init__(self,
-                 stmt,
-                 meta,
-                 repeats,
-                 hosts,
-                 concurrency,
-                 args=None,
-                 bulk_args=None,
-                 output_fmt=None):
-        self.stmt = stmt
-        self.meta = meta
-        self.repeats = repeats
+    def __init__(self, hosts, concurrency):
         self.concurrency = concurrency
-        self.hosts = hosts
         self.client = client(hosts, concurrency=concurrency)
-        self.bulk_args = bulk_args
-        self.args = args
-        self.output_fmt = output_fmt
 
-    def warmup(self, num_warmup):
-        statements = itertools.repeat((self.stmt,), num_warmup)
+    def warmup(self, stmt, num_warmup):
+        statements = itertools.repeat((stmt,), num_warmup)
         aio.run_many(self.client.execute, statements, 0, num_items=num_warmup)
 
-    def run(self):
-        version_info = aio.run(self.client.get_server_version)
-        if self.bulk_args:
-            statements = itertools.repeat((self.stmt, self.bulk_args), self.repeats)
+    def run(self, stmt, iterations, args=None, bulk_args=None):
+        if bulk_args:
+            args = bulk_args
             f = self.client.execute_many
         else:
-            statements = itertools.repeat((self.stmt, self.args), self.repeats)
             f = self.client.execute
-        started, ended, stats = run_and_measure(
-            f, statements, self.concurrency, self.repeats)
-        return Result(
-            statement=self.stmt,
-            meta=self.meta,
-            version_info=version_info,
-            started=started,
-            ended=ended,
-            stats=stats,
-            concurrency=self.concurrency,
-            output_fmt=self.output_fmt
-        )
+        statements = itertools.repeat((stmt, args), iterations)
+        return run_and_measure(f, statements, self.concurrency, iterations)
 
     def __enter__(self):
         return self
