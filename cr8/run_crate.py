@@ -219,6 +219,12 @@ class AddrConsumer:
             self.on_addr(m.group('protocol'), m.group('addr'))
 
 
+def _openuri(uri):
+    if os.path.isfile(uri):
+        return open(uri, 'rb')
+    return io.BytesIO(urlopen(uri).read())
+
+
 def _download_and_extract(uri, crate_root):
     filename = os.path.basename(uri)
     crate_folder_name = re.sub('\.tar(\.gz)?$', '', filename)
@@ -227,7 +233,7 @@ def _download_and_extract(uri, crate_root):
         log.info('Skipping download, tarball alrady extracted at %s', crate_dir)
         return crate_dir
     log.info('Downloading %s and extracting to %s', uri, crate_root)
-    with io.BytesIO(urlopen(uri).read()) as tmpfile:
+    with _openuri(uri) as tmpfile:
         with tarfile.open(fileobj=tmpfile) as t:
             t.extractall(crate_root)
     return crate_dir
