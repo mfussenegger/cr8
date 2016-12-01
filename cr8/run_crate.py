@@ -130,7 +130,8 @@ class CrateNode(contextlib.ExitStack):
                  crate_dir: str,
                  data_path: str=None,
                  env: Dict[str, Any]=None,
-                 settings: Dict[str, Any]=None) -> None:
+                 settings: Dict[str, Any]=None,
+                 keep_data: bool=False) -> None:
         """Create a CrateNode
 
         Args:
@@ -152,6 +153,7 @@ class CrateNode(contextlib.ExitStack):
         self.data_path = settings.get('path.data') or tempfile.mkdtemp()
         self.logs_path = settings.get('path.logs') or os.path.join(crate_dir, 'logs')
         self.cluster_name = settings.get('cluster.name') or 'cr8'
+        self.keep_data = keep_data
         settings['path.data'] = self.data_path
         settings['cluster.name'] = self.cluster_name
         args = ['-Des.{0}={1}'.format(k, v) for k, v in settings.items()]
@@ -172,11 +174,14 @@ class CrateNode(contextlib.ExitStack):
             env=self.env,
             universal_newlines=True
         ))
-        log.info(
-            ('Crate launched:\n'
+        msg = ('Crate launched:\n'
              '\tPID: %s\n'
              '\tLogs: %s\n'
-             '\tData: %s (removed on stop)\n'),
+             '\tData: %s')
+        if not self.keep_data:
+            msg += ' (removed on stop)\n'
+        log.info(
+            msg,
             proc.pid,
             os.path.join(self.logs_path, self.cluster_name + '.log'),
             self.data_path
@@ -199,7 +204,8 @@ class CrateNode(contextlib.ExitStack):
         if self.process:
             self.process.terminate()
             self.process.communicate(timeout=10)
-        shutil.rmtree(self.data_path)
+        if not self.keep_data:
+            shutil.rmtree(self.data_path)
 
     def __enter__(self):
         return self
@@ -328,10 +334,13 @@ def get_crate(version, crate_root=None):
 @argh.arg('version', help='Crate version to run. Concrete version like\
           "0.55.0", an alias or an URI pointing to a Crate tarball. Supported\
           aliases are: [{0}]'.format(', '.join(_version_lookups.keys())))
-@argh.arg('-e', '--env', action='append')
-@argh.arg('-s', '--setting', action='append')
-def run_crate(version, env=None, setting=None, crate_root=None):
-    """Launch a crate instance"""
+@argh.arg('-e', '--env', action='append',
+          help='Environment variable. Option can be specified multiple times.')
+@argh.arg('-s', '--setting', action='append',
+          help='Crate setting. Option can be specified multiple times.')
+@argh.arg('--keep-data', help='If this is set the data folder will be kept.')
+def run_crate(version, env=None, setting=None, crate_root=None, keep_data=False):
+    """Launch a crate instance. """
     init_logging()
     settings = {
         'cluster.name': 'cr8-crate-run' + str(random.randrange(1e9))
@@ -341,7 +350,10 @@ def run_crate(version, env=None, setting=None, crate_root=None):
         settings.update(dict(i.split('=') for i in setting))
     if env:
         env = dict(i.split('=') for i in env)
-    with CrateNode(crate_dir=crate_dir, env=env, settings=settings) as node:
+    with CrateNode(crate_dir=crate_dir,
+                   env=env,
+                   settings=settings,
+                   keep_data=keep_data) as node:
         try:
             node.start()
             node.process.wait()
