@@ -175,9 +175,9 @@ class CrateNode(contextlib.ExitStack):
             universal_newlines=True
         ))
         msg = ('Crate launched:\n'
-             '\tPID: %s\n'
-             '\tLogs: %s\n'
-             '\tData: %s')
+               '\tPID: %s\n'
+               '\tLogs: %s\n'
+               '\tData: %s')
         if not self.keep_data:
             msg += ' (removed on stop)\n'
         log.info(
@@ -205,7 +205,9 @@ class CrateNode(contextlib.ExitStack):
             self.process.terminate()
             self.process.communicate(timeout=10)
         if not self.keep_data:
-            shutil.rmtree(self.data_path)
+            path = self.data_path.split(',')
+            for p in path:
+                shutil.rmtree(p)
 
     def __enter__(self):
         return self
