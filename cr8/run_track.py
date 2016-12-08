@@ -77,7 +77,7 @@ class Executor:
 
 
 @argh.arg('-r', '--result_hosts', type=str)
-@argh.arg('-of', '--output-fmt', choices=['full', 'short'], default='full')
+@argh.arg('-of', '--output-fmt', choices=['json', 'text'], default='text')
 @argh.arg('--failfast', action='store_true')
 @argh.arg('--logfile-info', help='Redirect info messages to a file')
 @argh.arg('--logfile-result', help='Redirect benchmark results to a file')

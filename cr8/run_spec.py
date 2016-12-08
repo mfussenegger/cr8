@@ -193,7 +193,7 @@ def do_run_spec(spec, benchmark_hosts, log, result_hosts=None, action=None):
 
 
 @argh.arg('benchmark_hosts', type=str)
-@argh.arg('-of', '--output-fmt', choices=['full', 'short'], default='full')
+@argh.arg('-of', '--output-fmt', choices=['json', 'text'], default='text')
 @argh.arg('--action',
           choices=['setup', 'teardown', 'queries', 'load_data'],
           action='append')

@@ -14,7 +14,7 @@ from .engine import Runner, Result
 @argh.arg('-w', '--warmup', type=to_int)
 @argh.arg('-r', '--repeat', type=to_int)
 @argh.arg('-c', '--concurrency', type=to_int)
-@argh.arg('-of', '--output-fmt', choices=['full', 'short'], default='full')
+@argh.arg('-of', '--output-fmt', choices=['json', 'text'], default='text')
 @argh.wrap_errors([KeyboardInterrupt] + client_errors)
 def timeit(hosts=None,
            stmt=None,

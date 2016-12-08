@@ -43,15 +43,23 @@ Why cr8? 🤔
 
 1. To quickly produce sample data. Often if someone reports an issue sample
    data is required to be able to reproduce it.
-   ``insert-fake-data`` and ``insert-json`` address this problem.
+   `insert-fake-data`_ and `insert-json`_ address this problem.
 
-2. To benchmark queries & compare runtime across Crate versions.  ``timeit``,
-   ``run-spec`` and ``run-track`` can be used to get runtime statistics of
+2. To benchmark queries & compare runtime across Crate versions.  `timeit 🕐`_,
+   `run-spec`_ and `run-track`_ can be used to get runtime statistics of
    queries.
-   Being able to simulate real-world use-cases is NOT a goal of cr8.
+   These tools focus on response latencies. Being able to benchmark throughput
+   is NOT a goal of cr8.  Similarly, being able to simulate real-world use
+   cases is also NOT a goal of cr8.
 
-Most of these tools output JSON. To filter or transform the output `jq`_ can be
-used.
+
+
+.. note::
+
+    Although most commands output text by default. Most take a ``--output-fmt
+    json`` argument to output JSON.
+    This is very useful if used together with `jq`_ to post-process the output
+
 
 Install 💾
 ==========
@@ -86,22 +94,13 @@ A tool that can be used to measure the runtime of a given SQL statement on a
 cluster::
 
     >>> echo "select name from sys.cluster" | cr8 timeit --hosts localhost:4200
-    {
-        "bulk_size": null,
-        "concurrency": 1,
-        "ended": ...
-        "meta": null,
-        "runtime_stats": {
-            ...
-        },
-        "started": ...
-        "statement": "select name from sys.cluster\n",
-        "version_info": {
-            "date": "20...",
-            "hash": "...",
-            "number": "..."
-        }
-    }
+    Runtime (in ms):
+        mean:    ... ± ...
+        min/max: ... → ...
+    Percentile:
+        50:   ... ± ... (stdev)
+        95:   ...
+        99.9: ...
 
 
 insert-fake-data
@@ -148,12 +147,8 @@ insert-json
 
     >>> cat tests/demo.json | cr8 insert-json --table x.demo --hosts localhost:4200
     Executing inserts: bulk_size=1000 concurrency=25
-    {
-        "max": ...,
-        "mean": ...,
-        "min": ...,
-        "n": 1
-    }
+    Runtime (in ms):
+        mean:    ... ± 0.000
 
 Or simply print the insert statement generated from a JSON string::
 
@@ -167,7 +162,7 @@ insert-blob
 A tool to upload a file into a blob table::
 
     >>> cr8 insert-blob --hosts localhost:4200 --table blobtable specs/sample.toml
-    http://localhost:44200/_blobs/blobtable/c7d213cf2b8d6108701974071cdf53d61f21cf01
+    http://localhost:44200/_blobs/blobtable/2917773e74ff46d08f399435ed9b99afb9ed34bd
 
 run-spec
 --------
@@ -191,22 +186,13 @@ Usage::
        Statement: select count(*) from countries
        Concurrency: 2
        Iterations: 100
-    {
-        "bulk_size": null,
-        "concurrency": 2,
-        "ended": ...,
-        "meta": {
-            "name": "sample.toml"
-        },
-        "runtime_stats": {...
-        "started": ...
-        "statement": "select count(*) from countries",
-        "version_info": {
-            "date": "20...",
-            "hash": ...
-            "number": ...
-        }
-    }
+    Runtime (in ms):
+        mean:    ... ± ...
+        min/max: ... → ...
+    Percentile:
+        50:   ... ± ... (stdev)
+        95:   ...
+        99.9: ...
     ...
     ## Skipping (Version ...
        Statement: ...

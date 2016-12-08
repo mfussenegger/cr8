@@ -23,7 +23,7 @@ bulk_args = [["AE"], ["AF"]]
 
 [[queries]]
 statement = 'select 10'
-min_version = '0.80.2'
+min_version = '20.80.2'
 
 [teardown]
 statements = ["drop table countries"]

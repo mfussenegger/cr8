@@ -37,8 +37,8 @@ def _format_short(stats):
 
 
 def format_stats(stats, output_fmt=None):
-    output_fmt = output_fmt or 'full'
-    if output_fmt == 'full':
+    output_fmt = output_fmt or 'text'
+    if output_fmt == 'json':
         return to_jsonstr(stats)
     return _format_short(stats)
 
@@ -46,7 +46,7 @@ def format_stats(stats, output_fmt=None):
 class Logger(contextlib.ExitStack):
 
     def __init__(self,
-                 output_fmt='full',
+                 output_fmt='text',
                  logfile_info=None,
                  logfile_result=None):
         super().__init__()
@@ -54,7 +54,7 @@ class Logger(contextlib.ExitStack):
         result_output = self._open(logfile_result)
         self.info = partial(print, file=info_output)
         presult = partial(print, file=result_output)
-        if output_fmt == 'full':
+        if output_fmt == 'json':
             self.result = lambda r: presult(to_jsonstr(r.as_dict()))
         else:
             self.result = lambda r: presult(_format_short(r.runtime_stats))
