@@ -142,11 +142,11 @@ class CrateNode(contextlib.ExitStack):
         """
         super().__init__()
         self.crate_dir = crate_dir
-        self.env = env
+        self.env = env or {}
+        self.env.setdefault('JAVA_HOME', os.environ.get('JAVA_HOME', ''))
         self.monitor = OutputMonitor()
         self.process = None  # type: subprocess.Popen
         self.http_url = None  # type: str
-        self._has_http_url = threading.Event()
         start_script = 'crate.bat' if sys.platform == 'win32' else 'crate'
 
         settings = _get_settings(settings)
