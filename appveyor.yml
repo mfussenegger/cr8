@@ -1,0 +1,18 @@
+environment:
+  matrix:
+    - PYTHON: "C:\\Python35-x64"
+
+branches:
+  only:
+    - master
+
+install:
+  - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
+  - "python -m pip install wheel"
+  - "python -m pip install ."
+  - "python -m pip install fake-factory==0.5.7"
+
+build: off
+
+test_script:
+  - "python -m unittest"
