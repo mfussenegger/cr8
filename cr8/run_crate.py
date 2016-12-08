@@ -189,10 +189,20 @@ class CrateNode(contextlib.ExitStack):
         self.monitor.consumers.append(AddrConsumer(self._set_addr))
         self.monitor.start(proc)
 
-        wait_until(
-            lambda: self.http_url and cluster_state_200(self.http_url),
-            timeout=30
-        )
+        try:
+            line_buf = LineBuffer()
+            self.monitor.consumers.append(line_buf)
+            wait_until(
+                lambda: self.http_url and cluster_state_200(self.http_url),
+                timeout=30
+            )
+        except TimeoutError:
+            for line in line_buf.lines:
+                log.error(line)
+            raise
+        else:
+            self.monitor.consumers.remove(line_buf)
+            line_buf = None
         log.info('Cluster ready to process requests')
 
     def _set_addr(self, protocol, addr):
@@ -214,6 +224,15 @@ class CrateNode(contextlib.ExitStack):
 
     def __exit__(self, *ex):
         self.stop()
+
+
+class LineBuffer:
+
+    def __init__(self):
+        self.lines = []
+
+    def send(self, line):
+        self.lines.append(line.strip())
 
 
 class AddrConsumer:
