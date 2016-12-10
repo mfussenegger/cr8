@@ -2,6 +2,7 @@
 import functools
 import os
 import asyncio
+import signal
 try:
     import uvloop
     asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
@@ -61,10 +62,17 @@ def run(coro, *args):
     return loop.run_until_complete(gen)
 
 
+def _stop_q(loop, q):
+    asyncio.ensure_future(q.put(None))
+    loop.remove_signal_handler(signal.SIGINT)
+
+
 def run_many(coro, iterable, concurrency, num_items=None):
     loop = asyncio.get_event_loop()
     if concurrency == 1:
         return loop.run_until_complete(map(coro, iterable, total=num_items))
     q = asyncio.Queue(maxsize=concurrency)
+    loop.add_signal_handler(signal.SIGINT, functools.partial(_stop_q, loop, q))
     loop.run_until_complete(asyncio.gather(
         qmap(q, coro, iterable), consume(q, total=num_items)))
+    loop.remove_signal_handler(signal.SIGINT)
