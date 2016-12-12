@@ -7,6 +7,7 @@ import argh
 import argparse
 import operator
 import math
+import signal
 from faker import Factory
 from functools import partial
 from collections import OrderedDict
@@ -133,9 +134,9 @@ def _create_bulk_args(row_fun, req_size):
     return [row_fun() for i in range(req_size)]
 
 
-async def _produce_data_and_insert(q, client, stmt, row_fun, num_records, bulk_size):
+async def _produce_data_and_insert(q, client, stmt, row_fun, num_records, bulk_size, active):
     executor = ProcessPoolExecutor()
-    while num_records > 0:
+    while active and num_records > 0:
         req_size = min(num_records, bulk_size)
         num_records -= req_size
         args_coro = loop.run_in_executor(
@@ -216,7 +217,7 @@ def insert_fake_data(hosts=None,
     bulk_size = min(num_records, bulk_size)
     num_inserts = int(math.ceil(num_records / bulk_size))
 
-    generate_row_fun = create_row_generator(columns, mapping)
+    gen_row = create_row_generator(columns, mapping)
 
     stmt = to_insert(table, columns)[0]
     print('Using insert statement: ')
@@ -228,9 +229,19 @@ def insert_fake_data(hosts=None,
     print('Generating fake data and executing inserts')
     q = asyncio.Queue(maxsize=concurrency)
     with clients.client(hosts, concurrency=concurrency) as client:
-        loop.run_until_complete(asyncio.gather(
-            _produce_data_and_insert(q, client, stmt, generate_row_fun, num_records, bulk_size),
-            consume(q, total=num_inserts)))
+        active = [True]
+
+        def stop():
+            asyncio.ensure_future(q.put(None))
+            active.clear()
+            loop.remove_signal_handler(signal.SIGINT)
+        loop.add_signal_handler(signal.SIGINT, stop)
+        tasks = asyncio.gather(
+            _produce_data_and_insert(
+                q, client, stmt, gen_row, num_records, bulk_size, active),
+            consume(q, total=num_inserts)
+        )
+        loop.run_until_complete(tasks)
 
 
 def main():
