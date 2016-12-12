@@ -134,15 +134,25 @@ def _create_bulk_args(row_fun, req_size):
     return [row_fun() for i in range(req_size)]
 
 
-async def _produce_data_and_insert(q, client, stmt, row_fun, num_records, bulk_size, active):
-    executor = ProcessPoolExecutor()
+def _bulk_size_generator(num_records, bulk_size, active):
+    """ Generate bulk_size until num_records is reached or active becomes false
+
+    >>> gen = _bulk_size_generator(155, 50, [True])
+    >>> list(gen)
+    [50, 50, 50, 5]
+    """
     while active and num_records > 0:
         req_size = min(num_records, bulk_size)
         num_records -= req_size
-        args_coro = loop.run_in_executor(
-            executor, _create_bulk_args, row_fun, req_size)
-        task = asyncio.ensure_future(_exec_many(client, stmt, args_coro))
-        await q.put(task)
+        yield req_size
+
+
+async def _gen_data_and_insert(q, client, stmt, row_fun, size_seq):
+    with ProcessPoolExecutor() as e:
+        for size in size_seq:
+            args_coro = loop.run_in_executor(e, _create_bulk_args, row_fun, size)
+            task = asyncio.ensure_future(_exec_many(client, stmt, args_coro))
+            await q.put(task)
     await q.put(None)
 
 
@@ -236,9 +246,9 @@ def insert_fake_data(hosts=None,
             active.clear()
             loop.remove_signal_handler(signal.SIGINT)
         loop.add_signal_handler(signal.SIGINT, stop)
+        bulk_seq = _bulk_size_generator(num_records, bulk_size, active)
         tasks = asyncio.gather(
-            _produce_data_and_insert(
-                q, client, stmt, gen_row, num_records, bulk_size, active),
+            _gen_data_and_insert(q, client, stmt, gen_row, bulk_seq),
             consume(q, total=num_inserts)
         )
         loop.run_until_complete(tasks)
