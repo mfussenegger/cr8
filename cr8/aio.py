@@ -62,9 +62,11 @@ def run(coro, *args):
     return loop.run_until_complete(gen)
 
 
-def _stop_q(loop, q):
-    asyncio.ensure_future(q.put(None))
-    loop.remove_signal_handler(signal.SIGINT)
+def interruptable(iterable, is_active):
+    for i in iterable:
+        if not is_active:
+            return
+        yield i
 
 
 def run_many(coro, iterable, concurrency, num_items=None):
@@ -72,7 +74,22 @@ def run_many(coro, iterable, concurrency, num_items=None):
     if concurrency == 1:
         return loop.run_until_complete(map(coro, iterable, total=num_items))
     q = asyncio.Queue(maxsize=concurrency)
-    loop.add_signal_handler(signal.SIGINT, functools.partial(_stop_q, loop, q))
-    loop.run_until_complete(asyncio.gather(
-        qmap(q, coro, iterable), consume(q, total=num_items)))
+    is_active = [True]
+    iterable = interruptable(iterable, is_active)
+
+    def stop():
+        asyncio.ensure_future(q.put(None))
+        is_active.clear()
+        loop.remove_signal_handler(signal.SIGINT)
+
+    loop.add_signal_handler(signal.SIGINT, stop)
+    tasks = asyncio.gather(
+        qmap(q, coro, iterable),
+        consume(q, total=num_items)
+    )
+    try:
+        loop.run_until_complete(tasks)
+    except KeyboardInterrupt:
+        tasks.cancel()
+
     loop.remove_signal_handler(signal.SIGINT)
