@@ -1,7 +1,24 @@
 """misc functions that have no real home."""
 
-from typing import Tuple, Iterator
+from typing import Tuple, Iterator, Any
 from collections import defaultdict
+
+
+def try_len(o: Any) -> int:
+    """ Return len of `o` or None if `o` doesn't support len
+
+    >>> try_len([1, 2])
+    2
+
+    >>> try_len(print)
+    >>> try_len(None)
+    """
+    if not o:
+        return None
+    try:
+        return len(o)
+    except TypeError:
+        return None
 
 
 def parse_version(version: str) -> tuple:
