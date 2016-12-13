@@ -7,7 +7,13 @@ from cr8 import aio
 from .insert_json import to_insert
 from .bench_spec import load_spec
 from .engine import Runner, Result, run_and_measure
-from .misc import as_bulk_queries, as_statements, get_lines, parse_version
+from .misc import (
+    as_bulk_queries,
+    as_statements,
+    get_lines,
+    parse_version,
+    try_len
+)
 from .cli import dicts_from_lines
 from .log import Logger
 from . import clients
@@ -157,7 +163,7 @@ class Executor:
                 meta=meta,
                 timed_stats=timed_stats,
                 concurrency=concurrency,
-                bulk_size=len(bulk_args) if bulk_args else None
+                bulk_size=try_len(bulk_args)
             ))
 
     def __enter__(self):
