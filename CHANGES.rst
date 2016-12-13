@@ -1,4 +1,29 @@
 
+2016-12-13 0.9.0
+================
+
+Breaking
+--------
+
+- Changed the default output format to ``text``. In addition, the values of
+  ``--output-format`` were renamed from ``full`` and ``short`` to ``json`` and
+  ``text``.
+
+Miscellaneous improvements
+--------------------------
+
+- Added a ``--keep-data`` option to ``run-crate``. If this is set the data
+  folder isn't removed if the process is stopped.
+
+- The ``version`` argument of ``run-crate`` can now also be a fs path to a
+  CrateDB tarball.
+
+- Various error handling and ``Ctrl+c`` improvements.
+
+- Added ``--logfile-info`` and ``--logfile-result`` options to ``run-spec`` and
+  ``run-track``.
+
+
 2016-11-12 0.8.1
 ================
 
