@@ -5,6 +5,7 @@ import argh
 
 from . import aio
 from .cli import lines_from_stdin, to_int
+from .misc import as_statements
 from .log import Logger
 from .clients import client_errors
 from .engine import Runner, Result
@@ -26,7 +27,7 @@ def timeit(hosts=None,
     """
     num_lines = 0
     log = Logger(output_fmt)
-    for line in lines_from_stdin(stmt):
+    for line in as_statements(lines_from_stdin(stmt)):
         with Runner(hosts, concurrency) as runner:
             runner.warmup(line, warmup)
             timed_stats = runner.run(line, repeat)

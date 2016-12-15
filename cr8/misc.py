@@ -82,12 +82,13 @@ def as_statements(lines: Iterator[str]) -> Iterator[str]:
     """Create an iterator that transforms lines into sql statements.
 
     Statements within the lines must end with ";"
+    The last statement will be included even if it does not end in ';'
 
     >>> list(as_statements(['select * from', '-- comments are filtered', 't;']))
     ['select * from t']
 
     >>> list(as_statements(['a;', 'b', 'c;', 'd']))
-    ['a', 'b c']
+    ['a', 'b c', 'd']
     """
     lines = (l.strip() for l in lines if l)
     lines = (l for l in lines if not l.startswith('--'))
@@ -97,3 +98,5 @@ def as_statements(lines: Iterator[str]) -> Iterator[str]:
         if line.endswith(';'):
             yield ' '.join(parts)
             parts.clear()
+    if parts:
+        yield ' '.join(parts)
