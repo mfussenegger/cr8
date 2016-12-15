@@ -91,5 +91,9 @@ def run_many(coro, iterable, concurrency, num_items=None):
         loop.run_until_complete(tasks)
     except KeyboardInterrupt:
         tasks.cancel()
-
+        pending = asyncio.Task.all_tasks()
+        try:
+            loop.run_until_complete(asyncio.gather(*pending))
+        except asyncio.CancelledError:
+            pass
     loop.remove_signal_handler(signal.SIGINT)
