@@ -28,7 +28,7 @@ setup(
         'argh',
         'tqdm',
         'fake-factory==0.5.7',
-        'aiohttp>=1.1,<1.2',
+        'aiohttp>=1.1,<2',
         'toml'
     ],
     extras_require={

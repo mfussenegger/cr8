@@ -100,24 +100,33 @@ class HttpClient:
     def __init__(self, hosts, conn_pool_limit=25):
         self.hosts = hosts
         self.urls = itertools.cycle([i + '/_sql' for i in hosts])
-        conn = aiohttp.TCPConnector(limit=conn_pool_limit)
-        self.session = aiohttp.ClientSession(connector=conn)
+        self._conn_pool_limit = conn_pool_limit
+        self._session = None
+
+    async def get_session(self):
+        if not self._session:
+            conn = aiohttp.TCPConnector(limit=self._conn_pool_limit)
+            self._session = aiohttp.ClientSession(connector=conn)
+        return self._session
 
     async def execute(self, stmt, args=None):
         payload = {'stmt': _plain_or_callable(stmt)}
         if args:
             payload['args'] = _plain_or_callable(args)
-        return await _exec(self.session, next(self.urls), json.dumps(payload))
+        session = await self.get_session()
+        return await _exec(session, next(self.urls), json.dumps(payload))
 
     async def execute_many(self, stmt, bulk_args):
         data = json.dumps(dict(
             stmt=_plain_or_callable(stmt),
             bulk_args=_plain_or_callable(bulk_args)
         ))
-        return await _exec(self.session, next(self.urls), data)
+        session = await self.get_session()
+        return await _exec(session, next(self.urls), data)
 
     async def get_server_version(self):
-        async with self.session.get(self.hosts[0] + '/') as resp:
+        session = await self.get_session()
+        async with session.get(self.hosts[0] + '/') as resp:
             r = await resp.json()
             version = r['version']
             return {
@@ -127,7 +136,8 @@ class HttpClient:
             }
 
     def close(self):
-        self.session.close()
+        if self._session:
+            self._session.close()
 
     def __enter__(self):
         return self
