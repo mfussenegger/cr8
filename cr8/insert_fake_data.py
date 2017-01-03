@@ -245,7 +245,8 @@ def insert_fake_data(hosts=None,
             asyncio.ensure_future(q.put(None))
             active.clear()
             loop.remove_signal_handler(signal.SIGINT)
-        loop.add_signal_handler(signal.SIGINT, stop)
+        if sys.platform != 'win32':
+            loop.add_signal_handler(signal.SIGINT, stop)
         bulk_seq = _bulk_size_generator(num_records, bulk_size, active)
         tasks = asyncio.gather(
             _gen_data_and_insert(q, client, stmt, gen_row, bulk_seq),

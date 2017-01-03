@@ -3,6 +3,7 @@ import functools
 import os
 import asyncio
 import signal
+import sys
 try:
     import uvloop
     asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
@@ -69,11 +70,9 @@ def interruptable(iterable, is_active):
         yield i
 
 
-def run_many(coro, iterable, concurrency, num_items=None):
-    loop = asyncio.get_event_loop()
-    if concurrency == 1:
-        return loop.run_until_complete(map(coro, iterable, total=num_items))
-    q = asyncio.Queue(maxsize=concurrency)
+def setup_sigint_handling(loop, q, iterable):
+    if sys.platform == 'win32':
+        return iterable
     is_active = [True]
     iterable = interruptable(iterable, is_active)
 
@@ -81,8 +80,22 @@ def run_many(coro, iterable, concurrency, num_items=None):
         asyncio.ensure_future(q.put(None))
         is_active.clear()
         loop.remove_signal_handler(signal.SIGINT)
-
     loop.add_signal_handler(signal.SIGINT, stop)
+    return iterable
+
+
+def remove_sigint_handler(loop):
+    if sys.platform == 'win32':
+        return
+    loop.remove_signal_handler(signal.SIGINT)
+
+
+def run_many(coro, iterable, concurrency, num_items=None):
+    loop = asyncio.get_event_loop()
+    if concurrency == 1:
+        return loop.run_until_complete(map(coro, iterable, total=num_items))
+    q = asyncio.Queue(maxsize=concurrency)
+    iterable = setup_sigint_handling(loop, q, iterable)
     tasks = asyncio.gather(
         qmap(q, coro, iterable),
         consume(q, total=num_items)
@@ -91,5 +104,4 @@ def run_many(coro, iterable, concurrency, num_items=None):
         loop.run_until_complete(tasks)
     except KeyboardInterrupt:
         tasks.cancel()
-
-    loop.remove_signal_handler(signal.SIGINT)
+    remove_sigint_handler(loop)
