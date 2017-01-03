@@ -1,4 +1,11 @@
 
+2016-01-03 0.9.1
+================
+
+- Fixed an issue that caused failures on Windows
+
+- ``timeit`` can now receive multi-line statements via stdin
+
 2016-12-13 0.9.0
 ================
 
