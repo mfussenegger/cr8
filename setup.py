@@ -27,7 +27,7 @@ setup(
         'crate>=0.16',
         'argh',
         'tqdm',
-        'fake-factory',
+        'Faker',
         'aiohttp',
         'toml'
     ],

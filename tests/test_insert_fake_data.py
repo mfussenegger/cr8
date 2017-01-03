@@ -13,7 +13,7 @@ class TestDataFaker(TestCase):
 
     def test_fake_provider_for_name_column(self):
         provider = self.f.provider_for_column('name', 'string')
-        self.assertEqual(provider(), 'Alonza Schmitt')
+        self.assertEqual(provider(), 'Allison Hill')
 
     def test_fake_provider_for_string_id_column(self):
         provider = self.f.provider_for_column('id', 'string')
