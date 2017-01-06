@@ -39,6 +39,7 @@ setup(
         'License :: OSI Approved :: MIT License',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
     ],
     use_scm_version=True,
     setup_requires=['setuptools_scm']
