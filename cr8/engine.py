@@ -32,7 +32,7 @@ class Result:
         return self.__dict__
 
 
-def run_and_measure(f, statements, concurrency, num_items=None):
+def run_and_measure(f, statements, concurrency, num_items=None) -> TimedStats:
     stats = Stats(min(num_items or 1000, 1000))
     measure = partial(aio.measure, stats, f)
     started = int(time() * 1000)

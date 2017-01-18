@@ -13,6 +13,7 @@ from cr8.insert_blob import insert_blob
 from cr8.run_spec import run_spec
 from cr8.run_crate import run_crate
 from cr8.run_track import run_track
+from cr8.calibrate import calibrate
 
 
 def main():
@@ -26,7 +27,8 @@ def main():
                     insert_blob,
                     run_spec,
                     run_crate,
-                    run_track])
+                    run_track,
+                    calibrate])
     p.dispatch()
 
 
