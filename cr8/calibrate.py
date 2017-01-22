@@ -1,4 +1,3 @@
-import itertools
 import statistics
 from functools import partial
 
@@ -10,12 +9,6 @@ def _get_median(hosts, statement, warmup, iterations):
         r.warmup(statement, warmup)
         stats = r.run(statement, iterations)
         return stats.stats.get()['median']
-
-
-def _pairwise(iterable):
-    a, b = itertools.tee(iterable)
-    next(b, None)
-    return zip(a, b)
 
 
 def _perc_diff(a, b):
@@ -33,7 +26,6 @@ def _within_perc(values, perc):
 
 
 def calibrate(statement,
-              version='latest-stable',
               hosts='localhost:4200',
               start_warmup=1,
               start_iterations=10,
