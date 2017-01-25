@@ -3,6 +3,21 @@ import aiohttp
 import itertools
 from datetime import datetime
 from typing import List, Union, Iterable
+from decimal import Decimal
+
+class CrateJsonEncoder(json.JSONEncoder):
+
+    epoch = datetime(1970, 1, 1)
+
+    def default(self, o):
+        if isinstance(o, Decimal):
+            return str(o)
+        if isinstance(o, datetime):
+            delta = o - self.epoch
+            return int(delta.total_seconds() * 1000)
+        if isinstance(o, date):
+            return calendar.timegm(o.timetuple()) * 1000
+        return json.JSONEncoder.default(self, o)
 
 
 class SqlException(Exception):
@@ -114,13 +129,13 @@ class HttpClient:
         if args:
             payload['args'] = _plain_or_callable(args)
         session = await self.get_session()
-        return await _exec(session, next(self.urls), json.dumps(payload))
+        return await _exec(session, next(self.urls), json.dumps(payload, cls=CrateJsonEncoder))
 
     async def execute_many(self, stmt, bulk_args):
         data = json.dumps(dict(
             stmt=_plain_or_callable(stmt),
             bulk_args=_plain_or_callable(bulk_args)
-        ))
+        ), cls=CrateJsonEncoder)
         session = await self.get_session()
         return await _exec(session, next(self.urls), data)
 
