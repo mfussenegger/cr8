@@ -142,8 +142,9 @@ class CrateNode(contextlib.ExitStack):
         """
         super().__init__()
         self.crate_dir = crate_dir
-        self.env = env or {}
-        self.env.setdefault('JAVA_HOME', os.environ.get('JAVA_HOME', ''))
+        self.env = os.environ.copy()
+        if env:
+            self.env.update(env)
         self.monitor = OutputMonitor()
         self.process = None  # type: subprocess.Popen
         self.http_url = None  # type: str
@@ -212,8 +213,14 @@ class CrateNode(contextlib.ExitStack):
 
     def stop(self):
         if self.process:
+            print('Stopping Crate...')
             self.process.terminate()
-            self.process.communicate(timeout=10)
+            try:
+                self.process.communicate(timeout=10)
+                print('Stopped Crate')
+            except TimeoutError:
+                print('Killing Crate...')
+                self.process.kill()
         if not self.keep_data:
             path = self.data_path.split(',')
             for p in path:
@@ -379,7 +386,7 @@ def run_crate(version, env=None, setting=None, crate_root=None, keep_data=False)
             node.start()
             node.process.wait()
         except KeyboardInterrupt:
-            print('Stopping Crate...')
+            pass
 
 
 if __name__ == "__main__":
