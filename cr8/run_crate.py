@@ -17,30 +17,40 @@ import threading
 from typing import Dict, Any
 from urllib.request import urlopen
 
+from cr8.misc import parse_version
+
 
 log = logging.getLogger(__file__)
 
 
 RELEASE_URL = 'https://cdn.crate.io/downloads/releases/crate-{version}.tar.gz'
 VERSION_RE = re.compile('^(\d+\.\d+\.\d+)$')
+FOLDER_VERSION_RE = re.compile('crate-(\d+\.\d+\.\d+)')
+
 DEFAULT_SETTINGS = {
     'cluster.routing.allocation.disk.watermark.low': '1b',
     'cluster.routing.allocation.disk.watermark.high': '1b',
     'discovery.initial_state_timeout': 0,
-    'discovery.zen.ping.multicast.enabled': False,
     'network.host': '127.0.0.1',
     'udc.enabled': False
 }
 
-ADDRESS_RE = re.compile(
-    '.*\[(?P<protocol>http|psql|transport) +\] \[.*\] .*'
-    'publish_address {'
-    '(?:inet\[[\w\d\.-]*/|\[)?'
-    '(?:[\w\d\.-]+/)?'
-    '(?P<addr>[\d\.:]+)'
-    '(?:\])?'
-    '}'
-)
+
+def _format_cmd_option_legacy(k, v):
+    return '-Des.{0}={1}'.format(k, v)
+
+
+def _format_cmd_option(k, v):
+    if isinstance(v, bool):
+        return '-C{0}={1}'.format(k, str(v).lower())
+    return '-C{0}={1}'.format(k, v)
+
+
+def _extract_version(crate_dir) -> tuple:
+    m = FOLDER_VERSION_RE.findall(crate_dir)
+    if m:
+        return parse_version(m[0])
+    return (1, 0, 0)
 
 
 class OutputMonitor:
@@ -142,6 +152,7 @@ class CrateNode(contextlib.ExitStack):
         """
         super().__init__()
         self.crate_dir = crate_dir
+        version = _extract_version(crate_dir)
         self.env = env or {}
         self.env.setdefault('JAVA_HOME', os.environ.get('JAVA_HOME', ''))
         self.monitor = OutputMonitor()
@@ -150,13 +161,19 @@ class CrateNode(contextlib.ExitStack):
         start_script = 'crate.bat' if sys.platform == 'win32' else 'crate'
 
         settings = _get_settings(settings)
+        if version < (1, 1, 0):
+            settings.setdefault('discovery.zen.ping.multicast.enabled', False)
         self.data_path = settings.get('path.data') or tempfile.mkdtemp()
         self.logs_path = settings.get('path.logs') or os.path.join(crate_dir, 'logs')
         self.cluster_name = settings.get('cluster.name') or 'cr8'
         self.keep_data = keep_data
         settings['path.data'] = self.data_path
         settings['cluster.name'] = self.cluster_name
-        args = ['-Des.{0}={1}'.format(k, v) for k, v in settings.items()]
+        if version < (1, 0, 0):
+            _format_option = _format_cmd_option_legacy
+        else:
+            _format_option = _format_cmd_option
+        args = [_format_option(k, v) for k, v in settings.items()]
         self.cmd = [
             os.path.join(crate_dir, 'bin', start_script)] + args
 
@@ -237,13 +254,44 @@ class LineBuffer:
 
 class AddrConsumer:
 
+    ADDRESS_RE = re.compile(
+        '.*\[(?P<protocol>http|o.e.h.HttpServer|psql|transport|o.e.t.TransportService) +\] \[.*\] .*'
+        'publish_address {'
+        '(?:inet\[[\w\d\.-]*/|\[)?'
+        '(?:[\w\d\.-]+/)?'
+        '(?P<addr>[\d\.:]+)'
+        '(?:\])?'
+        '}'
+    )
+    PROTOCOL_MAP = {
+        'o.e.h.HttpServer': 'http',
+        'o.e.t.TransportService': 'transport'
+    }
+
     def __init__(self, on_addr):
         self.on_addr = on_addr
 
+    @staticmethod
+    def _parse(line):
+        """ Parse protocol and bound address from log message
+
+        >>> AddrConsumer._parse('NONE')
+        (None, None)
+
+        >>> AddrConsumer._parse('[INFO ][psql  ] [8f64DTi] publish_address {127.0.0.1:5432}, bound_addresses {127.0.0.1:5432}')
+        ('psql', '127.0.0.1:5432')
+        """
+        m = AddrConsumer.ADDRESS_RE.match(line)
+        if not m:
+            return None, None
+        protocol = m.group('protocol')
+        protocol = AddrConsumer.PROTOCOL_MAP.get(protocol, protocol)
+        return protocol, m.group('addr')
+
     def send(self, line):
-        m = ADDRESS_RE.match(line)
-        if m:
-            self.on_addr(m.group('protocol'), m.group('addr'))
+        protocol, addr = AddrConsumer._parse(line)
+        if protocol:
+            self.on_addr(protocol, addr)
 
 
 def _openuri(uri):
