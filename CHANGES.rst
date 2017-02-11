@@ -1,4 +1,21 @@
 
+2016-02-11 0.9.2
+================
+
+- Values of type ``Decimal`` or ``datetime`` can now be serialized.
+  This fixes an issue that could cause ``insert-fake-data`` to not work with
+  schemas that contained columns of type ``double``.
+  It also allows track files written in python to use ``Decimal`` or
+  ``datetime`` objects as arguments.
+
+- If python-argcomplete is installed and registered that should now be picked
+  up to enable tab-completion in bash.
+
+- Fixed an issue that caused warnings with newer ``aiohttp`` versions.
+
+- Adapted ``run-crate`` to handle upcoming breaking changes. It's now able to
+  launch tarballs of CrateDB ``1.1`` and ``1.2.`` snapshots.
+
 2016-01-03 0.9.1
 ================
 
