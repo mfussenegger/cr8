@@ -68,8 +68,10 @@ class DataFaker:
     }
 
     _type_default = {
-        'integer': operator.attrgetter('random_int'),
-        'long': operator.attrgetter('random_int'),
+        'integer': lambda f: partial(
+            f.random_int, min=-2147483648, max=2147483647),
+        'long': lambda f: partial(
+            f.random_int, min=-9223372036854775808, max=9223372036854775807),
         'float': operator.attrgetter('pyfloat'),
         'double': operator.attrgetter('pydecimal'),
         'ip': operator.attrgetter('ipv4'),
