@@ -34,6 +34,7 @@ setup(
     extras_require={
         'uvloop': ['uvloop'],
     },
+    python_requires='>=3.5',
     classifiers=[
         'Development Status :: 4 - Beta',
         'License :: OSI Approved :: MIT License',
