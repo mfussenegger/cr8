@@ -28,7 +28,7 @@ setup(
         'argh',
         'tqdm',
         'Faker',
-        'aiohttp>=1.1,<2',
+        'aiohttp>=2.0,<3',
         'toml'
     ],
     extras_require={
