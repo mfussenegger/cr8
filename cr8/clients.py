@@ -30,7 +30,7 @@ class SqlException(Exception):
 
 client_errors = [
     SqlException,
-    aiohttp.errors.ClientError
+    aiohttp.ClientError
 ]
 
 
