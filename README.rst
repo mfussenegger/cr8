@@ -127,7 +127,7 @@ The following command can be used to insert 1000 records::
         "name": "string"
     }
     Using insert statement: 
-    insert into x.demo ("country", "id", "name") values (?, ?, ?)
+    insert into "x"."demo" ("country", "id", "name") values (?, ?, ?)
     Will make 1 requests with a bulk size of 200
     Generating fake data and executing inserts
     <BLANKLINE>

@@ -231,7 +231,7 @@ def insert_fake_data(hosts=None,
 
     gen_row = create_row_generator(columns, mapping)
 
-    stmt = to_insert(table, columns)[0]
+    stmt = to_insert('"{schema}"."{table_name}"'.format(**locals()), columns)[0]
     print('Using insert statement: ')
     print(stmt)
 
