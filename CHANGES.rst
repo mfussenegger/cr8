@@ -1,5 +1,15 @@
+2017-05-14 0.9.3
+================
 
-2016-02-11 0.9.2
+- ``insert-fake-data``: Increased the default value range for columns of type
+  ``integer`` or ``long``.
+
+- Updated ``aiohttp`` to version 2
+
+- ``insert-fake-data``: The schema and table name is now quoted to allow using
+  reserved keywords as schema or table name.
+
+2017-02-11 0.9.2
 ================
 
 - Values of type ``Decimal`` or ``datetime`` can now be serialized.
@@ -16,7 +26,7 @@
 - Adapted ``run-crate`` to handle upcoming breaking changes. It's now able to
   launch tarballs of CrateDB ``1.1`` and ``1.2.`` snapshots.
 
-2016-01-03 0.9.1
+2017-01-03 0.9.1
 ================
 
 - Fixed an issue that caused failures on Windows
