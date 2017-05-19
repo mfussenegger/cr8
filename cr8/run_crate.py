@@ -58,13 +58,18 @@ class OutputMonitor:
     def __init__(self):
         self.consumers = []
 
-    def consume(self, iterable):
-        for line in iterable:
-            for consumer in self.consumers:
-                consumer.send(line)
+    def _consume(self, proc):
+        try:
+            for line in proc.stdout:
+                for consumer in self.consumers:
+                    consumer.send(line)
+        except:
+            if proc.returncode is not None:
+                return
+            raise
 
     def start(self, proc):
-        out_thread = threading.Thread(target=self.consume, args=(proc.stdout,))
+        out_thread = threading.Thread(target=self._consume, args=(proc,))
         out_thread.daemon = True
         out_thread.start()
 
@@ -121,6 +126,15 @@ def _get_settings(settings=None):
     if settings:
         s.update(settings)
     return s
+
+
+def _try_print_log(logfile):
+    try:
+        with open(logfile) as f:
+            for line in f:
+                log.error(line)
+    except:
+        pass
 
 
 class CrateNode(contextlib.ExitStack):
@@ -197,10 +211,12 @@ class CrateNode(contextlib.ExitStack):
                '\tData: %s')
         if not self.keep_data:
             msg += ' (removed on stop)\n'
+
+        logfile = os.path.join(self.logs_path, self.cluster_name + '.log')
         log.info(
             msg,
             proc.pid,
-            os.path.join(self.logs_path, self.cluster_name + '.log'),
+            logfile,
             self.data_path
         )
         self.monitor.consumers.append(AddrConsumer(self._set_addr))
@@ -213,9 +229,12 @@ class CrateNode(contextlib.ExitStack):
                 lambda: self.http_url and cluster_state_200(self.http_url),
                 timeout=30
             )
-        except TimeoutError:
-            for line in line_buf.lines:
-                log.error(line)
+        except TimeoutError as e:
+            if not line_buf.lines:
+                _try_print_log(logfile)
+            else:
+                for line in line_buf.lines:
+                    log.error(line)
             raise
         else:
             self.monitor.consumers.remove(line_buf)

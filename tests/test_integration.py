@@ -62,7 +62,7 @@ def load_tests(loader, tests, ignore):
                 stdin=subprocess.PIPE,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
-                timeout=30,
+                timeout=60,
                 shell=True,
                 env=env
             )
