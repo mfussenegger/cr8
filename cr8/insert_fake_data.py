@@ -188,7 +188,7 @@ def insert_fake_data(hosts=None,
         is no `x` provider.
 
     Available providers are listed here:
-        http://fake-factory.readthedocs.io/en/latest/providers.html
+        https://faker.readthedocs.io/en/latest/providers.html
 
         Additional providers:
         - auto_inc:
