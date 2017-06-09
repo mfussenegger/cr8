@@ -15,6 +15,8 @@ import io
 import tarfile
 import threading
 import fnmatch
+from pathlib import Path
+from functools import partial
 from typing import Dict, Any
 from urllib.request import urlopen
 
@@ -429,6 +431,25 @@ def _lookup_uri(version):
     return version
 
 
+def _is_project_repo(src_repo):
+    return (os.path.isdir(src_repo) and
+            os.path.exists(os.path.join(src_repo, '.git')) and
+            os.path.exists(os.path.join(src_repo, 'gradlew')))
+
+
+def _build_from_src(src_repo):
+    run = partial(subprocess.run, cwd=src_repo, check=True)
+    run(['git', 'clean', '-xdff'])
+    run(['git', 'submodule', 'update', '--init'])
+    run(['./gradlew', 'clean', 'distTar'])
+    distributions = Path(src_repo) / 'app' / 'build' / 'distributions'
+    tarball = next(distributions.glob('crate-*.tar.gz'))
+    with tarfile.open(tarball) as t:
+        t.extractall(tarball.parent)
+    # remove two suffixes ('.tar, '.gz') to get the folder name
+    return str(tarball.with_suffix('').with_suffix(''))
+
+
 def get_crate(version, crate_root=None):
     """Retrieve a Crate tarball, extract it and return the path.
 
@@ -445,6 +466,8 @@ def get_crate(version, crate_root=None):
             If this isn't specified ``$XDG_CACHE_HOME/.cache/cr8/crates``
             will be used.
     """
+    if _is_project_repo(version):
+        return _build_from_src(version)
     uri = _lookup_uri(version)
     crate_root = crate_root or os.environ.get(
         'XDG_CACHE_HOME', os.path.join(os.path.expanduser('~'), '.cache', 'cr8', 'crates'))
