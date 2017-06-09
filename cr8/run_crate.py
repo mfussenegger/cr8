@@ -14,6 +14,7 @@ import gzip
 import io
 import tarfile
 import threading
+import fnmatch
 from typing import Dict, Any
 from urllib.request import urlopen
 
@@ -25,6 +26,7 @@ log = logging.getLogger(__file__)
 
 RELEASE_URL = 'https://cdn.crate.io/downloads/releases/crate-{version}.tar.gz'
 VERSION_RE = re.compile('^(\d+\.\d+\.\d+)$')
+DYNAMIC_VERSION_RE = re.compile('^((\d+|x)\.(\d+|x)\.(\d+|x))$')
 FOLDER_VERSION_RE = re.compile('crate-(\d+\.\d+\.\d+)')
 
 DEFAULT_SETTINGS = {
@@ -353,6 +355,7 @@ def _from_versions_json(key):
 
 
 NIGHTLY_RE = re.compile('.*>(?P<filename>crate-\d+\.\d+\.\d+-\d{12}-[a-z0-9]{7,}\.tar\.gz)<.*')
+RELEASE_RE = re.compile('.*>(?P<filename>crate-(?P<version>\d+\.\d+\.\d+)\.tar\.gz)<.*')
 
 
 def _find_last_nightly(lines):
@@ -380,6 +383,29 @@ def _get_latest_nightly_uri():
         return base_uri + filename
 
 
+def _retrieve_crate_versions():
+    base_uri = 'https://cdn.crate.io/downloads/releases/'
+    with urlopen(base_uri) as r:
+        lines = (line.decode('utf-8') for line in r)
+        for line in lines:
+            m = RELEASE_RE.match(line)
+            if m:
+                yield m.group('version')
+
+
+def _find_matching_version(versions, version_pattern):
+    """
+    Return the first matching version
+
+    >>> _find_matching_version(['1.1.4', '1.0.12', '1.0.5'], '1.0.x')
+    '1.0.12'
+
+    >>> _find_matching_version(['1.1.4', '1.0.6', '1.0.5'], '2.x.x')
+    """
+    pattern = fnmatch.translate(version_pattern.replace('x', '*'))
+    return next((v for v in versions if re.match(pattern, v)), None)
+
+
 _version_lookups = {
     'latest': _from_versions_json('crate'),
     'latest-stable': _from_versions_json('crate'),
@@ -394,8 +420,13 @@ def _lookup_uri(version):
     m = VERSION_RE.match(version)
     if m:
         return RELEASE_URL.format(version=m.group(0))
-    else:
-        return version
+    m = DYNAMIC_VERSION_RE.match(version)
+    if m:
+        versions = reversed(list(_retrieve_crate_versions()))
+        release = _find_matching_version(versions, m.group(0))
+        if release:
+            return RELEASE_URL.format(version=release)
+    return version
 
 
 def get_crate(version, crate_root=None):
@@ -406,6 +437,8 @@ def get_crate(version, crate_root=None):
             Can be specified in different ways:
 
             - A concrete version like '0.55.0'
+            - A version including a `x` as wildcards. Like: '1.1.x' or '1.x.x'.
+              This will use the latest version that matches.
             - An alias: 'latest-stable' or 'latest-testing'
             - A URI pointing to a crate tarball
         crate_root: Where to extract the tarball to.
@@ -420,7 +453,7 @@ def get_crate(version, crate_root=None):
 
 
 @argh.arg('version', help='Crate version to run. Concrete version like\
-          "0.55.0", an alias or an URI pointing to a Crate tarball. Supported\
+          "0.55.0", "1.1.x", an alias or an URI pointing to a Crate tarball. Supported\
           aliases are: [{0}]'.format(', '.join(_version_lookups.keys())))
 @argh.arg('-e', '--env', action='append',
           help='Environment variable. Option can be specified multiple times.')
