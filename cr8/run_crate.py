@@ -20,10 +20,10 @@ from functools import partial
 from typing import Dict, Any
 from urllib.request import urlopen
 
-from cr8.misc import parse_version
+from cr8.misc import parse_version, init_logging
 
 
-log = logging.getLogger(__file__)
+log = logging.getLogger(__name__)
 
 
 RELEASE_URL = 'https://cdn.crate.io/downloads/releases/crate-{version}.tar.gz'
@@ -210,9 +210,9 @@ class CrateNode(contextlib.ExitStack):
             universal_newlines=True
         ))
         msg = ('Crate launched:\n'
-               '\tPID: %s\n'
-               '\tLogs: %s\n'
-               '\tData: %s')
+               '    PID: %s\n'
+               '    Logs: %s\n'
+               '    Data: %s')
         if not self.keep_data:
             msg += ' (removed on stop)\n'
 
@@ -335,13 +335,6 @@ def _download_and_extract(uri, crate_root):
         with tarfile.open(fileobj=tmpfile) as t:
             t.extractall(crate_root)
     return crate_dir
-
-
-def init_logging():
-    log.setLevel(logging.INFO)
-    ch = logging.StreamHandler()
-    ch.setLevel(logging.INFO)
-    log.addHandler(ch)
 
 
 def _from_versions_json(key):
@@ -475,6 +468,20 @@ def get_crate(version, crate_root=None):
     return crate_dir
 
 
+def create_node(version, env=None, setting=None, crate_root=None, keep_data=False):
+    init_logging(log)
+    settings = {
+        'cluster.name': 'cr8-crate-run' + str(random.randrange(1e9))
+    }
+    crate_dir = get_crate(version, crate_root)
+    if setting:
+        settings.update(dict(i.split('=') for i in setting))
+    if env:
+        env = dict(i.split('=') for i in env)
+    return CrateNode(
+        crate_dir=crate_dir, env=env, settings=settings, keep_data=keep_data)
+
+
 @argh.arg('version', help='Crate version to run. Concrete version like\
           "0.55.0", "1.1.x", an alias or an URI pointing to a Crate tarball. Supported\
           aliases are: [{0}]'.format(', '.join(_version_lookups.keys())))
@@ -485,22 +492,10 @@ def get_crate(version, crate_root=None):
 @argh.arg('--keep-data', help='If this is set the data folder will be kept.')
 def run_crate(version, env=None, setting=None, crate_root=None, keep_data=False):
     """Launch a crate instance. """
-    init_logging()
-    settings = {
-        'cluster.name': 'cr8-crate-run' + str(random.randrange(1e9))
-    }
-    crate_dir = get_crate(version, crate_root)
-    if setting:
-        settings.update(dict(i.split('=') for i in setting))
-    if env:
-        env = dict(i.split('=') for i in env)
-    with CrateNode(crate_dir=crate_dir,
-                   env=env,
-                   settings=settings,
-                   keep_data=keep_data) as node:
+    with create_node(version, env, setting, crate_root, keep_data) as n:
         try:
-            node.start()
-            node.process.wait()
+            n.start()
+            n.process.wait()
         except KeyboardInterrupt:
             print('Stopping Crate...')
 

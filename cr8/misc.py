@@ -1,7 +1,15 @@
 """misc functions that have no real home."""
 
+import logging
 from typing import Tuple, Iterator, Any
 from collections import defaultdict
+
+
+def init_logging(log):
+    log.setLevel(logging.INFO)
+    ch = logging.StreamHandler()
+    ch.setLevel(logging.INFO)
+    log.addHandler(ch)
 
 
 def try_len(o: Any) -> int:
@@ -100,3 +108,21 @@ def as_statements(lines: Iterator[str]) -> Iterator[str]:
             parts.clear()
     if parts:
         yield ' '.join(parts)
+
+
+def break_iterable(iterable, pred):
+    """Break a iterable on the item that matches the predicate into lists.
+
+    The item that matched the predicate is not included in the result.
+
+    >>> list(break_iterable([1, 2, 3, 4], lambda x: x == 3))
+    [[1, 2], [4]]
+    """
+    sublist = []
+    for i in iterable:
+        if pred(i):
+            yield sublist
+            sublist = []
+        else:
+            sublist.append(i)
+    yield sublist

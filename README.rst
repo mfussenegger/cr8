@@ -218,6 +218,33 @@ Launch a Crate instance::
 
 This requires Java 8.
 
+``run-crate`` supports chaining of additional commands using ``--``. Under the
+context of ``run-crate`` any host urls can be formatted using the
+``{node.http_url}`` format string::
+
+    >>> cr8 run-crate latest-stable -- timeit -s "select name" --hosts '{node.http_url}'
+     # run-crate
+    ===========
+    <BLANKLINE>
+    ...
+    Starting Crate process
+    Crate launched:
+        PID: ...
+        Logs: ...
+        Data: ...
+    <BLANKLINE>
+    Psql      : ...
+    Http      : ...
+    Transport : ...
+    Cluster ready to process requests
+    <BLANKLINE>
+    <BLANKLINE>
+    # timeit
+    ========
+    <BLANKLINE>
+    <BLANKLINE>
+    <BLANKLINE>
+    <BLANKLINE>
 
 run-track
 ---------
