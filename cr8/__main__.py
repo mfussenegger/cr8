@@ -36,7 +36,9 @@ def _run_crate_and_rest(parser, args_groups):
             cmd = '# ' + args[0]
             log.info(cmd)
             log.info('=' * len(cmd) + '\n')
-            args = [a.format(node=node) for a in args]
+            if '--hosts' in args:
+                hosts_idx = args.index('--hosts')
+                args[hosts_idx + 1] = args[hosts_idx + 1].format(node=node)
             parser.dispatch(args)
             log.info('\n')
 

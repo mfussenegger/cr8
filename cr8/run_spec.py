@@ -6,7 +6,7 @@ from functools import partial
 from cr8 import aio
 from .insert_json import to_insert
 from .bench_spec import load_spec
-from .engine import Runner, Result, run_and_measure
+from .engine import Runner, Result, run_and_measure, eval_fail_if
 from .misc import (
     as_bulk_queries,
     as_statements,
@@ -72,7 +72,7 @@ def _result_to_crate(log, client):
 
 
 class Executor:
-    def __init__(self, spec_dir, benchmark_hosts, result_hosts, log):
+    def __init__(self, spec_dir, benchmark_hosts, result_hosts, log, fail_if):
         self.benchmark_hosts = benchmark_hosts
         self.spec_dir = spec_dir
         self.client = clients.client(benchmark_hosts)
@@ -84,6 +84,10 @@ class Executor:
             Result,
             version_info=self.server_version_info
         )
+        if fail_if:
+            self.fail_if = partial(eval_fail_if, fail_if)
+        else:
+            self.fail_if = lambda x: None
         if result_hosts:
             self.process_result = _result_to_crate(self.log, self.result_client)
         else:
@@ -158,13 +162,15 @@ class Executor:
                                concurrency=concurrency)))
             with Runner(self.benchmark_hosts, concurrency) as runner:
                 timed_stats = runner.run(stmt, iterations, args, bulk_args)
-            self.process_result(self.create_result(
+            result = self.create_result(
                 statement=stmt,
                 meta=meta,
                 timed_stats=timed_stats,
                 concurrency=concurrency,
                 bulk_size=try_len(bulk_args)
-            ))
+            )
+            self.process_result(result)
+            self.fail_if(result)
 
     def __enter__(self):
         return self
@@ -174,12 +180,18 @@ class Executor:
         self.result_client.close()
 
 
-def do_run_spec(spec, benchmark_hosts, log, result_hosts=None, action=None):
+def do_run_spec(spec,
+                benchmark_hosts,
+                log,
+                result_hosts=None,
+                action=None,
+                fail_if=None):
     with Executor(
         spec_dir=os.path.dirname(spec),
         benchmark_hosts=benchmark_hosts,
         result_hosts=result_hosts,
-        log=log
+        log=log,
+        fail_if=fail_if
     ) as executor:
         spec = load_spec(spec)
         try:
@@ -212,7 +224,8 @@ def run_spec(spec,
              output_fmt=None,
              logfile_info=None,
              logfile_result=None,
-             action=None):
+             action=None,
+             fail_if=None):
     """Run a spec file, executing the statements on the benchmark_hosts.
 
     Short example of a spec file:
@@ -246,11 +259,21 @@ def run_spec(spec,
             If present only the specified action will be executed.
             The argument can be provided multiple times to execute more than
             one action.
+        fail-if: An expression that causes cr8 to exit with a failure if it
+            evaluates to true.
+            The expression can contain formatting expressions for:
+                - runtime_stats
+                - statement
+                - meta
+                - concurrency
+                - bulk_size
+            For example:
+                --fail-if "{runtime_stats.mean} > 1.34"
     """
     with Logger(output_fmt=output_fmt,
                 logfile_info=logfile_info,
                 logfile_result=logfile_result) as log:
-        do_run_spec(spec, benchmark_hosts, log, result_hosts, action)
+        do_run_spec(spec, benchmark_hosts, log, result_hosts, action, fail_if)
 
 
 def main():

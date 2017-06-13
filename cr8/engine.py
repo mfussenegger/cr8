@@ -11,6 +11,25 @@ from .clients import client
 TimedStats = namedtuple('TimedStats', ['started', 'ended', 'stats'])
 
 
+class FailIf(SystemExit):
+    pass
+
+
+def eval_fail_if(fail_if: str, result):
+    fail_if = fail_if.format(runtime_stats=result.runtime_stats,
+                             statement=result.statement,
+                             meta=result.meta,
+                             concurrency=result.concurrency,
+                             bulk_size=result.bulk_size)
+    if eval(fail_if):
+        raise FailIf("Expression failed: " + fail_if)
+
+
+class DotDict(dict):
+
+    __getattr__ = dict.__getitem__
+
+
 class Result:
     def __init__(self,
                  version_info,
@@ -21,10 +40,10 @@ class Result:
                  bulk_size=None):
         self.version_info = version_info
         self.statement = str(statement)
-        self.meta = meta
+        self.meta = meta and DotDict(meta) or None
         self.started = timed_stats.started
         self.ended = timed_stats.ended
-        self.runtime_stats = timed_stats.stats.get()
+        self.runtime_stats = DotDict(timed_stats.stats.get())
         self.concurrency = concurrency
         self.bulk_size = bulk_size
 
