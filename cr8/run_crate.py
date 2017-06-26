@@ -17,7 +17,7 @@ import threading
 import fnmatch
 from pathlib import Path
 from functools import partial
-from typing import Dict, Any
+from typing import Dict, Any, List
 from urllib.request import urlopen
 
 from cr8.misc import parse_version, init_logging
@@ -468,6 +468,16 @@ def get_crate(version, crate_root=None):
     return crate_dir
 
 
+def _parse_options(options: List[str]) -> Dict[str, str]:
+    """ Parse repeatable CLI options
+
+    >>> opts = _parse_options(['cluster.name=foo', 'CRATE_JAVA_OPTS="-Dxy=foo"'])
+    >>> print(json.dumps(opts, sort_keys=True))
+    {"CRATE_JAVA_OPTS": "\\"-Dxy=foo\\"", "cluster.name": "foo"}
+    """
+    return dict(i.split('=', maxsplit=1) for i in options)
+
+
 def create_node(version, env=None, setting=None, crate_root=None, keep_data=False):
     init_logging(log)
     settings = {
@@ -475,9 +485,9 @@ def create_node(version, env=None, setting=None, crate_root=None, keep_data=Fals
     }
     crate_dir = get_crate(version, crate_root)
     if setting:
-        settings.update(dict(i.split('=') for i in setting))
+        settings.update(_parse_options(setting))
     if env:
-        env = dict(i.split('=') for i in env)
+        env = _parse_options(env)
     return CrateNode(
         crate_dir=crate_dir, env=env, settings=settings, keep_data=keep_data)
 

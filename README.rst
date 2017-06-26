@@ -222,7 +222,7 @@ This requires Java 8.
 context of ``run-crate`` any host urls can be formatted using the
 ``{node.http_url}`` format string::
 
-    >>> cr8 run-crate latest-stable -- timeit -s "select name" --hosts '{node.http_url}'
+    >>> cr8 run-crate latest-stable -- timeit -s "select 1" --hosts '{node.http_url}'
      # run-crate
     ===========
     <BLANKLINE>
@@ -233,9 +233,7 @@ context of ``run-crate`` any host urls can be formatted using the
         Logs: ...
         Data: ...
     <BLANKLINE>
-    Psql      : ...
-    Http      : ...
-    Transport : ...
+    ...
     Cluster ready to process requests
     <BLANKLINE>
     <BLANKLINE>
