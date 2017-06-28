@@ -15,6 +15,8 @@ import io
 import tarfile
 import threading
 import fnmatch
+import socket
+import ssl
 from pathlib import Path
 from functools import partial
 from typing import Dict, Any, List
@@ -25,7 +27,7 @@ from cr8.misc import parse_version, init_logging
 
 log = logging.getLogger(__name__)
 
-
+NO_SSL_VERIFY_CTX = ssl._create_unverified_context()
 RELEASE_URL = 'https://cdn.crate.io/downloads/releases/crate-{version}.tar.gz'
 VERSION_RE = re.compile('^(\d+\.\d+\.\d+)$')
 DYNAMIC_VERSION_RE = re.compile('^((\d+|x)\.(\d+|x)\.(\d+|x))$')
@@ -115,9 +117,26 @@ def wait_until(predicate, timeout=30):
             break
 
 
+def _is_up(host: str, port: int):
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    ex = s.connect_ex((host, port))
+    s.close()
+    return ex == 0
+
+
+def _has_ssl(host: str, port: int):
+    s = ssl.wrap_socket(socket.socket(socket.AF_INET, socket.SOCK_STREAM))
+    try:
+        ex = s.connect_ex((host, port))
+        s.close()
+        return ex == 0
+    except ssl.SSLError:
+        return False
+
+
 def cluster_state_200(url):
     try:
-        with urlopen(url) as r:
+        with urlopen(url, context=NO_SSL_VERIFY_CTX) as r:
             p = json.loads(r.read().decode('utf-8'))
             return int(p['status']) == 200
     except Exception as e:
@@ -176,6 +195,7 @@ class CrateNode(contextlib.ExitStack):
         self.monitor = OutputMonitor()
         self.process = None  # type: subprocess.Popen
         self.http_url = None  # type: str
+        self.http_host = None  # type: str
         start_script = 'crate.bat' if sys.platform == 'win32' else 'crate'
 
         settings = _get_settings(settings)
@@ -229,10 +249,13 @@ class CrateNode(contextlib.ExitStack):
         try:
             line_buf = LineBuffer()
             self.monitor.consumers.append(line_buf)
-            wait_until(
-                lambda: self.http_url and cluster_state_200(self.http_url),
-                timeout=30
-            )
+            wait_until(lambda: self.http_host, timeout=30)
+            host, port = self.http_host.split(':')
+            port = int(port)
+            wait_until(lambda: _is_up(host, port), timeout=30)
+            if _has_ssl(host, port):
+                self.http_url = self.http_url.replace('http://', 'https://')
+            wait_until(lambda: cluster_state_200(self.http_url), timeout=30)
         except TimeoutError as e:
             if not line_buf.lines:
                 _try_print_log(logfile)
@@ -248,6 +271,7 @@ class CrateNode(contextlib.ExitStack):
     def _set_addr(self, protocol, addr):
         log.info('{0:10}: {1}'.format(protocol.capitalize(), addr))
         if protocol == 'http':
+            self.http_host = addr
             self.http_url = 'http://' + addr
 
     def stop(self):
