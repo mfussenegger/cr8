@@ -1,3 +1,38 @@
+2017-06-30 0.10.0
+=================
+
+- Added a new ``--fail-if`` argument to ``timeit`` and ``run-spec``.
+
+- Added support for sub-command chaining using ``--``. This is especially
+  useful if the first command is ``run-crate``.
+  Together with ``--fail-if`` this can be used with ``git bisect`` to determine
+  the first commit that introduced a performance regression.
+  An example:
+
+    cr8 run-crate /path/to/crate/src \
+        -- timeit -s "select... " --hosts '{node.http_url}' --fail-if "{runtime_stats.mean} > 1.34"
+
+
+``insert-fake-data``
+--------------------
+
+- Added a default provider for columns of type ``short``.
+
+
+``run-crate``
+-------------
+
+- It's not possible to launch SSL enabled nodes. Before ``run-crate`` would run
+  into a timeout.
+
+- The version identifier can now include ``x`` as wildcard. For example, use:
+  ``run-crate 2.0.x`` to run the latest hotfix version in the ``2.0`` series.
+
+- Added support for building and running crate from a source tree.
+
+- Environment variables set using ``--env`` can now contain ``=`` signs.
+
+
 2017-05-14 0.9.3
 ================
 
