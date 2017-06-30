@@ -49,7 +49,7 @@ Why cr8? 🤔
    `run-spec`_ and `run-track`_ can be used to get runtime statistics of
    queries.
    These tools focus on response latencies. Being able to benchmark throughput
-   is NOT a goal of cr8.  Similarly, being able to simulate real-world use
+   is NOT a goal of cr8. Similarly, being able to simulate real-world use
    cases is also NOT a goal of cr8.
 
 
@@ -58,20 +58,17 @@ Why cr8? 🤔
 
     Although most commands output text by default. Most take a ``--output-fmt
     json`` argument to output JSON.
-    This is very useful if used together with `jq`_ to post-process the output
+    This is useful if used together with `jq`_ to post-process the output
 
 
 Install 💾
 ==========
 
-Python >= 3.5.1 is required to use the command line tools.
+Python >= 3.6 is required to use the command line tools.
 
 Install them using `pip <https://pip.pypa.io/en/stable/>`_::
 
-    python3.5 -m pip install --user cr8
-
-(Users of Python 3.5.0 might run into `this AssertionError
-<http://bugs.python.org/issue25233>`_.)
+    python3.6 -m pip install --user cr8
 
 
 Usage

@@ -22,7 +22,7 @@
 ``run-crate``
 -------------
 
-- It's not possible to launch SSL enabled nodes. Before ``run-crate`` would run
+- It's now possible to launch SSL enabled nodes. Before ``run-crate`` would run
   into a timeout.
 
 - The version identifier can now include ``x`` as wildcard. For example, use:
