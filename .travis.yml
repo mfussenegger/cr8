@@ -2,7 +2,6 @@ sudo: false
 language: python
 cache: pip
 python:
-    - 3.5-dev # 3.5.0 has asyncio queue bugs
     - 3.6-dev
     - nightly
 
