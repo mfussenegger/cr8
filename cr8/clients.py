@@ -70,7 +70,8 @@ def _to_http_hosts(hosts: Union[Iterable[str], str]) -> List[str]:
 async def _exec(session, url, data):
     async with session.post(url,
                             data=data,
-                            headers=HTTP_DEFAULT_HDRS) as resp:
+                            headers=HTTP_DEFAULT_HDRS,
+                            timeout=None) as resp:
         r = await resp.json()
         if 'error' in r:
             raise SqlException(r['error']['message'])
