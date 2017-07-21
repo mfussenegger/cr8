@@ -521,16 +521,33 @@ def create_node(version, env=None, setting=None, crate_root=None, keep_data=Fals
         crate_dir=crate_dir, env=env, settings=settings, keep_data=keep_data)
 
 
-@argh.arg('version', help='Crate version to run. Concrete version like\
-          "0.55.0", "1.1.x", an alias or an URI pointing to a Crate tarball. Supported\
-          aliases are: [{0}]'.format(', '.join(_version_lookups.keys())))
+@argh.arg('version', help='Crate version to run')
 @argh.arg('-e', '--env', action='append',
           help='Environment variable. Option can be specified multiple times.')
 @argh.arg('-s', '--setting', action='append',
           help='Crate setting. Option can be specified multiple times.')
 @argh.arg('--keep-data', help='If this is set the data folder will be kept.')
 def run_crate(version, env=None, setting=None, crate_root=None, keep_data=False):
-    """Launch a crate instance. """
+    """Launch a crate instance.
+
+    Supported version specifications:
+        - Concrete version like "0.55.0" or with wildcard: "1.1.x"
+        - An alias (one of [latest-nightly, latest-stable, latest-testing])
+        - A URI pointing to a CrateDB tarball (in .tar.gz format)
+        - A URI pointing to a checked out CrateDB repo directory
+
+    run-crate supports command chaining. To first launch a CrateDB node and then
+    another sub-command use:
+
+        cr8 run-crate <ver> -- timeit -s "select 1" --hosts '{node.http_url}'
+
+    To launch any (blocking) subprocess, prefix the name with '@':
+
+        cr8 run-crate <version> -- @http '{node.http_url}'
+
+    If run-crate is invoked using command chaining it won't block but exit once
+    all chained commands finished.
+    """
     with create_node(version, env, setting, crate_root, keep_data) as n:
         try:
             n.start()

@@ -6,6 +6,7 @@ import sys
 import argh
 import argparse
 import logging
+from subprocess import run
 
 from cr8 import __version__
 from cr8.misc import break_iterable, init_logging
@@ -21,6 +22,14 @@ from cr8.run_track import run_track
 log = logging.getLogger(__name__)
 
 
+def _run_subcommand(parser, args):
+    if args[0][0] == '@':
+        args[0] = args[0][1:]
+        run(args)
+    else:
+        parser.dispatch(args)
+
+
 def _run_crate_and_rest(parser, args_groups):
     args = parser.parse_args(args_groups[0])
     log.info('# run-crate')
@@ -33,13 +42,17 @@ def _run_crate_and_rest(parser, args_groups):
         node.start()
         log.info('\n')
         for args in args_groups[1:]:
+            if not args or not args[0]:
+                continue
             cmd = '# ' + args[0]
             log.info(cmd)
             log.info('=' * len(cmd) + '\n')
-            if '--hosts' in args:
-                hosts_idx = args.index('--hosts')
-                args[hosts_idx + 1] = args[hosts_idx + 1].format(node=node)
-            parser.dispatch(args)
+            for i in range(len(args)):
+                try:
+                    args[i] = args[i].format(node=node)
+                except KeyError:
+                    pass
+            _run_subcommand(parser, args)
             log.info('\n')
 
 
