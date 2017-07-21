@@ -125,13 +125,12 @@ def _is_up(host: str, port: int):
 
 
 def _has_ssl(host: str, port: int):
-    s = ssl.wrap_socket(socket.socket(socket.AF_INET, socket.SOCK_STREAM))
-    try:
-        ex = s.connect_ex((host, port))
-        s.close()
-        return ex == 0
-    except ssl.SSLError:
-        return False
+    with ssl.wrap_socket(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as s:
+        try:
+            ex = s.connect_ex((host, port))
+            return ex == 0
+        except ssl.SSLError:
+            return False
 
 
 def cluster_state_200(url):
