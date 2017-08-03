@@ -302,7 +302,7 @@ class LineBuffer:
 class AddrConsumer:
 
     ADDRESS_RE = re.compile(
-        '.*\[(?P<protocol>http|o.e.h.HttpServer|psql|transport|o.e.t.TransportService) +\] \[.*\] .*'
+        '.*\[(?P<protocol>http|i.c.p.h.CrateNettyHttpServerTransport|o.e.h.HttpServer|psql|transport|o.e.t.TransportService)\s*\] \[.*\] .*'
         'publish_address {'
         '(?:inet\[[\w\d\.-]*/|\[)?'
         '(?:[\w\d\.-]+/)?'
@@ -311,6 +311,7 @@ class AddrConsumer:
         '}'
     )
     PROTOCOL_MAP = {
+        'i.c.p.h.CrateNettyHttpServerTransport': 'http',
         'o.e.h.HttpServer': 'http',
         'o.e.t.TransportService': 'transport'
     }
@@ -325,7 +326,13 @@ class AddrConsumer:
         >>> AddrConsumer._parse('NONE')
         (None, None)
 
-        >>> AddrConsumer._parse('[INFO ][psql  ] [8f64DTi] publish_address {127.0.0.1:5432}, bound_addresses {127.0.0.1:5432}')
+        >>> AddrConsumer._parse('[INFO ][i.c.p.h.CrateNettyHttpServerTransport] [Widderstein] publish_address {127.0.0.1:4200}, bound_addresses {[fe80::1]:4200}, {[::1]:4200}, {127.0.0.1:4200}')
+        ('http', '127.0.0.1:4200')
+
+        >>> AddrConsumer._parse('[INFO ][o.e.t.TransportService   ] [Widderstein] publish_address {127.0.0.1:4300}, bound_addresses {[fe80::1]:4300}, {[::1]:4300}, {127.0.0.1:4300}')
+        ('transport', '127.0.0.1:4300')
+
+        >>> AddrConsumer._parse('[INFO ][psql                     ] [Widderstein] publish_address {127.0.0.1:5432}, bound_addresses {127.0.0.1:5432}')
         ('psql', '127.0.0.1:5432')
         """
         m = AddrConsumer.ADDRESS_RE.match(line)
