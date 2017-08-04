@@ -174,7 +174,6 @@ class CrateNode(contextlib.ExitStack):
 
     def __init__(self,
                  crate_dir: str,
-                 data_path: str=None,
                  env: Dict[str, Any]=None,
                  settings: Dict[str, Any]=None,
                  keep_data: bool=False) -> None:
