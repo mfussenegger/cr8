@@ -1,3 +1,9 @@
+2017-08-04 0.10.1
+=================
+
+- ``run-crate`` now works again with ``latest-nightly``. It ran into a timeout
+  as it couldn't parse the HTTP address from the log due to a format change.
+
 2017-06-30 0.10.0
 =================
 
