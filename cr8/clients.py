@@ -7,6 +7,9 @@ from typing import List, Union, Iterable
 from decimal import Decimal
 
 
+HTTP_DEFAULT_HDRS = {'Content-Type': 'application/json'}
+
+
 class CrateJsonEncoder(json.JSONEncoder):
 
     epoch = datetime(1970, 1, 1)
@@ -65,7 +68,9 @@ def _to_http_hosts(hosts: Union[Iterable[str], str]) -> List[str]:
 
 
 async def _exec(session, url, data):
-    async with session.post(url, data=data) as resp:
+    async with session.post(url,
+                            data=data,
+                            headers=HTTP_DEFAULT_HDRS) as resp:
         r = await resp.json()
         if 'error' in r:
             raise SqlException(r['error']['message'])
