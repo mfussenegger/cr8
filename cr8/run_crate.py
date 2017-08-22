@@ -176,7 +176,8 @@ class CrateNode(contextlib.ExitStack):
                  crate_dir: str,
                  env: Dict[str, Any]=None,
                  settings: Dict[str, Any]=None,
-                 keep_data: bool=False) -> None:
+                 keep_data: bool=False,
+                 timeout: int=30) -> None:
         """Create a CrateNode
 
         Args:
@@ -203,6 +204,7 @@ class CrateNode(contextlib.ExitStack):
         self.logs_path = settings.get('path.logs') or os.path.join(crate_dir, 'logs')
         self.cluster_name = settings.get('cluster.name') or 'cr8'
         self.keep_data = keep_data
+        self.timeout = timeout
         settings['path.data'] = self.data_path
         settings['cluster.name'] = self.cluster_name
         if version < (1, 0, 0):
@@ -247,13 +249,13 @@ class CrateNode(contextlib.ExitStack):
         try:
             line_buf = LineBuffer()
             self.monitor.consumers.append(line_buf)
-            wait_until(lambda: self.http_host, timeout=30)
+            wait_until(lambda: self.http_host, timeout=self.timeout)
             host, port = self.http_host.split(':')
             port = int(port)
-            wait_until(lambda: _is_up(host, port), timeout=30)
+            wait_until(lambda: _is_up(host, port), timeout=self.timeout)
             if _has_ssl(host, port):
                 self.http_url = self.http_url.replace('http://', 'https://')
-            wait_until(lambda: cluster_state_200(self.http_url), timeout=30)
+            wait_until(lambda: cluster_state_200(self.http_url), timeout=self.timeout)
         except TimeoutError as e:
             if not line_buf.lines:
                 _try_print_log(logfile)
@@ -507,7 +509,7 @@ def _parse_options(options: List[str]) -> Dict[str, str]:
     return dict(i.split('=', maxsplit=1) for i in options)
 
 
-def create_node(version, env=None, setting=None, crate_root=None, keep_data=False):
+def create_node(version, env=None, setting=None, crate_root=None, keep_data=False, timeout=30):
     init_logging(log)
     settings = {
         'cluster.name': 'cr8-crate-run' + str(random.randrange(1e9))
@@ -518,7 +520,7 @@ def create_node(version, env=None, setting=None, crate_root=None, keep_data=Fals
     if env:
         env = _parse_options(env)
     return CrateNode(
-        crate_dir=crate_dir, env=env, settings=settings, keep_data=keep_data)
+        crate_dir=crate_dir, env=env, settings=settings, keep_data=keep_data, timeout=timeout)
 
 
 @argh.arg('version', help='Crate version to run. Concrete version like\
@@ -529,9 +531,11 @@ def create_node(version, env=None, setting=None, crate_root=None, keep_data=Fals
 @argh.arg('-s', '--setting', action='append',
           help='Crate setting. Option can be specified multiple times.')
 @argh.arg('--keep-data', help='If this is set the data folder will be kept.')
-def run_crate(version, env=None, setting=None, crate_root=None, keep_data=False):
+@argh.arg('-t', '--timeout', help='Set startup timeout.')
+
+def run_crate(version, env=None, setting=None, crate_root=None, keep_data=False, timeout=30):
     """Launch a crate instance. """
-    with create_node(version, env, setting, crate_root, keep_data) as n:
+    with create_node(version, env, setting, crate_root, keep_data, timeout) as n:
         try:
             n.start()
             n.process.wait()
