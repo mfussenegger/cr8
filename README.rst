@@ -241,6 +241,11 @@ context of ``run-crate`` any host urls can be formatted using the
     <BLANKLINE>
     <BLANKLINE>
 
+In the above example ``timeit`` is a ``cr8`` specific sub-command. But it's
+also possible to use arbitrary commands by prefixing them with ``@``::
+
+    cr8 run-crate latest-nightly -- @http '{node.http_url}'
+
 run-track
 ---------
 
