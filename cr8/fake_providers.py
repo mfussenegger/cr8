@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from faker.generator import random
 from faker.providers import BaseProvider
 from multiprocessing import Manager
 
@@ -60,7 +59,8 @@ class GeoSpatialProvider(BaseProvider):
         assert isinstance(lat_max, float)
         # longitude: -180 .. 0 .. +180 (E-W)
         # latitude: -90 .. 0 .. +90 (S-N)
+        uniform = self.generator.random.uniform
         return [
-            random.uniform(lon_min, lon_max),
-            random.uniform(lat_min, lat_max)
+            uniform(lon_min, lon_max),
+            uniform(lat_min, lat_max)
         ]

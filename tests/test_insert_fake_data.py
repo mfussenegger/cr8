@@ -9,7 +9,7 @@ class TestDataFaker(TestCase):
 
     def setUp(self):
         self.f = DataFaker()
-        self.f.fake.seed(42)
+        self.f.fake.seed_instance(42)
 
     def test_fake_provider_for_name_column(self):
         provider = self.f.provider_for_column('name', 'string')
