@@ -1,3 +1,10 @@
+2017-09-12 0.10.2
+=================
+
+- ``insert-fake-data`` should no longer generate the same values using the
+  ``uuid4`` provider. The amount of duplicate values generated using other
+  providers should be reduced as well.
+
 2017-08-04 0.10.1
 =================
 
