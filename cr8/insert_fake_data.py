@@ -11,7 +11,7 @@ import signal
 from faker import Factory
 from functools import partial
 from collections import OrderedDict
-from concurrent.futures import ProcessPoolExecutor
+from concurrent.futures import ThreadPoolExecutor
 
 from .insert_json import to_insert
 from .misc import parse_table, parse_version
@@ -151,7 +151,7 @@ def _bulk_size_generator(num_records, bulk_size, active):
 
 
 async def _gen_data_and_insert(q, client, stmt, row_fun, size_seq):
-    with ProcessPoolExecutor() as e:
+    with ThreadPoolExecutor() as e:
         for size in size_seq:
             args_coro = loop.run_in_executor(e, _create_bulk_args, row_fun, size)
             task = asyncio.ensure_future(_exec_many(client, stmt, args_coro))
