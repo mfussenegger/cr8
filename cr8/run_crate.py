@@ -368,43 +368,17 @@ def _download_and_extract(uri, crate_root):
 
 def _from_versions_json(key):
     def retrieve():
-        with urlopen('https://crate.io/versions.json') as r:
+        with urlopen('https://crate.io/releases.json') as r:
             if r.headers.get('Content-Encoding') == 'gzip':
                 with gzip.open(r, 'rt') as r:
                     versions = json.loads(r.read())
             else:
                 versions = json.loads(r.read().decode('utf-8'))
-        return versions[key]
+        return versions[key]['downloads']['tar.gz']['url']
     return retrieve
 
 
-NIGHTLY_RE = re.compile('.*>(?P<filename>crate-\d+\.\d+\.\d+-\d{12}-[a-z0-9]{7,}\.tar\.gz)<.*')
 RELEASE_RE = re.compile('.*>(?P<filename>crate-(?P<version>\d+\.\d+\.\d+)\.tar\.gz)<.*')
-
-
-def _find_last_nightly(lines):
-    """Return the last nightly release tarball filename.
-
-    >>> lines = [
-    ...     '<a href="crate-0.55.0-201606080301-3ceb1ed.tar.gz">crate-0.55.0-201606080301-3ceb1ed.tar.gz</a>           08-Jun-2016 01:01            46298304'
-    ...     '<a href="crate-0.55.0-201606090301-b32a36f.tar.gz">crate-0.55.0-201606090301-b32a36f.tar.gz</a>           09-Jun-2016 01:01            46297737'
-    ...     '<a href="crate-0.55.0-201606100301-23388dd.tar.gz">crate-0.55.0-201606100301-23388dd.tar.gz</a>           10-Jun-2016 01:01            46300496'
-    ... ]
-    >>> _find_last_nightly(lines)
-    'crate-0.55.0-201606100301-23388dd.tar.gz'
-    """
-    for line in reversed(lines):
-        m = NIGHTLY_RE.match(line)
-        if m:
-            return m.group('filename')
-    raise ValueError("Couldn't find a valid nightly tarball filename in the lines")
-
-
-def _get_latest_nightly_uri():
-    base_uri = 'https://cdn.crate.io/downloads/releases/nightly/'
-    with urlopen(base_uri) as r:
-        filename = _find_last_nightly([line.decode('utf-8') for line in r])
-        return base_uri + filename
 
 
 def _retrieve_crate_versions():
@@ -431,10 +405,10 @@ def _find_matching_version(versions, version_pattern):
 
 
 _version_lookups = {
-    'latest': _from_versions_json('crate'),
-    'latest-stable': _from_versions_json('crate'),
-    'latest-testing': _from_versions_json('crate_testing'),
-    'latest-nightly': _get_latest_nightly_uri
+    'latest': _from_versions_json('stable'),
+    'latest-stable': _from_versions_json('stable'),
+    'latest-testing': _from_versions_json('testing'),
+    'latest-nightly': _from_versions_json('nightly')
 }
 
 
