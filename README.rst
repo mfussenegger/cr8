@@ -132,7 +132,7 @@ The following command can be used to insert 1000 records::
 
 It will automatically read the schema from the table and map the columns to
 faker `providers
-<http://fake-factory.readthedocs.org/en/latest/providers.html>`_ and insert the
+<https://faker.readthedocs.io/en/latest/providers.html>`_ and insert the
 give number of records.
 
 (Currently only top-level columns are supported)
