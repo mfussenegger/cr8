@@ -189,7 +189,13 @@ class CrateNode(contextlib.ExitStack):
         self.crate_dir = crate_dir
         version = _extract_version(crate_dir)
         self.env = env or {}
-        self.env.setdefault('JAVA_HOME', os.environ.get('JAVA_HOME', ''))
+        self.env.setdefault('JAVA_HOME',
+                            os.environ.get('JAVA_HOME', ''))
+        self.env.setdefault('LANG',
+                            os.environ.get('LANG', os.environ.get('LC_ALL')))
+        if not self.env['LANG']:
+            raise SystemError('Your locale are not configured correctly. '
+                              'Please set LANG or alternatively LC_ALL.')
         self.monitor = OutputMonitor()
         self.process = None  # type: subprocess.Popen
         self.http_url = None  # type: str

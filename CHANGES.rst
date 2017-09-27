@@ -22,6 +22,10 @@
 ``run-crate``
 -------------
 
+- Pass ``LANG`` environment variable to ``crate`` subprocess.
+  This fixes encoding issues when passing unicode characters as CrateDB setting
+  values.
+
 - It's now possible to launch SSL enabled nodes. Before ``run-crate`` would run
   into a timeout.
 
