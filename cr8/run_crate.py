@@ -159,6 +159,13 @@ def _try_print_log(logfile):
         pass
 
 
+def _ensure_running(proc):
+    result = proc.poll()
+    if result:
+        raise SystemError('Process exited: ' + str(result))
+    return True
+
+
 class CrateNode(contextlib.ExitStack):
     """Class that allows starting and stopping a Crate process
 
@@ -250,23 +257,29 @@ class CrateNode(contextlib.ExitStack):
         self.monitor.consumers.append(AddrConsumer(self._set_addr))
         self.monitor.start(proc)
 
+        line_buf = LineBuffer()
+        self.monitor.consumers.append(line_buf)
         try:
-            line_buf = LineBuffer()
-            self.monitor.consumers.append(line_buf)
-            wait_until(lambda: self.http_host, timeout=30)
+            wait_until(
+                lambda: _ensure_running(proc) and self.http_host,
+                timeout=30
+            )
             host, port = self.http_host.split(':')
             port = int(port)
-            wait_until(lambda: _is_up(host, port), timeout=30)
+            wait_until(
+                lambda: _ensure_running(proc) and _is_up(host, port),
+                timeout=30
+            )
             if _has_ssl(host, port):
                 self.http_url = self.http_url.replace('http://', 'https://')
             wait_until(lambda: cluster_state_200(self.http_url), timeout=30)
-        except TimeoutError as e:
+        except (SystemError, TimeoutError) as e:
             if not line_buf.lines:
                 _try_print_log(logfile)
             else:
                 for line in line_buf.lines:
                     log.error(line)
-            raise
+            raise SystemExit("Exiting because CrateDB didn't start correctly")
         else:
             self.monitor.consumers.remove(line_buf)
             line_buf = None
