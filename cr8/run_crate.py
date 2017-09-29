@@ -363,6 +363,7 @@ def _download_and_extract(uri, crate_root):
     crate_folder_name = re.sub('\.tar(\.gz)?$', '', filename)
     crate_dir = os.path.join(crate_root, crate_folder_name)
     if os.path.exists(crate_dir):
+        os.utime(crate_dir)  # update mtime to avoid removal
         log.info('Skipping download, tarball alrady extracted at %s', crate_dir)
         return crate_dir
     log.info('Downloading %s and extracting to %s', uri, crate_root)
@@ -452,6 +453,17 @@ def _build_from_src(src_repo):
     return str(tarball.with_suffix('').with_suffix(''))
 
 
+def _remove_old_crates(path):
+    now = time.time()
+    s7days_ago = now - (7 * 24 * 60 * 60)
+    with contextlib.suppress(FileNotFoundError):
+        old_unused_dirs = (e for e in os.scandir(path)
+                           if e.is_dir() and e.stat().st_mtime < s7days_ago)
+        for e in old_unused_dirs:
+            print(f'Removing {e.name} from crates cache')
+            shutil.rmtree(e.path)
+
+
 def get_crate(version, crate_root=None):
     """Retrieve a Crate tarball, extract it and return the path.
 
@@ -471,8 +483,11 @@ def get_crate(version, crate_root=None):
     if _is_project_repo(version):
         return _build_from_src(version)
     uri = _lookup_uri(version)
-    crate_root = crate_root or os.environ.get(
-        'XDG_CACHE_HOME', os.path.join(os.path.expanduser('~'), '.cache', 'cr8', 'crates'))
+    if not crate_root:
+        crate_root = os.environ.get(
+            'XDG_CACHE_HOME',
+            os.path.join(os.path.expanduser('~'), '.cache', 'cr8', 'crates'))
+        _remove_old_crates(crate_root)
     crate_dir = _download_and_extract(uri, crate_root)
     return crate_dir
 
