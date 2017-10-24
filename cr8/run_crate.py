@@ -69,7 +69,7 @@ class OutputMonitor:
             for line in proc.stdout:
                 for consumer in self.consumers:
                     consumer.send(line)
-        except:
+        except Exception:
             if proc.returncode is not None:
                 return
             raise
@@ -118,19 +118,27 @@ def wait_until(predicate, timeout=30):
 
 
 def _is_up(host: str, port: int):
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    ex = s.connect_ex((host, port))
-    s.close()
-    return ex == 0
+    try:
+        conn = _create_connection(host, port)
+        conn.close()
+        return True
+    except socket.gaierror:
+        return False
+
+
+def _create_connection(host: str, port: int):
+    if host[0] == '[' and host[-1] == ']':
+        host = host[1:-1]
+    return socket.create_connection((host, port))
 
 
 def _has_ssl(host: str, port: int):
-    with ssl.wrap_socket(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as s:
-        try:
-            ex = s.connect_ex((host, port))
-            return ex == 0
-        except ssl.SSLError:
-            return False
+    try:
+        with ssl.wrap_socket(_create_connection(host, port)) as s:
+            s.close()
+            return True
+    except (socket.gaierror, ssl.SSLError):
+        return False
 
 
 def cluster_state_200(url):
@@ -155,7 +163,7 @@ def _try_print_log(logfile):
         with open(logfile) as f:
             for line in f:
                 log.error(line)
-    except:
+    except Exception:
         pass
 
 
@@ -264,7 +272,7 @@ class CrateNode(contextlib.ExitStack):
                 lambda: _ensure_running(proc) and self.http_host,
                 timeout=30
             )
-            host, port = self.http_host.split(':')
+            host, port = self.http_host.rsplit(':', 1)
             port = int(port)
             wait_until(
                 lambda: _ensure_running(proc) and _is_up(host, port),
@@ -321,9 +329,8 @@ class AddrConsumer:
     ADDRESS_RE = re.compile(
         '.*\[(?P<protocol>http|i.c.p.h.CrateNettyHttpServerTransport|o.e.h.HttpServer|psql|transport|o.e.t.TransportService)\s*\] \[.*\] .*'
         'publish_address {'
-        '(?:inet\[[\w\d\.-]*/|\[)?'
-        '(?:[\w\d\.-]+/)?'
-        '(?P<addr>[\d\.:]+)'
+        '(?:(inet\[[A-Za-z-\.]*/)|([A-Za-z\.]*/))?'
+        '?(?P<addr>\[?[\d\.:]+\]?:?\d+)'
         '(?:\])?'
         '}'
     )

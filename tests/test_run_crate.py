@@ -32,6 +32,9 @@ lines4 = [
     "[2016-06-16 10:27:20,185][INFO ][discovery                ] [Selene] crate/h9moKMrATmCElYXjfad5Vw",
 ]
 
+ipv6_psql = "[2017-10-26T15:31:44,654][INFO ][psql                     ] [Deichselspitze] publish_address {[::1]:5432}, bound_addresses {[::1]:5432}"
+ipv6_http = "[2017-10-26T15:31:44,666][INFO ][i.c.p.h.CrateNettyHttpServerTransport] [Deichselspitze] publish_address {[::1]:44200}, bound_addresses {[::1]:44200}"
+
 crate12_psql = "[2017-02-01T15:43:37,736][INFO ][psql                     ] [8f64DTi] publish_address {127.0.0.1:5432}, bound_addresses {127.0.0.1:5432}"
 crate12_http = "[2017-02-01T15:43:37,793][INFO ][o.e.h.HttpServer         ] [8f64DTi] publish_address {127.0.0.1:4200}, bound_addresses {127.0.0.1:4200}"
 crate12_transport = "[2017-02-01T15:43:37,783][INFO ][o.e.t.TransportService   ] [8f64DTi] publish_address {127.0.0.1:4300}, bound_addresses {127.0.0.1:4300}"
@@ -56,6 +59,12 @@ class AddrParseTest(TestCase):
         self.assertEqual(AddrConsumer._parse(crate12_psql), ('psql', '127.0.0.1:5432'))
         self.assertEqual(AddrConsumer._parse(crate12_http), ('http', '127.0.0.1:4200'))
         self.assertEqual(AddrConsumer._parse(crate12_transport), ('transport', '127.0.0.1:4300'))
+
+    def test_ipv6_http(self):
+        self.assertEqual(AddrConsumer._parse(ipv6_http), ('http', '[::1]:44200'))
+
+    def test_ipv6_psql(self):
+        self.assertEqual(AddrConsumer._parse(ipv6_psql), ('psql', '[::1]:5432'))
 
 
 def load_tests(loader, tests, ignore):

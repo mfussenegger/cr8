@@ -159,7 +159,7 @@ insert-blob
 A tool to upload a file into a blob table::
 
     >>> cr8 insert-blob --hosts localhost:4200 --table blobtable specs/sample.toml
-    http://localhost:44200/_blobs/blobtable/2917773e74ff46d08f399435ed9b99afb9ed34bd
+    http://.../_blobs/blobtable/2917773e74ff46d08f399435ed9b99afb9ed34bd
 
 run-spec
 --------
@@ -175,7 +175,7 @@ In the `specs` folder is an example spec file.
 
 Usage::
 
-    >>> cr8 run-spec specs/sample.toml localhost:44200 -r localhost:44200
+    >>> cr8 run-spec specs/sample.toml localhost:4200 -r localhost:4200
     # Running setUp
     # Running benchmark
     <BLANKLINE>
@@ -201,7 +201,7 @@ A table named `benchmarks` will be created if it doesn't exist.
 
 Writing spec files in python is also supported::
 
-    >>> cr8 run-spec specs/sample.py localhost:44200
+    >>> cr8 run-spec specs/sample.py localhost:4200
     # Running setUp
     # Running benchmark
     ...

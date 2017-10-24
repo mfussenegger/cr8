@@ -2,22 +2,20 @@ import os
 import doctest
 import subprocess
 import functools
-from unittest import main
 from cr8.run_crate import CrateNode, get_crate
 from crate.client import connect
 
 
-crate_dir = get_crate('latest-testing')
+crate_dir = get_crate('latest-nightly')
 node = CrateNode(
     crate_dir=crate_dir,
     settings={
         'cluster.name': 'cr8-tests',
-        'http.port': '44200-44250'
+        'http.port': '44200-44250',
     })
 
 
 def setup(*args):
-    node.start()
     with connect(node.http_url) as conn:
         c = conn.cursor()
         c.execute('create table x.demo (id int, name string, country string) \
@@ -36,7 +34,7 @@ def teardown(*args):
 
 
 def transform(s):
-    s = s.replace('localhost:4200', node.http_url or 'localhost:44200')
+    s = s.replace('localhost:4200', node.http_url)
     return (
         r'print(sh("""%s""").stdout.decode("utf-8"))' % s) + '\n'
 
@@ -54,6 +52,8 @@ class Parser(doctest.DocTestParser):
 def load_tests(loader, tests, ignore):
     env = os.environ.copy()
     env['CR8_NO_TQDM'] = 'True'
+    node.start()
+    assert node.http_host, "http_url must be available"
     tests.addTests(doctest.DocFileSuite(
         os.path.join('..', 'README.rst'),
         globs={
@@ -76,4 +76,5 @@ def load_tests(loader, tests, ignore):
 
 
 if __name__ == "__main__":
-    main()
+    import unittest
+    unittest.main()

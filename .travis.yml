@@ -21,7 +21,7 @@ addons:
 install:
     - pip install .
 script:
-    - python -m unittest
+    - python -m unittest -v
 
 notifications:
     email: false
