@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import math
 from faker.providers import BaseProvider
 from multiprocessing import Manager
 
@@ -50,6 +51,8 @@ class GeoSpatialProvider(BaseProvider):
     True
     """
 
+    EARTH_RADIUS = 6371.0  # in km
+
     def geo_point(self,
                   lon_min=-180.0, lon_max=180.0,
                   lat_min=-90.0, lat_max=90.0):
@@ -57,6 +60,12 @@ class GeoSpatialProvider(BaseProvider):
         assert isinstance(lon_max, float)
         assert isinstance(lat_min, float)
         assert isinstance(lat_max, float)
+
+        assert lon_min >= -180.0
+        assert lon_max <= 180.0
+        assert lat_min >= -90.0
+        assert lat_max <= 90.0
+
         # longitude: -180 .. 0 .. +180 (E-W)
         # latitude: -90 .. 0 .. +90 (S-N)
         u = self.generator.random.uniform
@@ -65,11 +74,42 @@ class GeoSpatialProvider(BaseProvider):
             u(lat_min, lat_max)
         ]
 
-    def geo_shape(self):
-        u = self.generator.random.uniform
-        return 'POLYGON (( {0} {1}, {2} {3}, {4} {5}, {6} {7}, {0} {1}))'.format(
-            u(-90, 0), u(-45, 0),
-            u(0, 90), u(-45, 0),
-            u(0, 90), u(0, 45),
-            u(-90, 0), u(45, 0),
-        )
+    def geo_shape(self, sides=5, center=None, distance=None):
+        """
+        Return a WKT string for a POLYGON with given amount of sides.
+        The polygon is defined by its center (random point if not provided) and
+        the distance (random distance if not provided; in km) of the points to
+        its center.
+        """
+        assert isinstance(sides, int)
+
+        if center is None:
+            center = self.geo_point()
+        else:
+            assert -180.0 <= center[0] <= 180.0
+            assert -90.0 <= center[1] <= 90.0
+
+        if distance is None:
+            distance = self.random_int(100, 1000)
+        else:
+            # 6371 => earth radius in km
+            # assert that shape radius is maximum half of earth's circumference
+            assert isinstance(distance, int)
+            assert distance <= self.EARTH_RADIUS * math.pi
+
+        d_arc = distance * 180.0 / self.EARTH_RADIUS / math.pi
+
+        points = []
+        angles = self.random_sample(range(360), sides)
+        angles.sort()
+        for a in angles:
+            rad = a * math.pi / 180.0
+            points.append(
+                [center[0] + d_arc * math.sin(rad),
+                 center[1] + d_arc * math.cos(rad)]
+            )
+        # close polygon
+        points.append(points[0])
+
+        path = ', '.join([' '.join(p) for p in ([str(lon), str(lat)] for lon, lat in points)])
+        return f'POLYGON (( {path} ))'

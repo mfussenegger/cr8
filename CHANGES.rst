@@ -1,3 +1,6 @@
+- Added a new default provider for columns of type ``GEO_SHAPE``, which
+  provides a POLYGON WKT string.
+
 2017-06-30 0.10.0
 =================
 
