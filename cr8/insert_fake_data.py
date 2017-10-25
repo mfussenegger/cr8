@@ -68,6 +68,7 @@ class DataFaker:
     }
 
     _type_default = {
+        'byte': lambda f: partial(f.random_int, min=-128, max=127),
         'short': lambda f: partial(f.random_int, min=-32768, max=32767),
         'integer': lambda f: partial(
             f.random_int, min=-2147483648, max=2147483647),

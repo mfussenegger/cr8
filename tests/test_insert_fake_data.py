@@ -66,6 +66,10 @@ class TestDataFaker(TestCase):
         provider = self.f.provider_for_column('x', 'short')
         self.assertEqual(provider(), -18176)
 
+    def test_byte_type_default(self):
+        provider = self.f.provider_for_column('x', 'byte')
+        self.assertEqual(provider(), -71)
+
     def test_ip_type_default(self):
         provider = self.f.provider_for_column('x', 'ip')
         self.assertEqual(provider(), '163.177.121.157')
