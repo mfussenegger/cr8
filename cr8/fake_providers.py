@@ -59,8 +59,17 @@ class GeoSpatialProvider(BaseProvider):
         assert isinstance(lat_max, float)
         # longitude: -180 .. 0 .. +180 (E-W)
         # latitude: -90 .. 0 .. +90 (S-N)
-        uniform = self.generator.random.uniform
+        u = self.generator.random.uniform
         return [
-            uniform(lon_min, lon_max),
-            uniform(lat_min, lat_max)
+            u(lon_min, lon_max),
+            u(lat_min, lat_max)
         ]
+
+    def geo_shape(self):
+        u = self.generator.random.uniform
+        return 'POLYGON (( {0} {1}, {2} {3}, {4} {5}, {6} {7}, {0} {1}))'.format(
+            u(-90, 0), u(-45, 0),
+            u(0, 90), u(-45, 0),
+            u(0, 90), u(0, 45),
+            u(-90, 0), u(45, 0),
+        )
