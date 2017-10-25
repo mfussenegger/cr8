@@ -80,6 +80,7 @@ class DataFaker:
         'string': operator.attrgetter('word'),
         'boolean': operator.attrgetter('boolean'),
         'geo_point': operator.attrgetter('geo_point'),
+        'geo_shape': operator.attrgetter('geo_shape'),
     }
 
     _custom = {
