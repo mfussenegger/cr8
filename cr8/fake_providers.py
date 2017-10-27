@@ -53,6 +53,29 @@ class GeoSpatialProvider(BaseProvider):
 
     EARTH_RADIUS = 6371.0  # in km
 
+    # CRATE GEO_SHAPE BOUNDS: minX=-180.0,maxX=180.0,minY=-90.0,maxY=90.0
+    LON_MIN = -180.0
+    LON_MAX = 180.0
+    LAT_MIN = -90.0
+    LAT_MAX = 90.0
+
+    def _coordinates(self, lon, lat):
+        """
+        Verifies that the provided coordinates are in between
+        the required bounds
+        """
+        if lon < self.LON_MIN or lon > self.LON_MAX:
+            if lon < 0:
+                lon = self.LON_MIN
+            else:
+                lon = self.LON_MAX
+        if lat < self.LAT_MIN or lat > self.LAT_MAX:
+            if lat < 0:
+                lat = self.LAT_MIN
+            else:
+                lat = self.LAT_MAX
+        return [lon , lat]
+
     def geo_point(self,
                   lon_min=-180.0, lon_max=180.0,
                   lat_min=-90.0, lat_max=90.0):
@@ -104,10 +127,9 @@ class GeoSpatialProvider(BaseProvider):
         angles.sort()
         for a in angles:
             rad = a * math.pi / 180.0
-            points.append(
-                [center[0] + d_arc * math.sin(rad),
-                 center[1] + d_arc * math.cos(rad)]
-            )
+            lon = center[0] + d_arc * math.sin(rad)
+            lat = center[1] + d_arc * math.cos(rad)
+            points.append(self._coordinates(lon, lat))
         # close polygon
         points.append(points[0])
 
