@@ -5,6 +5,7 @@ import math
 from faker.providers import BaseProvider
 from multiprocessing import Manager
 
+EARTH_RADIUS = 6371  # earth radius in km
 
 # Not implemented as Provider because with providers it's not possible to have
 # 1 instance per column. So either there would be one shared Counter accross
@@ -26,6 +27,36 @@ class Counter:
 def auto_inc(fake):
     manager = Manager()
     return Counter(manager.Value('i', 0), manager.Lock())
+
+
+def _dest_point(point, distance, bearing, radius):
+    # calculation taken from
+    # https://cdn.rawgit.com/chrisveness/geodesy/v1.1.2/latlon-spherical.js
+    # https://www.movable-type.co.uk/scripts/latlong.html
+
+    δ = distance / radius  # angular distance in rad
+    θ = math.radians(bearing)
+
+    φ1 = math.radians(point[1])
+    λ1 = math.radians(point[0])
+
+    sinφ1 = math.sin(φ1)
+    cosφ1 = math.cos(φ1)
+    sinδ = math.sin(δ)
+    cosδ = math.cos(δ)
+    sinθ = math.sin(θ)
+    cosθ = math.cos(θ)
+
+    sinφ2 = sinφ1 * cosδ + cosφ1 * sinδ * cosθ
+    φ2 = math.asin(sinφ2)
+    y = sinθ * sinδ * cosφ1
+    x = cosδ - sinφ1 * sinφ2
+    λ2 = λ1 + math.atan2(y, x)
+
+    return [
+        (math.degrees(λ2) + 540) % 360 - 180,  # normalise to −180..+180°
+        math.degrees(φ2)
+    ]
 
 
 class GeoSpatialProvider(BaseProvider):
@@ -51,7 +82,6 @@ class GeoSpatialProvider(BaseProvider):
     True
     """
 
-    EARTH_RADIUS = 6371.0  # in km
 
     def geo_point(self,
                   lon_min=-180.0, lon_max=180.0,
@@ -83,31 +113,26 @@ class GeoSpatialProvider(BaseProvider):
         """
         assert isinstance(sides, int)
 
-        if center is None:
-            center = self.geo_point()
-        else:
-            assert -180.0 <= center[0] <= 180.0
-            assert -90.0 <= center[1] <= 90.0
-
         if distance is None:
             distance = self.random_int(100, 1000)
         else:
             # 6371 => earth radius in km
             # assert that shape radius is maximum half of earth's circumference
             assert isinstance(distance, int)
-            assert distance <= self.EARTH_RADIUS * math.pi
+            assert distance <= EARTH_RADIUS * math.pi, \
+                'distance must not be greater than half of earth\'s circumference'
 
-        d_arc = distance * 180.0 / self.EARTH_RADIUS / math.pi
+        if center is None:
+            # required minimal spherical distance from north/southpole
+            dp = distance * 180.0 / EARTH_RADIUS / math.pi
+            center = self.geo_point(lat_min=-90.0 + dp, lat_max=90.0 - dp)
+        else:
+            assert -180.0 <= center[0] <= 180.0, 'Longitude out of bounds'
+            assert -90.0 <= center[1] <= 90.0, 'Latitude out of bounds'
 
-        points = []
-        angles = self.random_sample(range(360), sides)
+        angles = list(self.random_sample_unique(range(360), sides))
         angles.sort()
-        for a in angles:
-            rad = a * math.pi / 180.0
-            points.append(
-                [center[0] + d_arc * math.sin(rad),
-                 center[1] + d_arc * math.cos(rad)]
-            )
+        points = [_dest_point(center, distance, bearing, EARTH_RADIUS) for bearing in angles]
         # close polygon
         points.append(points[0])
 
