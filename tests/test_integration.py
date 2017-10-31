@@ -35,6 +35,9 @@ def teardown(*args):
 
 def transform(s):
     s = s.replace('localhost:4200', node.http_url)
+    s = s.replace(
+        'asyncpg://localhost:5432',
+        f'asyncpg://{node.addresses.psql.host}:{node.addresses.psql.port}')
     return (
         r'print(sh("""%s""").stdout.decode("utf-8"))' % s) + '\n'
 

@@ -20,6 +20,7 @@ addons:
 
 install:
     - pip install pycodestyle
+    - pip install asyncpg
     - pip install .
 script:
     - python -m unittest -v

@@ -38,6 +38,7 @@ TOC
         - `Find regressions`_
         - `Profiling`_
     - `run-track`_
+- `Protocols`_
 - `Development ☢`_
 
 
@@ -307,6 +308,21 @@ will be executed::
     ### Running spec file:  sample.toml
     # Running setUp
     # Running benchmark
+    ...
+
+
+Protocols
+=========
+
+``cr8`` supports using ``HTTP`` or the ``postgres`` protocol if the extra
+dependency ``asyncpg`` is installed.
+
+Note that using the postgres protocol will cause ``cr8`` to measure the
+round-trip time instead of the service time. So measurements will be different::
+
+
+    >>> echo "select 1" | cr8 timeit --hosts asyncpg://localhost:5432
+    Runtime (in ms):
     ...
 
 

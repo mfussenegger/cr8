@@ -33,6 +33,7 @@ setup(
     ],
     extras_require={
         'uvloop': ['uvloop'],
+        'asyncpg': ['asyncpg']
     },
     python_requires='>=3.6',
     classifiers=[
