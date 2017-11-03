@@ -95,11 +95,11 @@ def as_statements(lines: Iterator[str]) -> Iterator[str]:
     >>> list(as_statements(['select * from', '-- comments are filtered', 't;']))
     ['select * from t']
 
-    >>> list(as_statements(['a;', 'b', 'c;', 'd']))
+    >>> list(as_statements(['a;', 'b', 'c;', 'd', ' ']))
     ['a', 'b c', 'd']
     """
     lines = (l.strip() for l in lines if l)
-    lines = (l for l in lines if not l.startswith('--'))
+    lines = (l for l in lines if l and not l.startswith('--'))
     parts = []
     for line in lines:
         parts.append(line.rstrip(';'))
