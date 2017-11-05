@@ -1,7 +1,38 @@
+2017-11-05 0.11.0
+=================
+
 - Added a new default provider for columns of type ``BYTE``.
 
 - Added a new default provider for columns of type ``GEO_SHAPE``, which
   provides a POLYGON WKT string.
+
+- Dropped support for Python 3.5
+
+- ``run-crate`` now correctly supports settings using unicode characters.
+
+- ``run-crate`` will now remove old tarballs from the cache folder after a
+  while.
+
+- ``run-crate`` should now fail faster if an invalid setting is used.
+
+- ``run-crate`` now supports arbitrary command chaining using ``-- @cmdname``
+  If command chaining is used, ``run-crate`` will terminate after all commands
+  have been run.
+
+- ``run-crate`` should now work correctly if CrateDB is bound to a IPv6 address.
+
+2017-09-12 0.10.2
+=================
+
+- ``insert-fake-data`` should no longer generate the same values using the
+  ``uuid4`` provider. The amount of duplicate values generated using other
+  providers should be reduced as well.
+
+2017-08-04 0.10.1
+=================
+
+- ``run-crate`` now works again with ``latest-nightly``. It ran into a timeout
+  as it couldn't parse the HTTP address from the log due to a format change.
 
 2017-06-30 0.10.0
 =================
