@@ -122,7 +122,7 @@ def _is_up(host: str, port: int):
         conn = _create_connection(host, port)
         conn.close()
         return True
-    except socket.gaierror:
+    except (socket.gaierror, ConnectionRefusedError):
         return False
 
 
