@@ -19,11 +19,11 @@ import socket
 import ssl
 from pathlib import Path
 from functools import partial
-from typing import Dict, Any, List
+from typing import Dict, Any, List, NamedTuple
 from urllib.request import urlopen
 
 from cr8.misc import parse_version, init_logging
-
+from cr8.engine import DotDict
 
 log = logging.getLogger(__name__)
 
@@ -248,6 +248,7 @@ class CrateNode(contextlib.ExitStack):
             env=self.env,
             universal_newlines=True
         ))
+
         msg = ('Crate launched:\n'
                '    PID: %s\n'
                '    Logs: %s\n'
@@ -262,6 +263,7 @@ class CrateNode(contextlib.ExitStack):
             logfile,
             self.data_path
         )
+        self.addresses = DotDict({}) 
         self.monitor.consumers.append(AddrConsumer(self._set_addr))
         self.monitor.start(proc)
 
@@ -272,8 +274,8 @@ class CrateNode(contextlib.ExitStack):
                 lambda: _ensure_running(proc) and self.http_host,
                 timeout=30
             )
-            host, port = self.http_host.rsplit(':', 1)
-            port = int(port)
+            host = self.addresses.http.host
+            port = self.addresses.http.port
             wait_until(
                 lambda: _ensure_running(proc) and _is_up(host, port),
                 timeout=30
@@ -295,6 +297,9 @@ class CrateNode(contextlib.ExitStack):
 
     def _set_addr(self, protocol, addr):
         log.info('{0:10}: {1}'.format(protocol.capitalize(), addr))
+        host, port = addr.rsplit(':', 1)
+        port = int(port)
+        self.addresses[protocol] = Address(host, port) 
         if protocol == 'http':
             self.http_host = addr
             self.http_url = 'http://' + addr
@@ -323,6 +328,9 @@ class LineBuffer:
     def send(self, line):
         self.lines.append(line.strip())
 
+class Address(NamedTuple):
+    host: str
+    port: int
 
 class AddrConsumer:
 
