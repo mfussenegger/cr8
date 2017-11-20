@@ -308,6 +308,9 @@ class CrateNode(contextlib.ExitStack):
         if self.process:
             self.process.terminate()
             self.process.communicate(timeout=10)
+        self.addresses = DotDict({})
+        self.http_host = None
+        self.http_url = None
         if not self.keep_data:
             path = self.data_path.split(',')
             for p in path:
