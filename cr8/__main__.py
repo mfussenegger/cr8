@@ -6,7 +6,7 @@ import sys
 import argh
 import argparse
 import logging
-from subprocess import run
+from subprocess import run, CalledProcessError
 
 from cr8 import __version__
 from cr8.misc import break_iterable, init_logging
@@ -25,7 +25,11 @@ log = logging.getLogger(__name__)
 def _run_subcommand(parser, args):
     if args[0][0] == '@':
         args[0] = args[0][1:]
-        run(args)
+        try:
+            run(args, check=True)
+        except CalledProcessError as e:
+            sys.exit('Failure running: ' + ' '.join(args))
+
     else:
         parser.dispatch(args)
 
