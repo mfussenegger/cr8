@@ -12,7 +12,9 @@ node = CrateNode(
     settings={
         'cluster.name': 'cr8-tests',
         'http.port': '44200-44250',
-    })
+        'bootstrap.seccomp': False
+    }
+)
 
 
 def setup(*args):
