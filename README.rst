@@ -246,6 +246,25 @@ also possible to use arbitrary commands by prefixing them with ``@``::
 
     cr8 run-crate latest-nightly -- @http '{node.http_url}'
 
+One common use of this feature is to quickly reproduce bug reports::
+
+    cr8 run-crate latest-nightly -- @crash --hosts {node.http_url} <<EOF
+        create table mytable (x int);
+        insert into mytable (x) values (1);
+        refresh mytable;
+        ...
+    EOF
+
+Another use case is to use ``run-crate`` in combination with ``run-spec`` and
+``git bisect``::
+
+    git bisect run cr8 run-crate path/to/crate/src \
+        -- run-spec path/to/spec.toml '{node.http_url}' --fail-if '{runtime_stats.mean} > 15'
+
+This could also be combined with `timeout
+<https://www.gnu.org/software/coreutils/manual/html_node/timeout-invocation.html#timeout-invocation>`_.
+
+
 run-track
 ---------
 
