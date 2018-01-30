@@ -34,8 +34,6 @@ DYNAMIC_VERSION_RE = re.compile('^((\d+|x)\.(\d+|x)\.(\d+|x))$')
 FOLDER_VERSION_RE = re.compile('crate-(\d+\.\d+\.\d+)')
 
 DEFAULT_SETTINGS = {
-    'cluster.routing.allocation.disk.watermark.low': '1b',
-    'cluster.routing.allocation.disk.watermark.high': '1b',
     'discovery.initial_state_timeout': 0,
     'network.host': '127.0.0.1',
     'udc.enabled': False
