@@ -1,3 +1,15 @@
+2018-02-04 0.11.1
+=================
+
+- The ``disk.watermark`` settings are no longer set by default by ``run-crate``
+  in order to be compatible with CrateDB 3.0
+
+- ``run-crate`` will now exit with a failure if process chaining is used and
+  one of the chained processes failed.
+
+- ``stop()`` on ``CrateNode`` now resets certain attributes correctly, so that
+  ``start()`` doesn't fail with connection errors.
+
 2017-11-05 0.11.0
 =================
 
