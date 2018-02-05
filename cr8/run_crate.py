@@ -562,8 +562,8 @@ def run_crate(version, env=None, setting=None, crate_root=None, keep_data=False)
         - A URI pointing to a CrateDB tarball (in .tar.gz format)
         - A URI pointing to a checked out CrateDB repo directory
 
-    run-crate supports command chaining. To first launch a CrateDB node and then
-    another sub-command use:
+    run-crate supports command chaining. To launch a CrateDB node and another
+    sub-command use:
 
         cr8 run-crate <ver> -- timeit -s "select 1" --hosts '{node.http_url}'
 
@@ -571,8 +571,11 @@ def run_crate(version, env=None, setting=None, crate_root=None, keep_data=False)
 
         cr8 run-crate <version> -- @http '{node.http_url}'
 
-    If run-crate is invoked using command chaining it won't block but exit once
-    all chained commands finished.
+    If run-crate is invoked using command chaining it will exit once all
+    chained commands finished.
+
+    The postgres host and port are available as {node.addresses.psql.host} and
+    {node.addresses.psql.port}
     """
     with create_node(version, env, setting, crate_root, keep_data) as n:
         try:
