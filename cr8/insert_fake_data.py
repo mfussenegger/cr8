@@ -166,7 +166,7 @@ async def _gen_data_and_insert(q, client, stmt, row_fun, size_seq):
 @argh.arg('-n', '--num-records',
           help='number of records to insert',
           type=to_int,
-          default=1e5)
+          default=int(1e5))
 @argh.arg('-b', '--bulk-size', type=to_int)
 @argh.arg('-c', '--concurrency', type=to_int)
 @argh.arg('--mapping-file',
