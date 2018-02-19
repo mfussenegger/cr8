@@ -34,6 +34,9 @@ TOC
     - `insert-blob`_
     - `run-spec`_
     - `run-crate`_
+        - `Script reproduction`_
+        - `Find regressions`_
+        - `Profiling`_
     - `run-track`_
 - `Development ☢`_
 
@@ -246,6 +249,10 @@ also possible to use arbitrary commands by prefixing them with ``@``::
 
     cr8 run-crate latest-nightly -- @http '{node.http_url}'
 
+
+Script reproduction
+~~~~~~~~~~~~~~~~~~~
+
 One common use of this feature is to quickly reproduce bug reports::
 
     cr8 run-crate latest-nightly -- @crash --hosts {node.http_url} <<EOF
@@ -255,6 +262,10 @@ One common use of this feature is to quickly reproduce bug reports::
         ...
     EOF
 
+
+Find regressions
+~~~~~~~~~~~~~~~~
+
 Another use case is to use ``run-crate`` in combination with ``run-spec`` and
 ``git bisect``::
 
@@ -263,6 +274,22 @@ Another use case is to use ``run-crate`` in combination with ``run-spec`` and
 
 This could also be combined with `timeout
 <https://www.gnu.org/software/coreutils/manual/html_node/timeout-invocation.html#timeout-invocation>`_.
+
+
+Profiling
+~~~~~~~~~
+
+This can also be used in combination with the Java flight recorder to do
+profiling::
+
+    cr8 run-crate latest-nightly \
+        -e CRATE_HEAP_SIZE=4g \
+        -e CRATE_JAVA_OPTS="-Dcrate.signal_handler.disabled=true -XX:+UnlockCommercialFeatures -XX:+FlightRecorder" \
+        -s discovery.type=single-node \
+        -- run-spec path/to/specs/example.toml {node.http_url} --action setup \
+        -- @jcmd {node.process.pid} JFR.start duration=60s filename=myrecording.jfr \
+        -- run-spec path/to/specs/example.toml {node.http_url} --action queries \
+        -- @jcmd {node.process.pid} JFR.stop
 
 
 run-track
