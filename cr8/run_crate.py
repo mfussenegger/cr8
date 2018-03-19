@@ -24,6 +24,7 @@ from urllib.request import urlopen
 
 from cr8.misc import parse_version, init_logging
 from cr8.engine import DotDict
+from cr8.exceptions import ArgumentError
 
 log = logging.getLogger(__name__)
 
@@ -530,7 +531,11 @@ def _parse_options(options: List[str]) -> Dict[str, str]:
     >>> print(json.dumps(opts, sort_keys=True))
     {"CRATE_JAVA_OPTS": "\\"-Dxy=foo\\"", "cluster.name": "foo"}
     """
-    return dict(i.split('=', maxsplit=1) for i in options)
+    try:
+        return dict(i.split('=', maxsplit=1) for i in options)
+    except ValueError as e:
+        raise ArgumentError(
+            f'Option must be in format <key>=<value>, got: {options}')
 
 
 def create_node(version, env=None, setting=None, crate_root=None, keep_data=False):
@@ -553,6 +558,7 @@ def create_node(version, env=None, setting=None, crate_root=None, keep_data=Fals
 @argh.arg('-s', '--setting', action='append',
           help='Crate setting. Option can be specified multiple times.')
 @argh.arg('--keep-data', help='If this is set the data folder will be kept.')
+@argh.wrap_errors([ArgumentError])
 def run_crate(version, env=None, setting=None, crate_root=None, keep_data=False):
     """Launch a crate instance.
 
