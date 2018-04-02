@@ -82,7 +82,6 @@ class GeoSpatialProvider(BaseProvider):
     True
     """
 
-
     def geo_point(self,
                   lon_min=-180.0, lon_max=180.0,
                   lat_min=-90.0, lat_max=90.0):

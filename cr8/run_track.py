@@ -37,7 +37,7 @@ class Executor:
                     self.log,
                     self.result_hosts,
                     action=action)
-            except:
+            except Exception:
                 if self.fail_fast:
                     raise
                 else:
