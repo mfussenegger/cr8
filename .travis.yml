@@ -19,9 +19,11 @@ addons:
       - oracle-java8-set-default
 
 install:
+    - pip install pycodestyle
     - pip install .
 script:
     - python -m unittest -v
+    - pycodestyle cr8
 
 notifications:
     email: false
