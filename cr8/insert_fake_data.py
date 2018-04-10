@@ -33,6 +33,7 @@ where
     is_generated = false
     and {schema_column_name} = ?
     and table_name = ?
+    and column_name not like '%]'
 order by ordinal_position asc
 """
 
@@ -82,6 +83,7 @@ class DataFaker:
         'boolean': operator.attrgetter('boolean'),
         'geo_point': operator.attrgetter('geo_point'),
         'geo_shape': operator.attrgetter('geo_shape'),
+        'object': lambda f: dict
     }
 
     _custom = {

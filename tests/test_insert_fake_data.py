@@ -96,6 +96,10 @@ class TestDataFaker(TestCase):
             self.f.provider_for_column('x', 'y')
         self.assertEqual(str(cm.exception), msg)
 
+    def test_provider_for_object_column_creates_empty_dicts(self):
+        provider = self.f.provider_for_column('obj', 'object')
+        self.assertEqual(provider(), dict())
+
 
 def load_tests(loader, tests, ignore):
     tests.addTests(DocTestSuite(insert_fake_data))
