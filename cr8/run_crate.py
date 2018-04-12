@@ -30,9 +30,9 @@ log = logging.getLogger(__name__)
 
 NO_SSL_VERIFY_CTX = ssl._create_unverified_context()
 RELEASE_URL = 'https://cdn.crate.io/downloads/releases/crate-{version}.tar.gz'
-VERSION_RE = re.compile('^(\d+\.\d+\.\d+)$')
-DYNAMIC_VERSION_RE = re.compile('^((\d+|x)\.(\d+|x)\.(\d+|x))$')
-FOLDER_VERSION_RE = re.compile('crate-(\d+\.\d+\.\d+)')
+VERSION_RE = re.compile(r'^(\d+\.\d+\.\d+)$')
+DYNAMIC_VERSION_RE = re.compile(r'^((\d+|x)\.(\d+|x)\.(\d+|x))$')
+FOLDER_VERSION_RE = re.compile(r'crate-(\d+\.\d+\.\d+)')
 
 DEFAULT_SETTINGS = {
     'discovery.initial_state_timeout': 0,
@@ -188,9 +188,9 @@ class CrateNode(contextlib.ExitStack):
 
     def __init__(self,
                  crate_dir: str,
-                 env: Dict[str, Any]=None,
-                 settings: Dict[str, Any]=None,
-                 keep_data: bool=False) -> None:
+                 env: Dict[str, Any] = None,
+                 settings: Dict[str, Any] = None,
+                 keep_data: bool = False) -> None:
         """Create a CrateNode
 
         Args:
@@ -339,12 +339,12 @@ class Address(NamedTuple):
 class AddrConsumer:
 
     ADDRESS_RE = re.compile(
-        '.*\[(?P<protocol>http|i.c.p.h.CrateNettyHttpServerTransport|o.e.h.HttpServer|psql|transport|o.e.t.TransportService)\s*\] \[.*\] .*'
-        'publish_address {'
-        '(?:(inet\[[A-Za-z-\.]*/)|([A-Za-z\.]*/))?'
-        '?(?P<addr>\[?[\d\.:]+\]?:?\d+)'
-        '(?:\])?'
-        '}'
+        r'.*\[(?P<protocol>http|i.c.p.h.CrateNettyHttpServerTransport|o.e.h.HttpServer|psql|transport|o.e.t.TransportService)\s*\] \[.*\] .*'
+        r'publish_address {'
+        r'(?:(inet\[[A-Za-z-\.]*/)|([A-Za-z\.]*/))?'
+        r'?(?P<addr>\[?[\d\.:]+\]?:?\d+)'
+        r'(?:\])?'
+        r'}'
     )
     PROTOCOL_MAP = {
         'i.c.p.h.CrateNettyHttpServerTransport': 'http',
@@ -392,7 +392,7 @@ def _openuri(uri):
 
 def _download_and_extract(uri, crate_root):
     filename = os.path.basename(uri)
-    crate_folder_name = re.sub('\.tar(\.gz)?$', '', filename)
+    crate_folder_name = re.sub(r'\.tar(\.gz)?$', '', filename)
     crate_dir = os.path.join(crate_root, crate_folder_name)
     if os.path.exists(crate_dir):
         os.utime(crate_dir)  # update mtime to avoid removal
@@ -417,7 +417,7 @@ def _from_versions_json(key):
     return retrieve
 
 
-RELEASE_RE = re.compile('.*>(?P<filename>crate-(?P<version>\d+\.\d+\.\d+)\.tar\.gz)<.*')
+RELEASE_RE = re.compile(r'.*>(?P<filename>crate-(?P<version>\d+\.\d+\.\d+)\.tar\.gz)<.*')
 
 
 def _retrieve_crate_versions():
