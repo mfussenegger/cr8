@@ -2,6 +2,7 @@ import json
 import aiohttp
 import itertools
 import calendar
+import types
 from datetime import datetime, date
 from typing import List, Union, Iterable
 from decimal import Decimal
@@ -95,13 +96,21 @@ def _plain_or_callable(obj):
     >>> _plain_or_callable(_args)
     [1, 'name']
 
+    >>> _plain_or_callable((x for x in range(10)))
+    0
+
     >>> class BulkArgsGenerator:
     ...     def __call__(self):
     ...         return [[1, 'foo'], [2, 'bar'], [3, 'foobar']]
     >>> _plain_or_callable(BulkArgsGenerator())
     [[1, 'foo'], [2, 'bar'], [3, 'foobar']]
     """
-    return obj() if callable(obj) else obj
+    if callable(obj):
+        return obj()
+    elif isinstance(obj, types.GeneratorType):
+        return next(obj)
+    else:
+        return obj
 
 
 def _date_or_none(d: str) -> str:
