@@ -12,12 +12,15 @@ from .engine import Runner, Result, eval_fail_if
 
 
 @argh.arg('--hosts', help='crate hosts', type=str)
+@argh.arg('-s', '--stmt', type=str)
 @argh.arg('-w', '--warmup', type=to_int)
 @argh.arg('-r', '--repeat', type=to_int)
 @argh.arg('-c', '--concurrency', type=to_int)
 @argh.arg('-of', '--output-fmt', choices=['json', 'text'], default='text')
 @argh.arg('--fail-if', help='An expression which causes cr8 to exit with a\
           failure if it evaluates to true')
+@argh.arg('--sample-mode', choices=('all', 'reservoir'),
+          help='Method used for sampling', default='reservoir')
 @argh.wrap_errors([KeyboardInterrupt] + client_errors)
 def timeit(hosts=None,
            stmt=None,
@@ -25,7 +28,8 @@ def timeit(hosts=None,
            repeat=30,
            concurrency=1,
            output_fmt=None,
-           fail_if=None):
+           fail_if=None,
+           sample_mode='reservoir'):
     """Run the given statement a number of times and return the runtime stats
 
     Args:
@@ -42,7 +46,7 @@ def timeit(hosts=None,
     """
     num_lines = 0
     log = Logger(output_fmt)
-    with Runner(hosts, concurrency) as runner:
+    with Runner(hosts, concurrency, sample_mode) as runner:
         version_info = aio.run(runner.client.get_server_version)
         for line in as_statements(lines_from_stdin(stmt)):
             runner.warmup(line, warmup)

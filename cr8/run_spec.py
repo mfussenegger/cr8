@@ -3,7 +3,7 @@ import os
 import itertools
 from functools import partial
 
-from cr8 import aio
+from cr8 import aio, clients
 from .insert_json import to_insert
 from .bench_spec import load_spec
 from .engine import Runner, Result, run_and_measure, eval_fail_if
@@ -16,7 +16,6 @@ from .misc import (
 )
 from .cli import dicts_from_lines
 from .log import Logger
-from . import clients
 
 
 BENCHMARK_TABLE = '''
@@ -72,8 +71,15 @@ def _result_to_crate(log, client):
 
 
 class Executor:
-    def __init__(self, spec_dir, benchmark_hosts, result_hosts, log, fail_if):
+    def __init__(self,
+                 spec_dir,
+                 benchmark_hosts,
+                 result_hosts,
+                 log,
+                 fail_if,
+                 sample_mode):
         self.benchmark_hosts = benchmark_hosts
+        self.sample_mode = sample_mode
         self.spec_dir = spec_dir
         self.client = clients.client(benchmark_hosts)
         self.result_client = clients.client(result_hosts)
@@ -160,7 +166,7 @@ class Executor:
                                statement=str(stmt),
                                iterations=iterations,
                                concurrency=concurrency)))
-            with Runner(self.benchmark_hosts, concurrency) as runner:
+            with Runner(self.benchmark_hosts, concurrency, self.sample_mode) as runner:
                 timed_stats = runner.run(stmt, iterations, args, bulk_args)
             result = self.create_result(
                 statement=stmt,
@@ -182,7 +188,9 @@ class Executor:
 
 def do_run_spec(spec,
                 benchmark_hosts,
+                *,
                 log,
+                sample_mode,
                 result_hosts=None,
                 action=None,
                 fail_if=None):
@@ -191,7 +199,8 @@ def do_run_spec(spec,
         benchmark_hosts=benchmark_hosts,
         result_hosts=result_hosts,
         log=log,
-        fail_if=fail_if
+        fail_if=fail_if,
+        sample_mode=sample_mode
     ) as executor:
         spec = load_spec(spec)
         try:
@@ -217,6 +226,8 @@ def do_run_spec(spec,
           action='append')
 @argh.arg('--logfile-info', help='Redirect info messages to a file')
 @argh.arg('--logfile-result', help='Redirect benchmark results to a file')
+@argh.arg('--sample-mode', choices=('all', 'reservoir'),
+          help='Method used for sampling', default='reservoir')
 @argh.wrap_errors([KeyboardInterrupt] + clients.client_errors)
 def run_spec(spec,
              benchmark_hosts,
@@ -225,7 +236,8 @@ def run_spec(spec,
              logfile_info=None,
              logfile_result=None,
              action=None,
-             fail_if=None):
+             fail_if=None,
+             sample_mode='reservoir'):
     """Run a spec file, executing the statements on the benchmark_hosts.
 
     Short example of a spec file:
@@ -273,7 +285,15 @@ def run_spec(spec,
     with Logger(output_fmt=output_fmt,
                 logfile_info=logfile_info,
                 logfile_result=logfile_result) as log:
-        do_run_spec(spec, benchmark_hosts, log, result_hosts, action, fail_if)
+        do_run_spec(
+            spec=spec,
+            benchmark_hosts=benchmark_hosts,
+            log=log,
+            result_hosts=result_hosts,
+            action=action,
+            fail_if=fail_if,
+            sample_mode=sample_mode
+        )
 
 
 def main():

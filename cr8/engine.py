@@ -3,9 +3,9 @@ from functools import partial
 from time import time
 from collections import namedtuple
 
-from . import aio
-from .metrics import Stats
-from .clients import client
+from cr8 import aio
+from cr8.metrics import Stats, get_sampler
+from cr8.clients import client
 
 
 TimedStats = namedtuple('TimedStats', ['started', 'ended', 'stats'])
@@ -51,8 +51,8 @@ class Result:
         return self.__dict__
 
 
-def run_and_measure(f, statements, concurrency, num_items=None):
-    stats = Stats()
+def run_and_measure(f, statements, concurrency, num_items=None, sampler=None):
+    stats = Stats(sampler)
     measure = partial(aio.measure, stats, f)
     started = int(time() * 1000)
     aio.run_many(measure, statements, concurrency, num_items=num_items)
@@ -61,9 +61,10 @@ def run_and_measure(f, statements, concurrency, num_items=None):
 
 
 class Runner:
-    def __init__(self, hosts, concurrency):
+    def __init__(self, hosts, concurrency, sample_mode):
         self.concurrency = concurrency
         self.client = client(hosts, concurrency=concurrency)
+        self.sampler = get_sampler(sample_mode)
 
     def warmup(self, stmt, num_warmup):
         statements = itertools.repeat((stmt,), num_warmup)
@@ -76,7 +77,8 @@ class Runner:
         else:
             f = self.client.execute
         statements = itertools.repeat((stmt, args), iterations)
-        return run_and_measure(f, statements, self.concurrency, iterations)
+        return run_and_measure(
+            f, statements, self.concurrency, iterations, sampler=self.sampler)
 
     def __enter__(self):
         return self

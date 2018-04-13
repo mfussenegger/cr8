@@ -1,6 +1,7 @@
 import statistics
 import random
 import math
+from functools import partial
 
 
 DEFAULT_NUM_SAMPLES = 1000
@@ -61,6 +62,29 @@ class All:
     @property
     def count(self):
         return len(self.values)
+
+
+def get_sampler(sample_mode: str):
+    """Return a sampler constructor
+
+    >>> get_sampler('all')
+    <class 'cr8.metrics.All'>
+
+    >>> get_sampler('reservoir')
+    <class 'cr8.metrics.UniformReservoir'>
+
+    >>> get_sampler('reservoir:100')
+    functools.partial(<class 'cr8.metrics.UniformReservoir'>, size=100)
+    """
+    if sample_mode == 'all':
+        return All
+    mode = sample_mode.split(':')
+    if mode[0] == 'reservoir':
+        if len(mode) == 2:
+            return partial(UniformReservoir, size=int(mode[1]))
+        else:
+            return UniformReservoir
+    raise TypeError(f'Invalid sample_mode: {sample_mode}')
 
 
 def get_histogram_bins(min_, max_, stdev, count):

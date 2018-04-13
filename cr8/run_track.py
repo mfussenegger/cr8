@@ -10,12 +10,15 @@ from .clients import client_errors
 
 class Executor:
     def __init__(self,
+                 *,
                  track_dir,
                  log,
+                 sample_mode,
                  result_hosts=None,
                  crate_root=None,
                  fail_fast=None):
         self.track_dir = track_dir
+        self.sample_mode = sample_mode
         self.result_hosts = result_hosts
         self.crate_root = crate_root
         self.log = log
@@ -32,10 +35,11 @@ class Executor:
             self.log.info('### Running spec file: ', os.path.basename(spec))
             try:
                 do_run_spec(
-                    spec,
-                    benchmark_host,
-                    self.log,
-                    self.result_hosts,
+                    spec=spec,
+                    benchmark_hosts=benchmark_host,
+                    log=self.log,
+                    result_hosts=self.result_hosts,
+                    sample_mode=self.sample_mode,
                     action=action)
             except Exception:
                 if self.fail_fast:
@@ -81,6 +85,8 @@ class Executor:
 @argh.arg('--failfast', action='store_true')
 @argh.arg('--logfile-info', help='Redirect info messages to a file')
 @argh.arg('--logfile-result', help='Redirect benchmark results to a file')
+@argh.arg('--sample-mode', choices=('all', 'reservoir'),
+          help='Method used for sampling', default='reservoir')
 @argh.wrap_errors([KeyboardInterrupt] + client_errors)
 def run_track(track,
               result_hosts=None,
@@ -88,7 +94,8 @@ def run_track(track,
               output_fmt=None,
               logfile_info=None,
               logfile_result=None,
-              failfast=False):
+              failfast=False,
+              sample_mode='reservoir'):
     """Execute a track file"""
     with Logger(output_fmt=output_fmt,
                 logfile_info=logfile_info,
@@ -98,7 +105,8 @@ def run_track(track,
             log=log,
             result_hosts=result_hosts,
             crate_root=crate_root,
-            fail_fast=failfast
+            fail_fast=failfast,
+            sample_mode=sample_mode
         )
         executor.execute(toml.load(track))
 
