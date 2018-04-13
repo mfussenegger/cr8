@@ -52,7 +52,7 @@ class Result:
 
 
 def run_and_measure(f, statements, concurrency, num_items=None):
-    stats = Stats(min(num_items or 1000, 1000))
+    stats = Stats()
     measure = partial(aio.measure, stats, f)
     started = int(time() * 1000)
     aio.run_many(measure, statements, concurrency, num_items=num_items)

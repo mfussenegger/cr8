@@ -6,7 +6,7 @@ from cr8.metrics import Stats
 class ResultTest(TestCase):
 
     def test_short_result_output_with_only_1_measurement(self):
-        stats = Stats(1)
+        stats = Stats()
         stats.measure(23.4)
         self.assertEqual(
             format_stats(stats.get(), 'short'),
@@ -15,7 +15,7 @@ class ResultTest(TestCase):
         )
 
     def test_short_result_output_with_more_measurements(self):
-        stats = Stats(4)
+        stats = Stats()
         stats.measure(23.4)
         stats.measure(48.7)
         stats.measure(32.5)

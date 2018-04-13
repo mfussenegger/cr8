@@ -33,7 +33,7 @@ class UniformReservoir:
     See https://en.wikipedia.org/wiki/Reservoir_sampling#Algorithm_R
     """
 
-    def __init__(self, size):
+    def __init__(self, size=DEFAULT_NUM_SAMPLES):
         self.size = size
         self.count = 0
         self.values = []
@@ -47,6 +47,20 @@ class UniformReservoir:
             if k < self.size:
                 self.values[k] = value
         self.count = count + 1
+
+
+class All:
+    """Sampler that keeps all values"""
+
+    def __init__(self):
+        self.values = []
+
+    def add(self, value):
+        self.values.append(value)
+
+    @property
+    def count(self):
+        return len(self.values)
 
 
 def get_histogram_bins(min_, max_, stdev, count):
@@ -88,14 +102,14 @@ def error_margin(confidence_level, stdev, sample_size):
 class Stats:
     plevels = [50, 75, 90, 95, 99, 99.9]
 
-    def __init__(self, size=DEFAULT_NUM_SAMPLES):
-        self.reservoir = UniformReservoir(size=size or DEFAULT_NUM_SAMPLES)
+    def __init__(self, sampler=None):
+        self.sampler = sampler() if sampler else UniformReservoir()
 
     def measure(self, value):
-        self.reservoir.add(value)
+        self.sampler.add(value)
 
     def get(self):
-        values = sorted(self.reservoir.values)
+        values = sorted(self.sampler.values)
         count = len(values)
         # instead of failing return empty / subset so that json2insert & co
         # don't fail
@@ -113,12 +127,12 @@ class Stats:
             mean=statistics.mean(values),
             median=statistics.median(values),
             variance=statistics.variance(values),
-            error_margin=error_margin(95, stdev, self.reservoir.count),
+            error_margin=error_margin(95, stdev, self.sampler.count),
             stdev=stdev,
             # replace . with _ so that the output can be inserted into crate
             # crate doesn't allow dots in column names
             percentile={str(i[0]).replace('.', '_'): i[1] for i in
                         zip(self.plevels, percentiles)},
-            n=self.reservoir.count,
-            samples=self.reservoir.values
+            n=self.sampler.count,
+            samples=self.sampler.values
         )

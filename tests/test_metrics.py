@@ -16,13 +16,13 @@ class UniformReservoirTest(TestCase):
 class StatsTest(TestCase):
 
     def test_stats_are_empty_without_values(self):
-        hist = metrics.Stats(size=4)
+        hist = metrics.Stats(metrics.All)
         result = hist.get()
         self.assertEqual(len(result), 1)
         self.assertEqual(result['n'], 0)
 
     def test_stats_only_has_min_max_mean_with_1_value(self):
-        hist = metrics.Stats(size=4)
+        hist = metrics.Stats()
         hist.measure(23.2)
         result = hist.get()
         self.assertIn('mean', result)
@@ -31,7 +31,7 @@ class StatsTest(TestCase):
         self.assertEqual(result['n'], 1)
 
     def test_stats(self):
-        hist = metrics.Stats(size=4)
+        hist = metrics.Stats()
         hist.measure(10.5)
         hist.measure(38.1)
         hist.measure(234.7)
@@ -50,7 +50,7 @@ class StatsTest(TestCase):
         self.assertEqual(result['percentile']['99'], 234.7)
 
     def test_n_is_number_of_iterations(self):
-        hist = metrics.Stats(size=2)
+        hist = metrics.Stats()
         for i in range(10):
             hist.measure(i)
         self.assertEqual(hist.get()['n'], 10)
