@@ -77,7 +77,10 @@ def insert_json(table=None,
     stats = Stats()
     with clients.client(hosts, concurrency=concurrency) as client:
         f = partial(aio.measure, stats, client.execute_many)
-        aio.run_many(f, bulk_queries, concurrency)
+        try:
+            aio.run_many(f, bulk_queries, concurrency)
+        except clients.SqlException as e:
+            raise SystemExit(str(e))
     print(format_stats(stats.get(), output_fmt))
 
 
