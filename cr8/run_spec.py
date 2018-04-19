@@ -167,7 +167,12 @@ class Executor:
                                iterations=iterations,
                                concurrency=concurrency)))
             with Runner(self.benchmark_hosts, concurrency, self.sample_mode) as runner:
-                timed_stats = runner.run(stmt, iterations, args, bulk_args)
+                timed_stats = runner.run(
+                    stmt,
+                    iterations=iterations,
+                    args=args,
+                    bulk_args=bulk_args
+                )
             result = self.create_result(
                 statement=stmt,
                 meta=meta,

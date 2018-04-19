@@ -1,6 +1,6 @@
 import itertools
 from functools import partial
-from time import time
+from time import time, perf_counter
 from collections import namedtuple
 
 from cr8 import aio
@@ -60,6 +60,15 @@ def run_and_measure(f, statements, concurrency, num_items=None, sampler=None):
     return TimedStats(started, ended, stats)
 
 
+def _generate_statements(stmt, args, iterations, duration):
+    if duration is None:
+        yield from itertools.repeat((stmt, args), iterations or 100)
+    else:
+        now = perf_counter()
+        while perf_counter() - now < duration:
+            yield (stmt, args)
+
+
 class Runner:
     def __init__(self, hosts, concurrency, sample_mode):
         self.concurrency = concurrency
@@ -70,13 +79,13 @@ class Runner:
         statements = itertools.repeat((stmt,), num_warmup)
         aio.run_many(self.client.execute, statements, 0, num_items=num_warmup)
 
-    def run(self, stmt, iterations, args=None, bulk_args=None):
+    def run(self, stmt, *, iterations=None, duration=None, args=None, bulk_args=None):
         if bulk_args:
             args = bulk_args
             f = self.client.execute_many
         else:
             f = self.client.execute
-        statements = itertools.repeat((stmt, args), iterations)
+        statements = _generate_statements(stmt, args, iterations, duration)
         return run_and_measure(
             f, statements, self.concurrency, iterations, sampler=self.sampler)
 

@@ -15,6 +15,9 @@ from .engine import Runner, Result, eval_fail_if
 @argh.arg('-s', '--stmt', type=str)
 @argh.arg('-w', '--warmup', type=to_int)
 @argh.arg('-r', '--repeat', type=to_int)
+@argh.arg('--duration',
+          type=to_int,
+          help='Duration in seconds. Overwrites repeat if set.')
 @argh.arg('-c', '--concurrency', type=to_int)
 @argh.arg('-of', '--output-fmt', choices=['json', 'text'], default='text')
 @argh.arg('--fail-if', help='An expression which causes cr8 to exit with a\
@@ -25,7 +28,8 @@ from .engine import Runner, Result, eval_fail_if
 def timeit(hosts=None,
            stmt=None,
            warmup=30,
-           repeat=30,
+           repeat=None,
+           duration=None,
            concurrency=1,
            output_fmt=None,
            fail_if=None,
@@ -50,7 +54,7 @@ def timeit(hosts=None,
         version_info = aio.run(runner.client.get_server_version)
         for line in as_statements(lines_from_stdin(stmt)):
             runner.warmup(line, warmup)
-            timed_stats = runner.run(line, repeat)
+            timed_stats = runner.run(line, iterations=repeat, duration=duration)
             r = Result(
                 version_info=version_info,
                 statement=line,
