@@ -1,5 +1,6 @@
 
 from itertools import count
+from cr8.bench_spec import Spec, Instructions
 
 
 def queries():
@@ -13,7 +14,6 @@ def queries():
         'statement': 'insert into t (x) values (?)',
         'bulk_args': lambda: [[next(c)] for i in range(10)]
     }
-
 
 
 # Spec and Instructions are injected by the spec runner

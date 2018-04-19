@@ -162,7 +162,7 @@ insert-blob
 A tool to upload a file into a blob table::
 
     >>> cr8 insert-blob --hosts localhost:4200 --table blobtable specs/sample.toml
-    http://.../_blobs/blobtable/2917773e74ff46d08f399435ed9b99afb9ed34bd
+    http://.../_blobs/blobtable/e29fbe493d1b5491c2791638e2de5c5c0de32ebc
 
 run-spec
 --------
@@ -185,7 +185,7 @@ Usage::
     ## Running Query:
        Statement: select count(*) from countries
        Concurrency: 2
-       Iterations: 100
+       Duration: 1
     Runtime (in ms):
         mean:    ... ± ...
         min/max: ... → ...

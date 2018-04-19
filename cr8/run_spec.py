@@ -152,6 +152,7 @@ class Executor:
         for query in queries:
             stmt = query['statement']
             iterations = query.get('iterations', 1)
+            duration = query.get('duration', None)
             concurrency = query.get('concurrency', 1)
             args = query.get('args')
             bulk_args = query.get('bulk_args')
@@ -159,17 +160,18 @@ class Executor:
             if min_version and min_version > self.server_version:
                 self.log.info(self._skip_message(min_version, stmt))
                 continue
-            self.log.info(('\n## Running Query:\n'
-                           '   Statement: {statement:.70}\n'
-                           '   Concurrency: {concurrency}\n'
-                           '   Iterations: {iterations}'.format(
-                               statement=str(stmt),
-                               iterations=iterations,
-                               concurrency=concurrency)))
+            mode_desc = 'Duration' if duration else 'Iterations'
+            self.log.info(
+                (f'\n## Running Query:\n'
+                 f'   Statement: {stmt:.70}\n'
+                 f'   Concurrency: {concurrency}\n'
+                 f'   {mode_desc}: {duration or iterations}')
+            )
             with Runner(self.benchmark_hosts, concurrency, self.sample_mode) as runner:
                 timed_stats = runner.run(
                     stmt,
                     iterations=iterations,
+                    duration=duration,
                     args=args,
                     bulk_args=bulk_args
                 )
