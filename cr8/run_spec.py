@@ -6,7 +6,7 @@ from functools import partial
 from cr8 import aio, clients
 from .insert_json import to_insert
 from .bench_spec import load_spec
-from .engine import Runner, Result, run_and_measure, eval_fail_if
+from .engine import create_runner, Result, run_and_measure, eval_fail_if
 from .misc import (
     as_bulk_queries,
     as_statements,
@@ -167,7 +167,7 @@ class Executor:
                  f'   Concurrency: {concurrency}\n'
                  f'   {mode_desc}: {duration or iterations}')
             )
-            with Runner(self.benchmark_hosts, concurrency, self.sample_mode) as runner:
+            with create_runner(self.benchmark_hosts, concurrency, self.sample_mode) as runner:
                 timed_stats = runner.run(
                     stmt,
                     iterations=iterations,
