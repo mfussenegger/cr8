@@ -18,7 +18,7 @@ from .misc import parse_table, parse_version
 from .aio import asyncio, consume
 from .cli import to_int
 from .fake_providers import GeoSpatialProvider, auto_inc
-from . import clients, aio
+from cr8 import clients, aio
 
 loop = asyncio.get_event_loop()
 
@@ -61,6 +61,22 @@ def timestamp(fake):
     return partial(x1000, fake.unix_time)
 
 
+def array_provider(len_provider, value_provider, dimensions):
+    if dimensions == 0:
+        return value_provider()
+    else:
+        return [array_provider(len_provider, value_provider, dimensions - 1)
+                for _ in range(len_provider())]
+
+
+def make_array_provider(inner_provider, dimensions):
+    def setup_array_providers(fake):
+        inner = inner_provider(fake)
+        arr_len = partial(fake.random_int, min=0, max=50)
+        return partial(array_provider, arr_len, inner, dimensions)
+    return setup_array_providers
+
+
 class DataFaker:
     _mapping = {
         ('id', 'string'): operator.attrgetter('uuid4'),
@@ -94,6 +110,13 @@ class DataFaker:
         self.fake = Factory.create()
         self.fake.add_provider(GeoSpatialProvider)
 
+    def _provider_for_type(self, data_type):
+        inner_type, *dim = data_type.split('_array')
+        inner_provider = self._type_default.get(inner_type)
+        if not dim or not inner_provider:
+            return inner_provider
+        return make_array_provider(inner_provider, len(dim))
+
     def provider_for_column(self, column_name, data_type):
         provider = getattr(self.fake, column_name, None)
         if provider:
@@ -103,7 +126,7 @@ class DataFaker:
             return custom_provider(self.fake)
         alternative = self._mapping.get((column_name, data_type))
         if not alternative:
-            alternative = self._type_default.get(data_type)
+            alternative = self._provider_for_type(data_type)
             if not alternative:
                 msg = 'No fake provider found for column "{col}" with type "{type}"'
                 raise ValueError(msg.format(col=column_name, type=data_type))

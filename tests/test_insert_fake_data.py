@@ -100,6 +100,19 @@ class TestDataFaker(TestCase):
         provider = self.f.provider_for_column('obj', 'object')
         self.assertEqual(provider(), dict())
 
+    def test_provider_for_string_array(self):
+        provider = self.f.provider_for_column('foo', 'string_array')
+        value = provider()
+        self.assertEqual(len(value), 40)
+        self.assertEqual(value[0], 'brother')
+
+    def test_provider_for_nested_string_array(self):
+        provider = self.f.provider_for_column('foo', 'string_array_array')
+        value = provider()
+        self.assertEqual(len(value), 40)
+        self.assertEqual(len(value[0]), 7)
+        self.assertEqual(value[0][0:2], ['ago', 'site'])
+
 
 def load_tests(loader, tests, ignore):
     tests.addTests(DocTestSuite(insert_fake_data))
