@@ -75,7 +75,8 @@ async def _exec(session, url, data):
                             timeout=None) as resp:
         r = await resp.json()
         if 'error' in r:
-            raise SqlException(r['error']['message'])
+            raise SqlException(
+                r['error']['message'] + ' occurred using: ' + str(data))
         return r
 
 
