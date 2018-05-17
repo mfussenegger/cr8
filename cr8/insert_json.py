@@ -81,7 +81,12 @@ def insert_json(table=None,
             aio.run_many(f, bulk_queries, concurrency)
         except clients.SqlException as e:
             raise SystemExit(str(e))
-    print(format_stats(stats.get(), output_fmt))
+    try:
+        print(format_stats(stats.get(), output_fmt))
+    except KeyError:
+        if not stats.sampler.values:
+            raise SystemExit('No data received via stdin')
+        raise
 
 
 def main():
