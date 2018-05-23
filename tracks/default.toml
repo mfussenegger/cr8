@@ -3,4 +3,4 @@ CRATE_HEAP_SIZE = "512m"
 
 
 [settings]
-"indices.store.throttle.max_bytes_per_sec" = "40mb"
+"discovery.type" = "single-node"
