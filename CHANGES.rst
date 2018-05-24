@@ -1,3 +1,21 @@
+2018-05-24 0.12.0
+=================
+
+- Fixed an issue that caused ``insert-fake-data`` to fail with a ``TypeError``.
+
+- spec files written in python can now use generators for statements or
+  arguments. 
+
+- Improved the fake data generation for ``insert-fake-data``. It now works for
+  arrays and objects (although they'll simply be empty)
+
+- Added a ``duration`` option to spec files and ``timeit``
+
+- Added a ``sample-mode`` option to control how many samples will be kept for
+  the results.
+
+- Improved some error handling and error reporting
+
 2018-02-04 0.11.1
 =================
 
