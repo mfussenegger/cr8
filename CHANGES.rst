@@ -1,3 +1,13 @@
+2018-06-08 0.12.1
+=================
+
+- ``run-track`` now exists with an error code if any statement failed.
+
+- The statements printed during ``run-spec`` are no longer trimmed.
+
+- Version wildcards like ``2.3.x`` now work correctly for digits greater than
+  9.
+
 2018-05-24 0.12.0
 =================
 
