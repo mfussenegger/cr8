@@ -163,7 +163,8 @@ class Executor:
             mode_desc = 'Duration' if duration else 'Iterations'
             self.log.info(
                 (f'\n## Running Query:\n'
-                 f'   Statement: {stmt:.70}\n'
+                 f'   Statement:\n'
+                 f'     {stmt}\n'
                  f'   Concurrency: {concurrency}\n'
                  f'   {mode_desc}: {duration or iterations}')
             )
