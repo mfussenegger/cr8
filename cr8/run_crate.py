@@ -459,7 +459,8 @@ def _lookup_uri(version):
         return RELEASE_URL.format(version=m.group(0))
     m = DYNAMIC_VERSION_RE.match(version)
     if m:
-        versions = reversed(list(_retrieve_crate_versions()))
+        versions = sorted(map(parse_version, list(_retrieve_crate_versions())))
+        versions = ['.'.join(map(str, v)) for v in versions[::-1]]
         release = _find_matching_version(versions, m.group(0))
         if release:
             return RELEASE_URL.format(version=release)
