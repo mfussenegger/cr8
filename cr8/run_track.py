@@ -1,6 +1,7 @@
 import argh
 import os
 import toml
+import sys
 from glob import glob
 from .log import Logger
 from .run_spec import do_run_spec
@@ -31,6 +32,7 @@ class Executor:
 
     def _run_specs(self, specs, benchmark_host, action=None):
         specs = self._expand_paths(specs)
+        errors = []
         for spec in specs:
             self.log.info('### Running spec file: ', os.path.basename(spec))
             try:
@@ -42,28 +44,37 @@ class Executor:
                     sample_mode=self.sample_mode,
                     action=action)
             except Exception:
+                errors.append(True)
                 if self.fail_fast:
                     raise
                 else:
                     self.log.info('WARNING: Spec file failed due to the following exception:')
                     import traceback
                     traceback.print_exc()
+        return any(errors)
 
     def _execute_specs(self, specs, benchmark_host):
+        errors = []
         if isinstance(specs, list):
-            self._run_specs(specs, benchmark_host)
+            errors.append(self._run_specs(specs, benchmark_host))
         else:
             fixtures = specs.get('fixtures', [])
             queries = specs.get('queries', [])
             full = specs.get('full', [])
-            self._run_specs(fixtures, benchmark_host, action=['setup'])
-            self._run_specs(queries, benchmark_host, action=['queries'])
-            self._run_specs(fixtures, benchmark_host, action=['teardown'])
-            self._run_specs(full, benchmark_host)
+            errors.append(
+                self._run_specs(fixtures, benchmark_host, action=['setup']))
+            errors.append(
+                self._run_specs(queries, benchmark_host, action=['queries']))
+            errors.append(
+                self._run_specs(fixtures, benchmark_host, action=['teardown']))
+            errors.append(
+                self._run_specs(full, benchmark_host))
+        return any(errors)
 
     def execute(self, track):
         configurations = list(self._expand_paths(track['configurations']))
         versions = track['versions']
+        error = False
         for version in versions:
             self.log.info('# Version: ', version)
             for c, configuration in enumerate(configurations):
@@ -77,7 +88,9 @@ class Executor:
                                env=configuration.get('env'),
                                settings=configuration.get('settings')) as node:
                     node.start()
-                    self._execute_specs(track['specs'], node.http_url)
+                    _error = self._execute_specs(track['specs'], node.http_url)
+                    error = error or _error
+        return error
 
 
 @argh.arg('-r', '--result_hosts', type=str)
@@ -108,7 +121,9 @@ def run_track(track,
             fail_fast=failfast,
             sample_mode=sample_mode
         )
-        executor.execute(toml.load(track))
+        error = executor.execute(toml.load(track))
+        if error:
+            sys.exit(1)
 
 
 def main():
