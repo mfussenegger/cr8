@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 
 from setuptools import setup
 
@@ -28,7 +27,7 @@ setup(
         'argh',
         'tqdm',
         'Faker',
-        'aiohttp>=2.0,<3',
+        'aiohttp>=3.3,<4',
         'toml'
     ],
     extras_require={

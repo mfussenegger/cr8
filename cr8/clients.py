@@ -274,9 +274,13 @@ class HttpClient:
                 'date': _date_or_none(version['build_timestamp'][:10])
             }
 
-    def close(self):
+    async def _close(self):
         if self._session:
-            self._session.close()
+            await self._session.close()
+            self._session = None
+
+    def close(self):
+        asyncio.get_event_loop().run_until_complete(self._close())
 
     def __enter__(self):
         return self
