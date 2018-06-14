@@ -177,12 +177,11 @@ def _bulk_size_generator(num_records, bulk_size, active):
         yield req_size
 
 
-async def _gen_data_and_insert(q, client, stmt, row_fun, size_seq):
-    with ThreadPoolExecutor() as e:
-        for size in size_seq:
-            args_coro = loop.run_in_executor(e, _create_bulk_args, row_fun, size)
-            task = asyncio.ensure_future(_exec_many(client, stmt, args_coro))
-            await q.put(task)
+async def _gen_data_and_insert(q, e, client, stmt, row_fun, size_seq):
+    for size in size_seq:
+        args_coro = loop.run_in_executor(e, _create_bulk_args, row_fun, size)
+        task = asyncio.ensure_future(_exec_many(client, stmt, args_coro))
+        await q.put(task)
     await q.put(None)
 
 
@@ -278,11 +277,12 @@ def insert_fake_data(hosts=None,
         if sys.platform != 'win32':
             loop.add_signal_handler(signal.SIGINT, stop)
         bulk_seq = _bulk_size_generator(num_records, bulk_size, active)
-        tasks = asyncio.gather(
-            _gen_data_and_insert(q, client, stmt, gen_row, bulk_seq),
-            consume(q, total=num_inserts)
-        )
-        loop.run_until_complete(tasks)
+        with ThreadPoolExecutor() as e:
+            tasks = asyncio.gather(
+                _gen_data_and_insert(q, e, client, stmt, gen_row, bulk_seq),
+                consume(q, total=num_inserts)
+            )
+            loop.run_until_complete(tasks)
 
 
 def main():
