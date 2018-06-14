@@ -3,12 +3,10 @@ sudo: false
 language: python
 cache: pip
 python:
+  - 3.6
   - 3.6-dev
+  - 3.7-dev
   - nightly
-
-matrix:
-  allow_failures:
-    - python: nightly
 
 install:
   - wget https://raw.githubusercontent.com/sormuras/bach/master/install-jdk.sh
