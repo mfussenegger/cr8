@@ -239,33 +239,28 @@ class HttpClient:
     def __init__(self, hosts, conn_pool_limit=25):
         self.hosts = hosts
         self.urls = itertools.cycle([i + '/_sql' for i in hosts])
-        self._conn_pool_limit = conn_pool_limit
-        self._session = None
-
-    async def get_session(self):
-        if not self._session:
-            conn = aiohttp.TCPConnector(limit=self._conn_pool_limit)
-            self._session = aiohttp.ClientSession(connector=conn)
-        return self._session
+        conn = aiohttp.TCPConnector(limit=conn_pool_limit)
+        self._session = aiohttp.ClientSession(connector=conn)
 
     async def execute(self, stmt, args=None):
         payload = {'stmt': _plain_or_callable(stmt)}
         if args:
             payload['args'] = _plain_or_callable(args)
-        session = await self.get_session()
-        return await _exec(session, next(self.urls), json.dumps(payload, cls=CrateJsonEncoder))
+        return await _exec(
+            self._session,
+            next(self.urls),
+            json.dumps(payload, cls=CrateJsonEncoder)
+        )
 
     async def execute_many(self, stmt, bulk_args):
         data = json.dumps(dict(
             stmt=_plain_or_callable(stmt),
             bulk_args=_plain_or_callable(bulk_args)
         ), cls=CrateJsonEncoder)
-        session = await self.get_session()
-        return await _exec(session, next(self.urls), data)
+        return await _exec(self._session, next(self.urls), data)
 
     async def get_server_version(self):
-        session = await self.get_session()
-        async with session.get(self.hosts[0] + '/') as resp:
+        async with self._session.get(self.hosts[0] + '/') as resp:
             r = await resp.json()
             version = r['version']
             return {
@@ -277,7 +272,6 @@ class HttpClient:
     async def _close(self):
         if self._session:
             await self._session.close()
-            self._session = None
 
     def close(self):
         asyncio.get_event_loop().run_until_complete(self._close())
