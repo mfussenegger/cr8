@@ -19,6 +19,7 @@ import socket
 import ssl
 from pathlib import Path
 from functools import partial
+from itertools import cycle
 from typing import Dict, Any, List, NamedTuple
 from urllib.request import urlopen
 
@@ -268,9 +269,15 @@ class CrateNode(contextlib.ExitStack):
 
         line_buf = LineBuffer()
         self.monitor.consumers.append(line_buf)
+        spinner = cycle(['/', '-', '\\', '|'])
+
+        def show_spinner():
+            if sys.stdout.isatty():
+                print(next(spinner), end='\r')
+            return True
         try:
             wait_until(
-                lambda: _ensure_running(proc) and self.http_host,
+                lambda: show_spinner() and _ensure_running(proc) and self.http_host,
                 timeout=30
             )
             host = self.addresses.http.host
@@ -281,8 +288,11 @@ class CrateNode(contextlib.ExitStack):
             )
             if _has_ssl(host, port):
                 self.http_url = self.http_url.replace('http://', 'https://')
-            wait_until(lambda: cluster_state_200(self.http_url), timeout=30)
-        except (SystemError, TimeoutError) as e:
+            wait_until(
+                lambda: show_spinner() and cluster_state_200(self.http_url),
+                timeout=30
+            )
+        except (SystemError, TimeoutError):
             if not line_buf.lines:
                 _try_print_log(logfile)
             else:
@@ -534,7 +544,7 @@ def _parse_options(options: List[str]) -> Dict[str, str]:
     """
     try:
         return dict(i.split('=', maxsplit=1) for i in options)
-    except ValueError as e:
+    except ValueError:
         raise ArgumentError(
             f'Option must be in format <key>=<value>, got: {options}')
 
