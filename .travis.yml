@@ -1,24 +1,28 @@
+---
 sudo: false
 language: python
 cache: pip
 python:
-    - 3.6-dev
-    - nightly
+  - 3.6-dev
+  - nightly
 
 matrix:
   allow_failures:
     - python: nightly
 
 install:
-    - wget https://raw.githubusercontent.com/sormuras/bach/master/install-jdk.sh
-    - chmod +x ./install-jdk.sh
-    - ./install-jdk.sh -f 10
-    - pip install pycodestyle
-    - pip install asyncpg
-    - pip install .
+  - wget https://raw.githubusercontent.com/sormuras/bach/master/install-jdk.sh
+  - chmod +x ./install-jdk.sh
+  - ./install-jdk.sh -f 10
+  - pip install pycodestyle asyncpg coverage codecov
+  - pip install .
+
 script:
-    - python -m unittest -v
-    - pycodestyle cr8
+  - coverage run --source=cr8 -m unittest -v
+  - pycodestyle cr8
+
+after_success:
+  - codecov
 
 notifications:
-    email: false
+  email: false
