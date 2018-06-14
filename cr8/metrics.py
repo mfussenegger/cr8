@@ -87,27 +87,6 @@ def get_sampler(sample_mode: str):
     raise TypeError(f'Invalid sample_mode: {sample_mode}')
 
 
-def get_histogram_bins(min_, max_, stdev, count):
-    # Use Scott's normal reference rule to get the bin width
-    # https://en.wikipedia.org/wiki/Histogram#Number_of_bins_and_width
-    bin_width = (3.5 * stdev) / (count ** (1. / 3))
-    num_bins = math.ceil((max_ - min_) / bin_width)
-    return [i * bin_width + min_ for i in range(1, num_bins + 1)]
-
-
-def get_histogram(sorted_values, min_, max_, stdev):
-    bins = get_histogram_bins(min_, max_, stdev, len(sorted_values))
-    result = {x: 0 for x in bins}
-    for value in sorted_values:
-        for bin_ in bins:
-            if value <= bin_:
-                result[bin_] += 1
-                break
-    items = sorted(result.items(), key=lambda t: t[0])
-    keys = ('bin', 'num')
-    return [dict(zip(keys, v)) for v in items]
-
-
 _z_map = {
     80: 1.282,
     85: 1.440,
