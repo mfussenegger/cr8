@@ -21,13 +21,15 @@ class StatsTest(TestCase):
         self.assertEqual(len(result), 1)
         self.assertEqual(result['n'], 0)
 
-    def test_stats_only_has_min_max_mean_with_1_value(self):
+    def test_stats_has_min_max_mean_samples_and_stdev_with_1_value(self):
         hist = metrics.Stats()
         hist.measure(23.2)
         result = hist.get()
-        self.assertIn('mean', result)
-        self.assertIn('min', result)
-        self.assertIn('max', result)
+        self.assertEqual(result['mean'], 23.2)
+        self.assertEqual(result['min'], 23.2)
+        self.assertEqual(result['max'], 23.2)
+        self.assertEqual(result['samples'], [23.2])
+        self.assertEqual(result['stdev'], 0)
         self.assertEqual(result['n'], 1)
 
     def test_stats(self):

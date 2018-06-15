@@ -119,7 +119,14 @@ class Stats:
         if count == 0:
             return dict(n=0)
         elif count == 1:
-            return dict(min=values[0], max=values[0], mean=values[0], n=count)
+            return dict(
+                min=values[0],
+                max=values[0],
+                mean=values[0],
+                n=count,
+                stdev=0,
+                samples=self.sampler.values
+            )
         percentiles = [percentile(values, p) for p in self.plevels]
         min_ = values[0]
         max_ = values[-1]
