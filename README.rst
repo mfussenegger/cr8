@@ -74,6 +74,9 @@ Install them using `pip <https://pip.pypa.io/en/stable/>`_::
 
     python3.6 -m pip install --user cr8
 
+Or download a single ``zipapp`` file from the `releases page
+<https://github.com/mfussenegger/cr8/releases>`_.
+
 
 Usage
 =====
