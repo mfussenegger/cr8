@@ -6,7 +6,11 @@
         "data_files": [
             {
                 "target": "countries",
-                "source": "data/countries.json"
+                "source": "data/countries1.json"
+            },
+            {
+                "target": "countries",
+                "source": "data/countries2.json.gz"
             }
         ]
     },

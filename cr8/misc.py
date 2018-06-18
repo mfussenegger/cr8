@@ -1,6 +1,7 @@
 """misc functions that have no real home."""
 
 import logging
+import gzip
 from typing import Tuple, Iterator, Any
 from collections import defaultdict
 
@@ -81,9 +82,14 @@ def as_bulk_queries(queries, bulk_size):
 
 def get_lines(filename: str) -> Iterator[str]:
     """Create an iterator that returns the lines of a utf-8 encoded file."""
-    with open(filename, 'r', encoding='utf-8') as f:
-        for line in f:
-            yield line
+    if filename.endswith('.gz'):
+        with gzip.open(filename, 'r') as f:
+            for line in f:
+                yield line.decode('utf-8')
+    else:
+        with open(filename, 'r', encoding='utf-8') as f:
+            for line in f:
+                yield line
 
 
 def as_statements(lines: Iterator[str]) -> Iterator[str]:

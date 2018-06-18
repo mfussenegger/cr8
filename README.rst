@@ -166,7 +166,7 @@ insert-blob
 A tool to upload a file into a blob table::
 
     >>> cr8 insert-blob --hosts localhost:4200 --table blobtable specs/sample.toml
-    http://.../_blobs/blobtable/e29fbe493d1b5491c2791638e2de5c5c0de32ebc
+    http://.../_blobs/blobtable/c7ba64086c76c2db78dfabf163ef41a338a0d84b
 
 run-spec
 --------
@@ -308,6 +308,7 @@ will be executed::
     >>> cr8 run-track tracks/sample.toml
     # Version:  latest-testing
     ## Starting Crate latest-testing, configuration: default.toml
+    ...
     ### Running spec file:  sample.toml
     # Running setUp
     # Running benchmark

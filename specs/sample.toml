@@ -3,7 +3,11 @@ statement_files = ["sql/create_countries.sql"]
 
     [[setup.data_files]]
     target = "countries"
-    source = "data/countries.json" # paths are relative to the spec file
+    source = "data/countries1.json" # paths are relative to the spec file
+
+    [[setup.data_files]]
+    target = "countries"
+    source = "data/countries2.json.gz" # paths are relative to the spec file
 
 [[queries]]
 statement = "select count(*) from countries"
