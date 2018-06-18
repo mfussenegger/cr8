@@ -249,7 +249,7 @@ class CrateNode(contextlib.ExitStack):
             universal_newlines=True
         ))
 
-        msg = ('Crate launched:\n'
+        msg = ('CrateDB launching:\n'
                '    PID: %s\n'
                '    Logs: %s\n'
                '    Data: %s')
