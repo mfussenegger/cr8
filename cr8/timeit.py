@@ -8,7 +8,7 @@ from .cli import lines_from_stdin, to_int
 from .misc import as_statements
 from .log import Logger
 from .clients import client_errors
-from .engine import Runner, Result, eval_fail_if
+from .engine import create_runner, Result, eval_fail_if
 
 
 @argh.arg('--hosts', help='crate hosts', type=str)
@@ -50,7 +50,7 @@ def timeit(hosts=None,
     """
     num_lines = 0
     log = Logger(output_fmt)
-    with Runner(hosts, concurrency, sample_mode) as runner:
+    with create_runner(hosts, concurrency, sample_mode) as runner:
         version_info = aio.run(runner.client.get_server_version)
         for line in as_statements(lines_from_stdin(stmt)):
             runner.warmup(line, warmup)
