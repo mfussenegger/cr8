@@ -1,0 +1,14 @@
+---
+rules:
+  default:
+    merge_strategy:
+      method: rebase
+      rebase_fallback: none
+    protection:
+      required_status_checks:
+        strict: true
+        contexts:
+          - 'continuous-integration/travis-ci/pr'
+          - 'mergify/allow'
+          - 'LGTM analysis: Python'
+      enforce_admins: true
