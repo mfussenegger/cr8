@@ -308,7 +308,6 @@ will be executed::
     >>> cr8 run-track tracks/sample.toml
     # Version:  latest-testing
     ## Starting Crate latest-testing, configuration: default.toml
-    ...
     ### Running spec file:  sample.toml
     # Running setUp
     # Running benchmark

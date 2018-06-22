@@ -17,6 +17,7 @@ import threading
 import fnmatch
 import socket
 import ssl
+from hashlib import sha1
 from pathlib import Path
 from functools import partial
 from itertools import cycle
@@ -400,18 +401,36 @@ def _openuri(uri):
     return io.BytesIO(urlopen(uri).read())
 
 
+def _can_use_cache(uri, crate_dir):
+    if not os.path.exists(crate_dir):
+        return False
+    os.utime(crate_dir)  # update mtime to avoid removal
+    if os.path.isfile(uri):
+        with _openuri(uri) as f:
+            checksum = sha1(f.read()).hexdigest()
+            return os.path.exists(os.path.join(crate_dir, checksum))
+    # Always enable use of the cache if the source is not local
+    return True
+
+
 def _download_and_extract(uri, crate_root):
     filename = os.path.basename(uri)
     crate_folder_name = re.sub(r'\.tar(\.gz)?$', '', filename)
     crate_dir = os.path.join(crate_root, crate_folder_name)
-    if os.path.exists(crate_dir):
-        os.utime(crate_dir)  # update mtime to avoid removal
+
+    if _can_use_cache(uri, crate_dir):
         log.info('Skipping download, tarball alrady extracted at %s', crate_dir)
         return crate_dir
+    elif os.path.exists(crate_dir):
+        shutil.rmtree(crate_dir, ignore_errors=True)
     log.info('Downloading %s and extracting to %s', uri, crate_root)
     with _openuri(uri) as tmpfile:
         with tarfile.open(fileobj=tmpfile) as t:
             t.extractall(crate_root)
+        tmpfile.seek(0)
+        checksum = sha1(tmpfile.read()).hexdigest()
+        with open(os.path.join(crate_dir, checksum), 'a'):
+            os.utime(os.path.join(crate_dir, checksum))
     return crate_dir
 
 
