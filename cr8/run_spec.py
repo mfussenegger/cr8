@@ -236,7 +236,7 @@ def do_run_spec(spec,
 @argh.arg('--logfile-result', help='Redirect benchmark results to a file')
 @argh.arg('--sample-mode', choices=('all', 'reservoir'),
           help='Method used for sampling', default='reservoir')
-@argh.wrap_errors([KeyboardInterrupt] + clients.client_errors)
+@argh.wrap_errors([KeyboardInterrupt, BrokenPipeError] + clients.client_errors)
 def run_spec(spec,
              benchmark_hosts,
              result_hosts=None,

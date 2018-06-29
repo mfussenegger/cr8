@@ -100,7 +100,7 @@ class Executor:
 @argh.arg('--logfile-result', help='Redirect benchmark results to a file')
 @argh.arg('--sample-mode', choices=('all', 'reservoir'),
           help='Method used for sampling', default='reservoir')
-@argh.wrap_errors([KeyboardInterrupt] + client_errors)
+@argh.wrap_errors([KeyboardInterrupt, BrokenPipeError] + client_errors)
 def run_track(track,
               result_hosts=None,
               crate_root=None,

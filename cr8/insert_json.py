@@ -7,7 +7,7 @@ from functools import partial
 
 from .cli import dicts_from_stdin, to_int
 from .misc import as_bulk_queries
-from . import aio, clients
+from cr8 import aio, clients
 from .metrics import Stats
 from .log import format_stats
 
@@ -50,7 +50,7 @@ def print_only(table):
           to execute the insert statement', type=str)
 @argh.arg('-c', '--concurrency', type=to_int)
 @argh.arg('-of', '--output-fmt', choices=['json', 'text'], default='text')
-@argh.wrap_errors([KeyboardInterrupt] + clients.client_errors)
+@argh.wrap_errors([KeyboardInterrupt, BrokenPipeError] + clients.client_errors)
 def insert_json(table=None,
                 bulk_size=1000,
                 concurrency=25,

@@ -3,12 +3,12 @@
 
 import argh
 
-from . import aio
-from .cli import lines_from_stdin, to_int
-from .misc import as_statements
-from .log import Logger
-from .clients import client_errors
-from .engine import Runner, Result, eval_fail_if
+from cr8 import aio
+from cr8.cli import lines_from_stdin, to_int
+from cr8.misc import as_statements
+from cr8.log import Logger
+from cr8.clients import client_errors
+from cr8.engine import Runner, Result, eval_fail_if
 
 
 @argh.arg('--hosts', help='crate hosts', type=str)
@@ -24,7 +24,7 @@ from .engine import Runner, Result, eval_fail_if
           failure if it evaluates to true')
 @argh.arg('--sample-mode', choices=('all', 'reservoir'),
           help='Method used for sampling', default='reservoir')
-@argh.wrap_errors([KeyboardInterrupt] + client_errors)
+@argh.wrap_errors([KeyboardInterrupt, BrokenPipeError] + client_errors)
 def timeit(hosts=None,
            stmt=None,
            warmup=30,
