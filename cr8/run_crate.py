@@ -302,7 +302,6 @@ class CrateNode(contextlib.ExitStack):
             raise SystemExit("Exiting because CrateDB didn't start correctly")
         else:
             self.monitor.consumers.remove(line_buf)
-            line_buf = None
         log.info('Cluster ready to process requests')
 
     def _set_addr(self, protocol, addr):
