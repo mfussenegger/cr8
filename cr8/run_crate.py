@@ -17,6 +17,7 @@ import threading
 import fnmatch
 import socket
 import ssl
+from datetime import datetime
 from hashlib import sha1
 from pathlib import Path
 from functools import partial
@@ -521,7 +522,8 @@ def _remove_old_crates(path):
         old_unused_dirs = (e for e in os.scandir(path)
                            if e.is_dir() and e.stat().st_mtime < s7days_ago)
         for e in old_unused_dirs:
-            print(f'Removing {e.name} from crates cache')
+            last_use = datetime.fromtimestamp(e.stat().st_mtime)
+            print(f'Removing from cache: {e.name} (last use: {last_use:%Y-%m-%d %H:%M})')
             shutil.rmtree(e.path)
 
 
