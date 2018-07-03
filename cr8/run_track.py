@@ -7,6 +7,7 @@ from .log import Logger
 from .run_spec import do_run_spec
 from .run_crate import CrateNode, get_crate
 from .clients import client_errors
+from .cli import boolean
 
 
 class Executor:
@@ -17,13 +18,15 @@ class Executor:
                  sample_mode,
                  result_hosts=None,
                  crate_root=None,
-                 fail_fast=None):
+                 fail_fast=None,
+                 verify_ssl):
         self.track_dir = track_dir
         self.sample_mode = sample_mode
         self.result_hosts = result_hosts
         self.crate_root = crate_root
         self.log = log
         self.fail_fast = fail_fast
+        self.verify_ssl = verify_ssl
 
     def _expand_paths(self, paths):
         paths = (os.path.join(self.track_dir, path) for path in paths)
@@ -42,7 +45,8 @@ class Executor:
                     log=self.log,
                     result_hosts=self.result_hosts,
                     sample_mode=self.sample_mode,
-                    action=action)
+                    action=action,
+                    verify_ssl=self.verify_ssl)
             except Exception:
                 errors.append(True)
                 if self.fail_fast:
@@ -100,6 +104,10 @@ class Executor:
 @argh.arg('--logfile-result', help='Redirect benchmark results to a file')
 @argh.arg('--sample-mode', choices=('all', 'reservoir'),
           help='Method used for sampling', default='reservoir')
+@argh.arg('--verify-ssl',
+          type=boolean,
+          help='Perform SSL certificate validation.',
+          default='true')
 @argh.wrap_errors([KeyboardInterrupt, BrokenPipeError] + client_errors)
 def run_track(track,
               result_hosts=None,
@@ -108,7 +116,8 @@ def run_track(track,
               logfile_info=None,
               logfile_result=None,
               failfast=False,
-              sample_mode='reservoir'):
+              sample_mode='reservoir',
+              verify_ssl=True):
     """Execute a track file"""
     with Logger(output_fmt=output_fmt,
                 logfile_info=logfile_info,
@@ -119,7 +128,8 @@ def run_track(track,
             result_hosts=result_hosts,
             crate_root=crate_root,
             fail_fast=failfast,
-            sample_mode=sample_mode
+            sample_mode=sample_mode,
+            verify_ssl=verify_ssl
         )
         error = executor.execute(toml.load(track))
         if error:

@@ -14,7 +14,7 @@ from .misc import (
     parse_version,
     try_len
 )
-from .cli import dicts_from_lines
+from .cli import dicts_from_lines, boolean
 from .log import Logger
 
 
@@ -77,11 +77,13 @@ class Executor:
                  result_hosts,
                  log,
                  fail_if,
-                 sample_mode):
+                 sample_mode,
+                 verify_ssl):
         self.benchmark_hosts = benchmark_hosts
         self.sample_mode = sample_mode
         self.spec_dir = spec_dir
-        self.client = clients.client(benchmark_hosts)
+        self.verify_ssl = verify_ssl
+        self.client = clients.client(benchmark_hosts, verify_ssl=verify_ssl)
         self.result_client = clients.client(result_hosts)
         self.server_version_info = aio.run(self.client.get_server_version)
         self.server_version = parse_version(self.server_version_info['number'])
@@ -168,7 +170,10 @@ class Executor:
                  f'   Concurrency: {concurrency}\n'
                  f'   {mode_desc}: {duration or iterations}')
             )
-            with Runner(self.benchmark_hosts, concurrency, self.sample_mode) as runner:
+            with Runner(self.benchmark_hosts,
+                        concurrency,
+                        self.sample_mode,
+                        self.verify_ssl) as runner:
                 timed_stats = runner.run(
                     stmt,
                     iterations=iterations,
@@ -201,14 +206,16 @@ def do_run_spec(spec,
                 sample_mode,
                 result_hosts=None,
                 action=None,
-                fail_if=None):
+                fail_if=None,
+                verify_ssl):
     with Executor(
         spec_dir=os.path.dirname(spec),
         benchmark_hosts=benchmark_hosts,
         result_hosts=result_hosts,
         log=log,
         fail_if=fail_if,
-        sample_mode=sample_mode
+        sample_mode=sample_mode,
+        verify_ssl=verify_ssl
     ) as executor:
         spec = load_spec(spec)
         try:
@@ -236,6 +243,10 @@ def do_run_spec(spec,
 @argh.arg('--logfile-result', help='Redirect benchmark results to a file')
 @argh.arg('--sample-mode', choices=('all', 'reservoir'),
           help='Method used for sampling', default='reservoir')
+@argh.arg('--verify-ssl',
+          type=boolean,
+          help='Perform SSL certificate validation.',
+          default='true')
 @argh.wrap_errors([KeyboardInterrupt, BrokenPipeError] + clients.client_errors)
 def run_spec(spec,
              benchmark_hosts,
@@ -245,7 +256,8 @@ def run_spec(spec,
              logfile_result=None,
              action=None,
              fail_if=None,
-             sample_mode='reservoir'):
+             sample_mode='reservoir',
+             verify_ssl=True):
     """Run a spec file, executing the statements on the benchmark_hosts.
 
     Short example of a spec file:
@@ -300,7 +312,8 @@ def run_spec(spec,
             result_hosts=result_hosts,
             action=action,
             fail_if=fail_if,
-            sample_mode=sample_mode
+            sample_mode=sample_mode,
+            verify_ssl=verify_ssl
         )
 
 
