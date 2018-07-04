@@ -280,7 +280,7 @@ class CrateNode(contextlib.ExitStack):
         try:
             wait_until(
                 lambda: show_spinner() and _ensure_running(proc) and self.http_host,
-                timeout=30
+                timeout=60
             )
             host = self.addresses.http.host
             port = self.addresses.http.port
