@@ -1,3 +1,19 @@
+2018-07-04 0.13.0
+=================
+
+- Added experimental postgres protocol support. It's available if the optional
+  ``asyncpg`` dependency is installed.
+
+- Bumped the ``aiohttp`` dependency for ``Python 3.7`` support.
+
+- The ``load_data`` directive in spec files now can read ``gzipped`` files.
+
+- Cached local tarballs are now checksummed to avoid re-using a stale tarball
+  from cache.
+
+- Samples and stdev are now included in the ``runtime_stats`` output if only 1
+  sample is available.
+
 2018-06-08 0.12.1
 =================
 
