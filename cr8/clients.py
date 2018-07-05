@@ -4,6 +4,7 @@ import itertools
 import calendar
 import types
 import time
+from urllib.parse import urlparse, parse_qs
 from datetime import datetime, date
 from typing import List, Union, Iterable
 from decimal import Decimal
@@ -172,6 +173,37 @@ def _to_dsn(hosts):
     return dsn
 
 
+def _to_boolean(v):
+    if str(v).lower() in ("true"):
+        return True
+    elif str(v).lower() in ("false"):
+        return False
+    else:
+        raise ValueError('not a boolean value')
+
+
+def _verify_ssl_from_first(hosts):
+    """Check if SSL validation parameter is passed in URI
+
+    >>> _verify_ssl_from_first(['https://myhost:4200/?verify_ssl=false'])
+    False
+
+    >>> _verify_ssl_from_first(['https://myhost:4200/'])
+    True
+
+    >>> _verify_ssl_from_first([
+    ...      'https://h1:4200/?verify_ssl=False',
+    ...      'https://h2:4200/?verify_ssl=True'
+    ... ])
+    False
+    """
+    for host in hosts:
+        query = parse_qs(urlparse(host).query)
+        if 'verify_ssl' in query:
+            return _to_boolean(query['verify_ssl'][0])
+    return True
+
+
 class AsyncpgClient:
     def __init__(self, hosts, pool_size=25):
         self.dsn = _to_dsn(hosts)
@@ -239,7 +271,8 @@ class HttpClient:
     def __init__(self, hosts, conn_pool_limit=25):
         self.hosts = hosts
         self.urls = itertools.cycle([i + '/_sql' for i in hosts])
-        conn = aiohttp.TCPConnector(limit=conn_pool_limit)
+        verify_ssl = _verify_ssl_from_first(self.hosts)
+        conn = aiohttp.TCPConnector(limit=conn_pool_limit, verify_ssl=verify_ssl)
         self._session = aiohttp.ClientSession(connector=conn)
 
     async def execute(self, stmt, args=None):
