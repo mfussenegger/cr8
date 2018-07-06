@@ -236,10 +236,10 @@ class AsyncpgClient:
 
 
 class HttpClient:
-    def __init__(self, hosts, conn_pool_limit=25):
+    def __init__(self, hosts, conn_pool_limit=25, verify_ssl=True):
         self.hosts = hosts
         self.urls = itertools.cycle([i + '/_sql' for i in hosts])
-        conn = aiohttp.TCPConnector(limit=conn_pool_limit)
+        conn = aiohttp.TCPConnector(limit=conn_pool_limit, verify_ssl=verify_ssl)
         self._session = aiohttp.ClientSession(connector=conn)
 
     async def execute(self, stmt, args=None):
@@ -283,10 +283,12 @@ class HttpClient:
         self.close()
 
 
-def client(hosts, concurrency=25):
+def client(hosts, concurrency=25, verify_ssl=True):
     hosts = hosts or 'localhost:4200'
     if hosts.startswith('asyncpg://'):
         if not asyncpg:
             raise ValueError('Cannot use "asyncpg" scheme if asyncpg is not available')
         return AsyncpgClient(hosts, pool_size=concurrency)
-    return HttpClient(_to_http_hosts(hosts), conn_pool_limit=concurrency)
+    return HttpClient(_to_http_hosts(hosts),
+                      conn_pool_limit=concurrency,
+                      verify_ssl=verify_ssl)

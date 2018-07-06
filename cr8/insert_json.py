@@ -5,7 +5,7 @@ import argh
 import sys
 from functools import partial
 
-from .cli import dicts_from_stdin, to_int
+from .cli import dicts_from_stdin, to_int, boolean
 from .misc import as_bulk_queries
 from cr8 import aio, clients
 from .metrics import Stats
@@ -50,12 +50,17 @@ def print_only(table):
           to execute the insert statement', type=str)
 @argh.arg('-c', '--concurrency', type=to_int)
 @argh.arg('-of', '--output-fmt', choices=['json', 'text'], default='text')
+@argh.arg('--verify-ssl',
+          type=boolean,
+          help='Perform SSL certificate validation.',
+          default='true')
 @argh.wrap_errors([KeyboardInterrupt, BrokenPipeError] + clients.client_errors)
 def insert_json(table=None,
                 bulk_size=1000,
                 concurrency=25,
                 hosts=None,
-                output_fmt=None):
+                output_fmt=None,
+                verify_ssl=True):
     """Insert JSON lines fed into stdin into a Crate cluster.
 
     If no hosts are specified the statements will be printed.
@@ -75,7 +80,9 @@ def insert_json(table=None,
         bulk_size, concurrency), file=sys.stderr)
 
     stats = Stats()
-    with clients.client(hosts, concurrency=concurrency) as client:
+    with clients.client(hosts,
+                        concurrency=concurrency,
+                        verify_ssl=verify_ssl) as client:
         f = partial(aio.measure, stats, client.execute_many)
         try:
             aio.run_many(f, bulk_queries, concurrency)

@@ -4,7 +4,7 @@
 import argh
 
 from cr8 import aio
-from cr8.cli import lines_from_stdin, to_int
+from cr8.cli import lines_from_stdin, to_int, boolean
 from cr8.misc import as_statements
 from cr8.log import Logger
 from cr8.clients import client_errors
@@ -24,6 +24,10 @@ from cr8.engine import Runner, Result, eval_fail_if
           failure if it evaluates to true')
 @argh.arg('--sample-mode', choices=('all', 'reservoir'),
           help='Method used for sampling', default='reservoir')
+@argh.arg('--verify-ssl',
+          type=boolean,
+          help='Perform SSL certificate validation.',
+          default='true')
 @argh.wrap_errors([KeyboardInterrupt, BrokenPipeError] + client_errors)
 def timeit(hosts=None,
            stmt=None,
@@ -33,7 +37,8 @@ def timeit(hosts=None,
            concurrency=1,
            output_fmt=None,
            fail_if=None,
-           sample_mode='reservoir'):
+           sample_mode='reservoir',
+           verify_ssl=True):
     """Run the given statement a number of times and return the runtime stats
 
     Args:
@@ -50,7 +55,7 @@ def timeit(hosts=None,
     """
     num_lines = 0
     log = Logger(output_fmt)
-    with Runner(hosts, concurrency, sample_mode) as runner:
+    with Runner(hosts, concurrency, sample_mode, verify_ssl) as runner:
         version_info = aio.run(runner.client.get_server_version)
         for line in as_statements(lines_from_stdin(stmt)):
             runner.warmup(line, warmup)

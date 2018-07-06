@@ -16,7 +16,7 @@ from concurrent.futures import ThreadPoolExecutor
 from .insert_json import to_insert
 from .misc import parse_table, parse_version
 from .aio import asyncio, consume
-from .cli import to_int
+from .cli import to_int, boolean
 from .fake_providers import GeoSpatialProvider, auto_inc
 from cr8 import clients, aio
 
@@ -196,13 +196,18 @@ async def _gen_data_and_insert(q, e, client, stmt, row_fun, size_seq):
 @argh.arg('--mapping-file',
           type=argparse.FileType('r'),
           help='JSON file with a column to fake provider mapping.')
+@argh.arg('--verify-ssl',
+          type=boolean,
+          help='Perform SSL certificate validation.',
+          default='true')
 @argh.wrap_errors([KeyboardInterrupt] + clients.client_errors)
 def insert_fake_data(hosts=None,
                      table=None,
                      num_records=1e5,
                      bulk_size=1000,
                      concurrency=25,
-                     mapping_file=None):
+                     mapping_file=None,
+                     verify_ssl=True):
     """Generate random data and insert it into a table.
 
     This will read the table schema and then find suitable random data providers.
@@ -242,7 +247,7 @@ def insert_fake_data(hosts=None,
                 "y": "provider_without_args"
             }
     """
-    with clients.client(hosts, concurrency=1) as client:
+    with clients.client(hosts, concurrency=1, verify_ssl=verify_ssl) as client:
         schema, table_name = parse_table(table)
         columns = retrieve_columns(client, schema, table_name)
     if not columns:
@@ -267,7 +272,9 @@ def insert_fake_data(hosts=None,
 
     print('Generating fake data and executing inserts')
     q = asyncio.Queue(maxsize=concurrency)
-    with clients.client(hosts, concurrency=concurrency) as client:
+    with clients.client(hosts,
+                        concurrency=concurrency,
+                        verify_ssl=verify_ssl) as client:
         active = [True]
 
         def stop():

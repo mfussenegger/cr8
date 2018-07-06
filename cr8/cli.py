@@ -23,6 +23,15 @@ def to_int(s):
         return int(ast.literal_eval(s))
 
 
+def boolean(v):
+    if str(v).lower() in ("yes", "true", "t", "1"):
+        return True
+    elif str(v).lower() in ("no", "false", "f", "0"):
+        return False
+    else:
+        raise ValueError('not a boolean value')
+
+
 def lines_from_stdin(default=None):
     if sys.stdin.isatty():
         if default:
