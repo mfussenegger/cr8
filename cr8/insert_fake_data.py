@@ -51,16 +51,6 @@ def generate_row(fakers):
     return [x() for x in fakers]
 
 
-def x1000(func):
-    return func() * 1000
-
-
-def timestamp(fake):
-    # return lamda: fake.unix_time() * 1000 workaround:
-    # can't use lambda or nested functions because of multiprocessing pickling
-    return partial(x1000, fake.unix_time)
-
-
 def array_provider(len_provider, value_provider, dimensions):
     if dimensions == 0:
         return value_provider()
@@ -94,7 +84,8 @@ class DataFaker:
         'float': operator.attrgetter('pyfloat'),
         'double': operator.attrgetter('pydecimal'),
         'ip': operator.attrgetter('ipv4'),
-        'timestamp': timestamp,
+        'timestamp': lambda f: partial(
+            f.date_time_between, start_date='-2y', end_date='now'),
         'string': operator.attrgetter('word'),
         'boolean': operator.attrgetter('boolean'),
         'geo_point': operator.attrgetter('geo_point'),

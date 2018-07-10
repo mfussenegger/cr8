@@ -3,6 +3,7 @@ from cr8 import insert_fake_data
 from unittest import TestCase, main
 from doctest import DocTestSuite
 from decimal import Decimal
+import datetime
 
 
 class TestDataFaker(TestCase):
@@ -43,11 +44,15 @@ class TestDataFaker(TestCase):
 
     def test_timestamp_column_default(self):
         provider = self.f.provider_for_column('timestamp', 'timestamp')
-        self.assertEqual(provider(), 1373158606000)
+        dt = provider()
+        diff = datetime.datetime(2017, 11, 18, 19, 0, 0) - dt
+        self.assertLessEqual(diff, datetime.timedelta(seconds=1))
 
     def test_timestamp_type_default(self):
         provider = self.f.provider_for_column('some_ts_column', 'timestamp')
-        self.assertEqual(provider(), 1373158606000)
+        dt = provider()
+        diff = datetime.datetime(2017, 11, 18, 19, 0, 0) - dt
+        self.assertLessEqual(diff, datetime.timedelta(seconds=1))
 
     def test_provider_from_mapping(self):
         mapping = {'x': ['random_int', [10, 20]]}

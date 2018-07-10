@@ -224,7 +224,7 @@ class AsyncpgClient:
         pool = await self._get_pool()
         async with pool.acquire() as conn:
             if args:
-                rows = await conn.fetch(stmt, args)
+                rows = await conn.fetch(stmt, *args)
             else:
                 rows = await conn.fetch(stmt)
             return {
