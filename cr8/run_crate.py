@@ -506,7 +506,7 @@ def _build_from_src(src_repo):
     run = partial(subprocess.run, cwd=src_repo, check=True)
     run(['git', 'clean', '-xdff'])
     run(['git', 'submodule', 'update', '--init'])
-    run(['./gradlew', 'clean', 'distTar'])
+    run(['./gradlew', '--no-daemon', 'clean', 'distTar'])
     distributions = Path(src_repo) / 'app' / 'build' / 'distributions'
     tarball = next(distributions.glob('crate-*.tar.gz'))
     with tarfile.open(tarball) as t:
