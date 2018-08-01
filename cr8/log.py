@@ -5,7 +5,7 @@ from functools import partial
 
 
 _wopen = partial(open, mode='w', encoding='utf-8')
-to_jsonstr = partial(json.dumps, sort_keys=True, indent=4)
+to_jsonstr = json.dumps
 
 
 def _format_short(stats):
