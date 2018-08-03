@@ -27,7 +27,7 @@ def _run_subcommand(parser, args):
         args[0] = args[0][1:]
         try:
             run(args, check=True)
-        except CalledProcessError as e:
+        except CalledProcessError:
             sys.exit('Failure running: ' + ' '.join(args))
 
     else:
