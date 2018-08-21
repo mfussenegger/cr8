@@ -61,11 +61,11 @@ class TestDataFaker(TestCase):
 
     def test_float_type_default(self):
         provider = self.f.provider_for_column('x', 'float')
-        self.assertEqual(provider(), -37544673531.0)
+        self.assertEqual(provider(), -31246013015.0)
 
     def test_double_type_default(self):
         provider = self.f.provider_for_column('x', 'double')
-        self.assertEqual(provider(), Decimal(-37544673531.0))
+        self.assertEqual(provider(), Decimal(-31246013015.0))
 
     def test_short_type_default(self):
         provider = self.f.provider_for_column('x', 'short')
@@ -87,12 +87,12 @@ class TestDataFaker(TestCase):
         provider = self.f.provider_for_column('area', 'geo_shape')
         self.assertEqual(provider(),
                          'POLYGON (( '
-                         '-134.2325571273118 45.556559118260715, '
-                         '-132.65503973028405 44.3429491731632, '
-                         '-131.0465423296239 40.100682891838076, '
-                         '-142.29874368812432 33.69327653122715, '
-                         '-148.71231715402132 39.51393935755063, '
-                         '-134.2325571273118 45.556559118260715 '
+                         '-132.47048275355667 44.147296981090086, '
+                         '-131.2679223792111 42.09369742374501, '
+                         '-132.14018682738413 37.17894586552094, '
+                         '-133.04540290479406 36.10457754779138, '
+                         '-142.31051949147854 46.75961787621673, '
+                         '-132.47048275355667 44.147296981090086 '
                          '))')
 
     def test_invalid_provider_for_column(self):
@@ -109,14 +109,14 @@ class TestDataFaker(TestCase):
         provider = self.f.provider_for_column('foo', 'string_array')
         value = provider()
         self.assertEqual(len(value), 40)
-        self.assertEqual(value[0], 'brother')
+        self.assertEqual(value[0], 'born')
 
     def test_provider_for_nested_string_array(self):
         provider = self.f.provider_for_column('foo', 'string_array_array')
         value = provider()
         self.assertEqual(len(value), 40)
         self.assertEqual(len(value[0]), 7)
-        self.assertEqual(value[0][0:2], ['ago', 'site'])
+        self.assertEqual(value[0][0:2], ['agent', 'every'])
 
 
 def load_tests(loader, tests, ignore):

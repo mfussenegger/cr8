@@ -129,7 +129,7 @@ class GeoSpatialProvider(BaseProvider):
             assert -180.0 <= center[0] <= 180.0, 'Longitude out of bounds'
             assert -90.0 <= center[1] <= 90.0, 'Latitude out of bounds'
 
-        angles = list(self.random_sample_unique(range(360), sides))
+        angles = list(self.random_sample(range(360), sides))
         angles.sort()
         points = [_dest_point(center, distance, bearing, EARTH_RADIUS) for bearing in angles]
         # close polygon
