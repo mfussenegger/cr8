@@ -77,7 +77,7 @@ class TestDataFaker(TestCase):
 
     def test_ip_type_default(self):
         provider = self.f.provider_for_column('x', 'ip')
-        self.assertEqual(provider(), '163.177.121.157')
+        self.assertEqual(provider(), '198.50.12.206')
 
     def test_geopoint_type_default(self):
         provider = self.f.provider_for_column('location', 'geo_point')
