@@ -13,3 +13,4 @@ rules:
           - 'continuous-integration/travis-ci/pr'
           - 'LGTM analysis: Python'
       enforce_admins: true
+    delete_branch: true
