@@ -16,11 +16,7 @@ class FailIf(SystemExit):
 
 
 def eval_fail_if(fail_if: str, result):
-    fail_if = fail_if.format(runtime_stats=result.runtime_stats,
-                             statement=result.statement,
-                             meta=result.meta,
-                             concurrency=result.concurrency,
-                             bulk_size=result.bulk_size)
+    fail_if = fail_if.format(**result.as_dict())
     if eval(fail_if):
         raise FailIf("Expression failed: " + fail_if)
 
