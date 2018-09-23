@@ -288,7 +288,7 @@ profiling::
 
     cr8 run-crate latest-nightly \
         -e CRATE_HEAP_SIZE=4g \
-        -e CRATE_JAVA_OPTS="-Dcrate.signal_handler.disabled=true -XX:+UnlockCommercialFeatures -XX:+FlightRecorder" \
+        -e CRATE_JAVA_OPTS="-Dcrate.signal_handler.disabled=true -XX:+UnlockDiagnosticVMOptions -XX:+DebugNonSafepoints -XX:+UnlockCommercialFeatures -XX:+FlightRecorder" \
         -s discovery.type=single-node \
         -- run-spec path/to/specs/example.toml {node.http_url} --action setup \
         -- @jcmd {node.process.pid} JFR.start duration=60s filename=myrecording.jfr \
