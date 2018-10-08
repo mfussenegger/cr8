@@ -1,3 +1,23 @@
+2018-10-08 0.14.0
+=================
+
+- SSL validation can no be disabled by including ``verify_ssl=False`` in the
+  hosts URI.
+
+- ``insert-fake-data`` now generates timestamps differently so it works with
+  ``asyncpg``
+
+- JSON output is no longer pretty printed by default. Use ``jq`` or ``python
+  -mjson.tool`` to do so.
+
+- Release branches can now be used as argument to ``run-crate``. (Something
+  like ``run-crate 3.1``. This will result in a source checkout and the tarball
+  will be built locally.)
+
+- Improved the error message when connecting via ``HTTP`` and running into a
+  ``401``.
+
+
 2018-07-04 0.13.0
 =================
 
