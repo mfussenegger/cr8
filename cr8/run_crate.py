@@ -35,7 +35,9 @@ NO_SSL_VERIFY_CTX = ssl._create_unverified_context()
 RELEASE_URL = 'https://cdn.crate.io/downloads/releases/crate-{version}.tar.gz'
 VERSION_RE = re.compile(r'^(\d+\.\d+\.\d+)$')
 DYNAMIC_VERSION_RE = re.compile(r'^((\d+|x)\.(\d+|x)\.(\d+|x))$')
+BRANCH_VERSION_RE = re.compile(r'^((\d+)\.(\d+))$')
 FOLDER_VERSION_RE = re.compile(r'crate-(\d+\.\d+\.\d+)')
+REPO_URL = 'https://github.com/crate/crate.git'
 
 DEFAULT_SETTINGS = {
     'discovery.initial_state_timeout': 0,
@@ -505,7 +507,7 @@ def _is_project_repo(src_repo):
 def _build_from_src(src_repo):
     run = partial(subprocess.run, cwd=src_repo, check=True)
     run(['git', 'clean', '-xdff'])
-    run(['git', 'submodule', 'update', '--init'])
+    run(['git', 'submodule', 'update', '--init', '--', 'es/upstream'])
     run(['./gradlew', '--no-daemon', 'clean', 'distTar'])
     distributions = Path(src_repo) / 'app' / 'build' / 'distributions'
     tarball = next(distributions.glob('crate-*.tar.gz'))
@@ -513,6 +515,15 @@ def _build_from_src(src_repo):
         t.extractall(tarball.parent)
     # remove two suffixes ('.tar, '.gz') to get the folder name
     return str(tarball.with_suffix('').with_suffix(''))
+
+
+def _build_from_release_branch(branch, crate_root):
+    src_repo = Path(crate_root) / 'sources'
+    if not src_repo.exists() or not (src_repo / '.git').exists():
+        clone = ['git', 'clone', REPO_URL, 'sources']
+        subprocess.run(clone, cwd=crate_root, check=True)
+    subprocess.run(['git', 'checkout', branch], cwd=str(src_repo), check=True)
+    return _build_from_src(str(src_repo))
 
 
 def _remove_old_crates(path):
@@ -537,6 +548,7 @@ def get_crate(version, crate_root=None):
             - A concrete version like '0.55.0'
             - A version including a `x` as wildcards. Like: '1.1.x' or '1.x.x'.
               This will use the latest version that matches.
+            - Release branch, like `3.1`
             - An alias: 'latest-stable' or 'latest-testing'
             - A URI pointing to a crate tarball
         crate_root: Where to extract the tarball to.
@@ -545,12 +557,15 @@ def get_crate(version, crate_root=None):
     """
     if _is_project_repo(version):
         return _build_from_src(version)
-    uri = _lookup_uri(version)
+    m = BRANCH_VERSION_RE.match(version)
     if not crate_root:
         crate_root = os.environ.get(
             'XDG_CACHE_HOME',
             os.path.join(os.path.expanduser('~'), '.cache', 'cr8', 'crates'))
         _remove_old_crates(crate_root)
+    if m:
+        return _build_from_release_branch(m.group(0), crate_root)
+    uri = _lookup_uri(version)
     crate_dir = _download_and_extract(uri, crate_root)
     return crate_dir
 
