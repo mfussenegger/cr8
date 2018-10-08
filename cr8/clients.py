@@ -84,6 +84,9 @@ async def _exec(session, url, data):
                             data=data,
                             headers=HTTP_DEFAULT_HDRS,
                             timeout=None) as resp:
+        if resp.status == 401:
+            t = await resp.text()
+            raise SqlException(t)
         r = await resp.json()
         if 'error' in r:
             raise SqlException(
