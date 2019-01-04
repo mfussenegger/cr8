@@ -1,15 +1,17 @@
 ---
-rules:
-  default:
-    merge_strategy:
-      method: rebase
-      rebase_fallback: none
-    enabling_label: ready-to-merge
-    protection:
-      required_pull_request_reviews: null
-      required_status_checks:
+pull_request_rules:
+  - actions:
+      merge:
+        method: rebase
+        rebase_fallback: null
         strict: true
-        contexts:
-          - 'continuous-integration/travis-ci/pr'
-          - 'LGTM analysis: Python'
-      enforce_admins: true
+    conditions:
+      - label=ready-to-merge
+      - 'status-success=continuous-integration/travis-ci/pr'
+      - 'status-success=LGTM analysis: Python'
+    name: default
+  - name: Delete branch after merge
+    actions:
+      delete_head_branch: {}
+    conditions:
+      - merged
