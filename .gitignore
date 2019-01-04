@@ -66,3 +66,5 @@ target/
 # buildout
 bin/
 venv/
+
+nose2-junit.xml

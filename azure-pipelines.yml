@@ -19,14 +19,27 @@ jobs:
 
       - script: |
           python -m pip install --upgrade pip
-          pip install pycodestyle asyncpg coverage codecov
+          pip install pycodestyle asyncpg "nose2[coverage_plugin]"
           pip install .
         displayName: 'Install dependencies'
 
       - script: |
-          python -m unittest -v
+          nose2 --with-coverage \
+            --coverage-report xml \
+            --plugin nose2.plugins.junitxml \
+            --junit-xml tests
           pycodestyle cr8
         displayName: 'test'
+
+      - task: PublishTestResults@2
+        inputs:
+          testResultsFiles: 'nose2-junit.xml'
+          testRunTitle: 'Publish test results for Python $(python.version)'
+
+      - task: PublishCodeCoverageResults@1
+        inputs:
+          codeCoverageTool: Cobertura
+          summaryFileLocation: '$(System.DefaultWorkingDirectory)/**/coverage.xml'
 
   - job: 'Publish'
     dependsOn: 'Test'
