@@ -33,7 +33,8 @@ setup(
     ],
     extras_require={
         'extra': ['uvloop', 'pysimdjson'],
-        'asyncpg': ['asyncpg']
+        'asyncpg': ['asyncpg'],
+        'prometheus': ['prometheus_client'],
     },
     python_requires='>=3.6',
     classifiers=[

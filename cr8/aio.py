@@ -19,10 +19,9 @@ tqdm = functools.partial(
 )
 
 
-async def measure(stats, f, *args, **kws):
+async def measure(observe, f, *args, **kws):
     r = await f(*args, **kws)
-    duration = r['duration']
-    stats.measure(duration)
+    observe(r['duration'])
     return r
 
 
