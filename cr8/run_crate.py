@@ -507,7 +507,9 @@ def _is_project_repo(src_repo):
 def _build_from_src(src_repo):
     run = partial(subprocess.run, cwd=src_repo, check=True)
     run(['git', 'clean', '-xdff'])
-    run(['git', 'submodule', 'update', '--init', '--', 'es/upstream'])
+    src_repo = Path(src_repo)
+    if os.path.exists(src_repo / 'es' / 'upstream'):
+        run(['git', 'submodule', 'update', '--init', '--', 'es/upstream'])
     run(['./gradlew', '--no-daemon', 'clean', 'distTar'])
     distributions = Path(src_repo) / 'app' / 'build' / 'distributions'
     tarball = next(distributions.glob('crate-*.tar.gz'))
