@@ -1,3 +1,9 @@
+2019-02-05 0.14.1
+=================
+
+- Made ``run-crate`` where the argument is a path to a repository forward
+  compatible with upcoming build changes.
+
 2018-10-08 0.14.0
 =================
 
