@@ -504,7 +504,8 @@ def _is_project_repo(src_repo):
             os.path.exists(os.path.join(src_repo, 'gradlew')))
 
 
-def _build_from_src(src_repo):
+def _build_tarball(src_repo) -> str:
+    """ Build a tarball from src and return the path to it """
     run = partial(subprocess.run, cwd=src_repo, check=True)
     run(['git', 'clean', '-xdff'])
     src_repo = Path(src_repo)
@@ -512,25 +513,38 @@ def _build_from_src(src_repo):
         run(['git', 'submodule', 'update', '--init', '--', 'es/upstream'])
     run(['./gradlew', '--no-daemon', 'clean', 'distTar'])
     distributions = Path(src_repo) / 'app' / 'build' / 'distributions'
-    tarball = next(distributions.glob('crate-*.tar.gz'))
+    return next(distributions.glob('crate-*.tar.gz'))
+
+
+def _extract_tarball(tarball):
     with tarfile.open(tarball) as t:
+        folder_name = t.getnames()[0]
         t.extractall(tarball.parent)
-    # remove two suffixes ('.tar, '.gz') to get the folder name
-    return str(tarball.with_suffix('').with_suffix(''))
+    return str(tarball.parent / folder_name)
 
 
 def _build_from_release_branch(branch, crate_root):
     crates = Path(crate_root)
-    src_repo = crates / 'sources'
+    src_repo = crates / 'sources_tmp'
     run_in_repo = partial(subprocess.run, cwd=src_repo, check=True)
     if not src_repo.exists() or not (src_repo / '.git').exists():
-        clone = ['git', 'clone', REPO_URL, 'sources']
+        clone = ['git', 'clone', REPO_URL, 'sources_tmp']
         subprocess.run(clone, cwd=crate_root, check=True)
     else:
         run_in_repo(['git', 'fetch'])
     run_in_repo(['git', 'checkout', branch])
     run_in_repo(['git', 'pull', 'origin', branch])
-    return _build_from_src(str(src_repo))
+    rev_parse_p = run_in_repo(
+        ['git', 'rev-parse', 'HEAD'], stdout=subprocess.PIPE, text=True)
+    revision = rev_parse_p.stdout.strip()
+    builds_dir = crates / 'builds'
+    os.makedirs(builds_dir, exist_ok=True)
+    cached_build = builds_dir / (revision + '.tar.gz')
+    if os.path.isfile(cached_build):
+        return _extract_tarball(cached_build)
+    tarball = _build_tarball(str(src_repo))
+    shutil.copy(tarball, cached_build)
+    return _extract_tarball(tarball)
 
 
 def _remove_old_crates(path):
@@ -574,7 +588,7 @@ def get_crate(version, crate_root=None):
         crate_root = _crates_cache()
         _remove_old_crates(crate_root)
     if _is_project_repo(version):
-        return _build_from_src(version)
+        return _extract_tarball(_build_tarball(src_repo))
     m = BRANCH_VERSION_RE.match(version)
     if m:
         return _build_from_release_branch(m.group(0), crate_root)
