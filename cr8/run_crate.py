@@ -536,8 +536,16 @@ def _remove_old_crates(path):
                            if e.is_dir() and e.stat().st_mtime < s7days_ago)
         for e in old_unused_dirs:
             last_use = datetime.fromtimestamp(e.stat().st_mtime)
-            print(f'Removing from cache: {e.name} (last use: {last_use:%Y-%m-%d %H:%M})')
+            msg = f'Removing from cache: {e.name} (last use: {last_use:%Y-%m-%d %H:%M})'
+            print(msg, file=sys.stderr)
             shutil.rmtree(e.path)
+
+
+def _crates_cache() -> str:
+    """ Return the path to the crates cache folder """
+    return os.environ.get(
+        'XDG_CACHE_HOME',
+        os.path.join(os.path.expanduser('~'), '.cache', 'cr8', 'crates'))
 
 
 def get_crate(version, crate_root=None):
@@ -557,14 +565,12 @@ def get_crate(version, crate_root=None):
             If this isn't specified ``$XDG_CACHE_HOME/.cache/cr8/crates``
             will be used.
     """
+    if not crate_root:
+        crate_root = _crates_cache()
+        _remove_old_crates(crate_root)
     if _is_project_repo(version):
         return _build_from_src(version)
     m = BRANCH_VERSION_RE.match(version)
-    if not crate_root:
-        crate_root = os.environ.get(
-            'XDG_CACHE_HOME',
-            os.path.join(os.path.expanduser('~'), '.cache', 'cr8', 'crates'))
-        _remove_old_crates(crate_root)
     if m:
         return _build_from_release_branch(m.group(0), crate_root)
     uri = _lookup_uri(version)
