@@ -1,3 +1,9 @@
+2019-02-14 0.14.2
+=================
+
+- ``run-crate <release_branch>`` will now make sure that the sources are
+  updated to avoid stale builds.
+
 2019-02-05 0.14.1
 =================
 
