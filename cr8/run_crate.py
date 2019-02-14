@@ -520,11 +520,16 @@ def _build_from_src(src_repo):
 
 
 def _build_from_release_branch(branch, crate_root):
-    src_repo = Path(crate_root) / 'sources'
+    crates = Path(crate_root)
+    src_repo = crates / 'sources'
+    run_in_repo = partial(subprocess.run, cwd=src_repo, check=True)
     if not src_repo.exists() or not (src_repo / '.git').exists():
         clone = ['git', 'clone', REPO_URL, 'sources']
         subprocess.run(clone, cwd=crate_root, check=True)
-    subprocess.run(['git', 'checkout', branch], cwd=str(src_repo), check=True)
+    else:
+        run_in_repo(['git', 'fetch'])
+    run_in_repo(['git', 'checkout', branch])
+    run_in_repo(['git', 'pull', 'origin', branch])
     return _build_from_src(str(src_repo))
 
 
