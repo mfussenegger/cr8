@@ -25,6 +25,7 @@ from itertools import cycle
 from typing import Dict, Any, List, NamedTuple
 from urllib.request import urlopen
 
+from cr8.java_magic import find_java_home
 from cr8.misc import parse_version, init_logging
 from cr8.engine import DotDict
 from cr8.exceptions import ArgumentError
@@ -195,7 +196,8 @@ class CrateNode(contextlib.ExitStack):
                  crate_dir: str,
                  env: Dict[str, Any] = None,
                  settings: Dict[str, Any] = None,
-                 keep_data: bool = False) -> None:
+                 keep_data: bool = False,
+                 java_magic: bool = False) -> None:
         """Create a CrateNode
 
         Args:
@@ -203,13 +205,19 @@ class CrateNode(contextlib.ExitStack):
             env: Environment variables with which the Crate process will be
                 started.
             settings: Additional Crate settings.
+            java_magic: If set to true, it will attempt to set JAVA_HOME to
+                some path that contains a Java version suited to run the given
+                CrateDB instance.
         """
         super().__init__()
         self.crate_dir = crate_dir
         version = _extract_version(crate_dir)
         self.env = env or {}
-        self.env.setdefault('JAVA_HOME',
-                            os.environ.get('JAVA_HOME', ''))
+        if java_magic:
+            java_home = find_java_home(version)
+        else:
+            java_home = os.environ.get('JAVA_HOME', '')
+        self.env.setdefault('JAVA_HOME', java_home)
         self.env.setdefault('LANG',
                             os.environ.get('LANG', os.environ.get('LC_ALL')))
         if not self.env['LANG']:
@@ -611,7 +619,14 @@ def _parse_options(options: List[str]) -> Dict[str, str]:
             f'Option must be in format <key>=<value>, got: {options}')
 
 
-def create_node(version, env=None, setting=None, crate_root=None, keep_data=False):
+def create_node(
+        version,
+        env=None,
+        setting=None,
+        crate_root=None,
+        keep_data=False,
+        java_magic=False,
+):
     init_logging(log)
     settings = {
         'cluster.name': 'cr8-crate-run' + str(random.randrange(1e9))
@@ -622,7 +637,12 @@ def create_node(version, env=None, setting=None, crate_root=None, keep_data=Fals
     if env:
         env = _parse_options(env)
     return CrateNode(
-        crate_dir=crate_dir, env=env, settings=settings, keep_data=keep_data)
+        crate_dir=crate_dir,
+        env=env,
+        settings=settings,
+        keep_data=keep_data,
+        java_magic=java_magic
+    )
 
 
 @argh.arg('version', help='Crate version to run')
@@ -631,8 +651,18 @@ def create_node(version, env=None, setting=None, crate_root=None, keep_data=Fals
 @argh.arg('-s', '--setting', action='append',
           help='Crate setting. Option can be specified multiple times.')
 @argh.arg('--keep-data', help='If this is set the data folder will be kept.')
+@argh.arg(
+    '--disable-java-magic',
+    help='Disable the logic to detect a suitable JAVA_HOME')
 @argh.wrap_errors([ArgumentError])
-def run_crate(version, env=None, setting=None, crate_root=None, keep_data=False):
+def run_crate(
+        version,
+        env=None,
+        setting=None,
+        crate_root=None,
+        keep_data=False,
+        disable_java_magic=False,
+):
     """Launch a crate instance.
 
     Supported version specifications:
@@ -656,7 +686,14 @@ def run_crate(version, env=None, setting=None, crate_root=None, keep_data=False)
     The postgres host and port are available as {node.addresses.psql.host} and
     {node.addresses.psql.port}
     """
-    with create_node(version, env, setting, crate_root, keep_data) as n:
+    with create_node(
+            version,
+            env,
+            setting,
+            crate_root,
+            keep_data,
+            java_magic=not disable_java_magic,
+    ) as n:
         try:
             n.start()
             n.process.wait()

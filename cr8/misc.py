@@ -31,15 +31,19 @@ def try_len(o: Any) -> int:
 
 
 def parse_version(version: str) -> tuple:
-    """Parse a string formatted X.Y.Z version number into a tuple
+    """Parse a string formatted X[.Y.Z] version number into a tuple
 
     >>> parse_version('10.2.3')
     (10, 2, 3)
+
+    >>> parse_version('12')
+    (12, 0, 0)
     """
     if not version:
         return None
-    major, minor, patch = version.split('.', maxsplit=3)
-    return (int(major), int(minor), int(patch))
+    parts = version.split('.')
+    missing = 3 - len(parts)
+    return tuple(int(i) for i in parts + ([0] * missing))
 
 
 def parse_table(fq_table: str) -> Tuple[str, str]:
