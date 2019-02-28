@@ -1,3 +1,15 @@
+2019-02-28 0.15.0
+=================
+
+- ``run-crate`` will now try to choose a different ``JAVA_HOME`` if the given
+  version of ``CrateDB`` can't be run with the default ``JAVA_HOME``. This
+  behavior can be disabled with ``--disable-java-magic``.
+  The behavior of the ``CrateNode`` API is unchanged and by default won't try
+  to change the ``JAVA_HOME``.
+
+- ``run-crate`` will now avoid re-building branches from source if there aren't
+  any new commits.
+
 2019-02-14 0.14.2
 =================
 
