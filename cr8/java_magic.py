@@ -42,7 +42,6 @@ def _detect_java_version(java_home: str) -> tuple:
         stderr=subprocess.STDOUT
     )
     line = p.stdout.split('\n')[0]
-    assert 'version' in line, ('First line must contain the version, got:' + line)
     return _parse_java_version(line)
 
 
