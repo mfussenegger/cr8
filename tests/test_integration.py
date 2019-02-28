@@ -2,6 +2,8 @@ import os
 import doctest
 import subprocess
 import functools
+from unittest import TestCase
+
 from cr8.run_crate import CrateNode, get_crate
 from crate.client import connect
 
@@ -51,6 +53,12 @@ class Parser(doctest.DocTestParser):
             if isinstance(s, doctest.Example):
                 s.source = transform(s.source)
         return r
+
+
+class SourceBuildTest(TestCase):
+
+    def test_build_from_branch(self):
+        self.assertIsNotNone(get_crate('3.3'))
 
 
 def load_tests(loader, tests, ignore):

@@ -543,7 +543,7 @@ def _build_from_release_branch(branch, crate_root):
     run_in_repo(['git', 'checkout', branch])
     run_in_repo(['git', 'pull', 'origin', branch])
     rev_parse_p = run_in_repo(
-        ['git', 'rev-parse', 'HEAD'], stdout=subprocess.PIPE, text=True)
+        ['git', 'rev-parse', 'HEAD'], stdout=subprocess.PIPE, encoding='utf-8')
     revision = rev_parse_p.stdout.strip()
     builds_dir = crates / 'builds'
     os.makedirs(builds_dir, exist_ok=True)
