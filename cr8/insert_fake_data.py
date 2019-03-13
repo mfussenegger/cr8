@@ -30,7 +30,7 @@ select
 from
     information_schema.columns
 where
-    is_generated = false
+    cast(is_generated as string) in ('f', 'NEVER')
     and {schema_column_name} = ?
     and table_name = ?
     and column_name not like '%]'
