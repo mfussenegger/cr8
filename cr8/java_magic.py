@@ -13,7 +13,7 @@ JAVA_CANDIDATES = tuple(
     + glob('/usr/lib/java-*')
     + glob('/Library/Java/JavaVirtualMachines/jdk*/Contents/Home')
 )
-
+MIN_VERSION_FOR_JVM11 = (2, 3, 6)
 VERSION_RE = re.compile(r'(\d+\.\d+\.\d+(_\d+)?)|"(\d+)"')
 
 
@@ -56,10 +56,10 @@ def _find_matching_java_home(version_matches: Callable[[], bool]) -> str:
 
 def find_java_home(cratedb_version: tuple) -> str:
     """ Return a path to a JAVA_HOME suites for the given CrateDB version """
-    if (2, 3) <= cratedb_version < (4, 0):
+    if MIN_VERSION_FOR_JVM11 <= cratedb_version < (4, 0):
         # Supports 8 to 11+, use whatever is set
         return os.environ.get('JAVA_HOME', '')
-    if cratedb_version < (2, 3):
+    if cratedb_version < MIN_VERSION_FOR_JVM11:
         return _find_matching_java_home(lambda ver: ver[0] == 8)
     else:
         return _find_matching_java_home(lambda ver: ver[0] >= 11)
