@@ -63,21 +63,45 @@ class TestDataFaker(TestCase):
         provider = self.f.provider_for_column('x', 'float')
         self.assertEqual(provider(), -31246013015.0)
 
+    def test_real_type_default(self):
+        provider = self.f.provider_for_column('x', 'real')
+        self.assertEqual(provider(), -31246013015.0)
+
     def test_double_type_default(self):
         provider = self.f.provider_for_column('x', 'double')
+        self.assertEqual(provider(), Decimal(-31246013015.0))
+
+    def test_double_precision_type_default(self):
+        provider = self.f.provider_for_column('x', 'double precision')
         self.assertEqual(provider(), Decimal(-31246013015.0))
 
     def test_short_type_default(self):
         provider = self.f.provider_for_column('x', 'short')
         self.assertEqual(provider(), -18176)
 
+    def test_smallint_type_default(self):
+        provider = self.f.provider_for_column('x', 'smallint')
+        self.assertEqual(provider(), -18176)
+
     def test_byte_type_default(self):
         provider = self.f.provider_for_column('x', 'byte')
+        self.assertEqual(provider(), -71)
+
+    def test_char_type_default(self):
+        provider = self.f.provider_for_column('x', 'char')
         self.assertEqual(provider(), -71)
 
     def test_ip_type_default(self):
         provider = self.f.provider_for_column('x', 'ip')
         self.assertEqual(provider(), '198.50.12.206')
+
+    def test_text_type_default(self):
+        provider = self.f.provider_for_column('x', 'text')
+        self.assertEqual(provider(), 'police')
+
+    def test_bigint_type_default(self):
+        provider = self.f.provider_for_column('x', 'bigint')
+        self.assertEqual(provider(), -7169676182496904803)
 
     def test_geopoint_type_default(self):
         provider = self.f.provider_for_column('location', 'geo_point')
