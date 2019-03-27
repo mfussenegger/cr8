@@ -67,6 +67,15 @@ def make_array_provider(inner_provider, dimensions):
     return setup_array_providers
 
 
+def _gen_short(f):
+    return partial(f.random_int, min=-32768, max=32767)
+
+
+def _gen_long(f):
+    return partial(
+        f.random_int, min=-9223372036854775808, max=9223372036854775807)
+
+
 class DataFaker:
     _mapping = {
         ('id', 'string'): operator.attrgetter('uuid4'),
@@ -76,17 +85,21 @@ class DataFaker:
 
     _type_default = {
         'byte': lambda f: partial(f.random_int, min=-128, max=127),
-        'short': lambda f: partial(f.random_int, min=-32768, max=32767),
-        'integer': lambda f: partial(
-            f.random_int, min=-2147483648, max=2147483647),
-        'long': lambda f: partial(
-            f.random_int, min=-9223372036854775808, max=9223372036854775807),
+        'char': lambda f: partial(f.random_int, min=-128, max=127),
+        'short': _gen_short,
+        'smallint': _gen_short,
+        'integer': lambda f: partial(f.random_int, min=-2147483648, max=2147483647),
+        'long': _gen_long,
+        'bigint': _gen_long,
         'float': operator.attrgetter('pyfloat'),
+        'real': operator.attrgetter('pyfloat'),
         'double': operator.attrgetter('pydecimal'),
+        'double precision': operator.attrgetter('pydecimal'),
         'ip': operator.attrgetter('ipv4'),
         'timestamp': lambda f: partial(
             f.date_time_between, start_date='-2y', end_date='now'),
         'string': operator.attrgetter('word'),
+        'text': operator.attrgetter('word'),
         'boolean': operator.attrgetter('boolean'),
         'geo_point': operator.attrgetter('geo_point'),
         'geo_shape': operator.attrgetter('geo_shape'),
