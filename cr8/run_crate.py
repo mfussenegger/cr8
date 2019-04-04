@@ -73,7 +73,10 @@ class OutputMonitor:
         try:
             for line in proc.stdout:
                 for consumer in self.consumers:
-                    consumer.send(line)
+                    if callable(consumer):
+                        consumer(line)
+                    else:
+                        consumer.send(line)
         except Exception:
             if proc.returncode is not None:
                 return
@@ -287,8 +290,8 @@ class CrateNode(contextlib.ExitStack):
         self.monitor.consumers.append(AddrConsumer(self._set_addr))
         self.monitor.start(proc)
 
-        line_buf = LineBuffer()
-        self.monitor.consumers.append(line_buf)
+        log_lines = []
+        self.monitor.consumers.append(log_lines.append)
         spinner = cycle(['/', '-', '\\', '|'])
 
         def show_spinner():
@@ -313,14 +316,14 @@ class CrateNode(contextlib.ExitStack):
                 timeout=30
             )
         except (SystemError, TimeoutError):
-            if not line_buf.lines:
+            if not log_lines:
                 _try_print_log(logfile)
             else:
-                for line in line_buf.lines:
+                for line in log_lines:
                     log.error(line)
             raise SystemExit("Exiting because CrateDB didn't start correctly")
         else:
-            self.monitor.consumers.remove(line_buf)
+            self.monitor.consumers.remove(log_lines.append)
         log.info('Cluster ready to process requests')
 
     def _set_addr(self, protocol, addr):
@@ -349,15 +352,6 @@ class CrateNode(contextlib.ExitStack):
 
     def __exit__(self, *ex):
         self.stop()
-
-
-class LineBuffer:
-
-    def __init__(self):
-        self.lines = []
-
-    def send(self, line):
-        self.lines.append(line.strip())
 
 
 class Address(NamedTuple):

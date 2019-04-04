@@ -1,7 +1,8 @@
 from unittest import main, TestCase
+from unittest.mock import Mock
 from doctest import DocTestSuite
 from cr8 import run_crate
-from cr8.run_crate import AddrConsumer
+from cr8.run_crate import AddrConsumer, OutputMonitor
 
 
 lines1 = [
@@ -45,6 +46,23 @@ def get_match(lines):
         protocol, addr = AddrConsumer._parse(line)
         if protocol:
             return protocol, addr
+
+
+class OutputMonitorTest(TestCase):
+
+    def test_callable_consumer_is_supported(self):
+        lines = []
+        proc = Mock()
+        proc.stdout = ['foo', 'bar']
+
+        om = OutputMonitor()
+        om.consumers.append(lines.append)
+        om._consume(proc)
+        self.assertEqual(lines, ['foo', 'bar'])
+
+        om.consumers.remove(lines.append)
+        om._consume(proc)
+        self.assertEqual(lines, ['foo', 'bar'])
 
 
 class AddrParseTest(TestCase):
