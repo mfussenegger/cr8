@@ -1,3 +1,15 @@
+2019-04-04 0.15.1
+=================
+
+- Fixed a compatibility issue with Python 3.6
+
+- Adapted some queries and type mappings to be compatible with CrateDB 4.0
+
+- Corrected the minimum CrateDB version that can be run with Java 11.
+
+- Added a ``version`` arg to ``CrateNode`` which can be used to overrule
+  the auto-detection.
+
 2019-02-28 0.15.0
 =================
 
