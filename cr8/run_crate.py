@@ -197,7 +197,8 @@ class CrateNode(contextlib.ExitStack):
                  env: Dict[str, Any] = None,
                  settings: Dict[str, Any] = None,
                  keep_data: bool = False,
-                 java_magic: bool = False) -> None:
+                 java_magic: bool = False,
+                 version: tuple = None) -> None:
         """Create a CrateNode
 
         Args:
@@ -208,10 +209,17 @@ class CrateNode(contextlib.ExitStack):
             java_magic: If set to true, it will attempt to set JAVA_HOME to
                 some path that contains a Java version suited to run the given
                 CrateDB instance.
+            version:
+                The CrateDB version as tuple in the format (major, minor, hotfix).
+                This is usually inferred from the given `crate_dir`, but can be
+                passed explicitly to overrule the detection mechanism.
+                This argument is used to provide the right defaults and use the
+                right commandline argument syntax to launch CrateDB.
+
         """
         super().__init__()
         self.crate_dir = crate_dir
-        version = _extract_version(crate_dir)
+        version = version or _extract_version(crate_dir)
         self.env = env or {}
         if java_magic:
             java_home = find_java_home(version)
