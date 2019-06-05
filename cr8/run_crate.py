@@ -588,6 +588,7 @@ def get_crate(version, crate_root=None):
             - A version including a `x` as wildcards. Like: '1.1.x' or '1.x.x'.
               This will use the latest version that matches.
             - Release branch, like `3.1`
+            - Any branch: 'branch:<branchName>'
             - An alias: 'latest-stable' or 'latest-testing'
             - A URI pointing to a crate tarball
         crate_root: Where to extract the tarball to.
@@ -602,6 +603,8 @@ def get_crate(version, crate_root=None):
     m = BRANCH_VERSION_RE.match(version)
     if m:
         return _build_from_release_branch(m.group(0), crate_root)
+    if version.startswith('branch:'):
+        return _build_from_release_branch(version[len('branch:'):], crate_root)
     uri = _lookup_uri(version)
     crate_dir = _download_and_extract(uri, crate_root)
     return crate_dir
@@ -672,6 +675,7 @@ def run_crate(
         - An alias (one of [latest-nightly, latest-stable, latest-testing])
         - A URI pointing to a CrateDB tarball (in .tar.gz format)
         - A URI pointing to a checked out CrateDB repo directory
+        - A branch like `branch:master` or `branch:my-new-feature`
 
     run-crate supports command chaining. To launch a CrateDB node and another
     sub-command use:
