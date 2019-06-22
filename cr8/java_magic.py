@@ -48,7 +48,10 @@ def _detect_java_version(java_home: str) -> tuple:
 def _find_matching_java_home(version_matches: Callable[[], bool]) -> str:
     java_home = os.environ.get('JAVA_HOME', '')
     for path in filter(os.path.exists, (java_home, ) + JAVA_CANDIDATES):
-        version = _detect_java_version(path)
+        try:
+            version = _detect_java_version(path)
+        except FileNotFoundError: # Path may exist, but bin/java may be missing
+            continue
         if version_matches(version):
             return path
     return java_home
