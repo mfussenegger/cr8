@@ -13,8 +13,7 @@ node = CrateNode(
     crate_dir=crate_dir,
     settings={
         'cluster.name': 'cr8-tests',
-        'http.port': '44200-44250',
-        'bootstrap.system_call_filter': False
+        'http.port': '44200-44250'
     })
 
 

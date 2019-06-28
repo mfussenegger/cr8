@@ -117,8 +117,8 @@ For example given the table as follows::
 
     create table x.demo (
         id int,
-        name string,
-        country string
+        name text,
+        country text
     );
 
 The following command can be used to insert 1000 records::
@@ -126,12 +126,12 @@ The following command can be used to insert 1000 records::
     >>> cr8 insert-fake-data --hosts localhost:4200 --table x.demo --num-records 200
     Found schema: 
     {
-        "country": "string",
+        "country": "text",
         "id": "integer",
-        "name": "string"
+        "name": "text"
     }
     Using insert statement: 
-    insert into "x"."demo" ("country", "id", "name") values (?, ?, ?)
+    insert into "x"."demo" ("id", "name", "country") values (?, ?, ?)
     Will make 1 requests with a bulk size of 200
     Generating fake data and executing inserts
     <BLANKLINE>
