@@ -60,6 +60,12 @@ class TestDataFaker(TestCase):
         diff = datetime.datetime(2017, 11, 18, 19, 0, 0) - dt
         self.assertLessEqual(diff, datetime.timedelta(seconds=1))
 
+    def test_timestamp_without_time_zone_type_default(self):
+        provider = self.f.provider_for_column('some_ts_column', 'timestamp without time zone')
+        dt = provider()
+        diff = datetime.datetime(2017, 11, 18, 19, 0, 0) - dt
+        self.assertLessEqual(diff, datetime.timedelta(seconds=1))
+
     def test_provider_from_mapping(self):
         mapping = {'x': ['random_int', [10, 20]]}
         provider = self.f.provider_from_mapping('x', mapping)

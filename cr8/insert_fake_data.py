@@ -100,6 +100,8 @@ class DataFaker:
             f.date_time_between, start_date='-2y', end_date='now'),
         'timestamp with time zone': lambda f: partial(
             f.date_time_between, start_date='-2y', end_date='now'),
+        'timestamp without time zone': lambda f: partial(
+            f.date_time_between, start_date='-2y', end_date='now'),
         'string': operator.attrgetter('word'),
         'text': operator.attrgetter('word'),
         'boolean': operator.attrgetter('boolean'),
