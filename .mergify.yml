@@ -7,7 +7,7 @@ pull_request_rules:
         strict: true
     conditions:
       - label=ready-to-merge
-      - 'status-success=continuous-integration/travis-ci/pr'
+      - 'status-success=cr8'
       - 'status-success=LGTM analysis: Python'
     name: default
   - name: Delete branch after merge
