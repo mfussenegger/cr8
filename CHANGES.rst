@@ -1,3 +1,16 @@
+2019-07-01 0.16.0
+=================
+
+- Added type mapping for the ``timestamp with time zone`` and ``timestamp
+  without time zone`` data types so that ``insert-fake-data`` can generate data
+  for those columns by default.
+
+- ``run-crate`` now supports arbitrary branch builds. E.g. ``run-crate
+  branch:master``
+
+- Removed the ``LineBuffer`` from ``run_crate`` and added support for callables
+  instead.
+
 2019-04-04 0.15.1
 =================
 
