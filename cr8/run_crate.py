@@ -22,7 +22,7 @@ from hashlib import sha1
 from pathlib import Path
 from functools import partial
 from itertools import cycle
-from typing import Dict, Any, List, NamedTuple
+from typing import Optional, Dict, Any, List, NamedTuple
 from urllib.request import urlopen
 
 from cr8.java_magic import find_java_home
@@ -159,7 +159,7 @@ def cluster_state_200(url):
         return False
 
 
-def _get_settings(settings=None):
+def _get_settings(settings=None) -> Dict[str, Any]:
     s = DEFAULT_SETTINGS.copy()
     if settings:
         s.update(settings)
@@ -235,9 +235,9 @@ class CrateNode(contextlib.ExitStack):
             raise SystemExit('Your locale are not configured correctly. '
                              'Please set LANG or alternatively LC_ALL.')
         self.monitor = OutputMonitor()
-        self.process = None  # type: subprocess.Popen
-        self.http_url = None  # type: str
-        self.http_host = None  # type: str
+        self.process = None  # type: Optional[subprocess.Popen]
+        self.http_url = None  # type: Optional[str]
+        self.http_host = None  # type: Optional[str]
         start_script = 'crate.bat' if sys.platform == 'win32' else 'crate'
 
         settings = _get_settings(settings)
@@ -514,7 +514,7 @@ def _is_project_repo(src_repo):
             os.path.exists(os.path.join(src_repo, 'gradlew')))
 
 
-def _build_tarball(src_repo) -> str:
+def _build_tarball(src_repo) -> Path:
     """ Build a tarball from src and return the path to it """
     run = partial(subprocess.run, cwd=src_repo, check=True)
     run(['git', 'clean', '-xdff'])
@@ -618,7 +618,7 @@ def _parse_options(options: List[str]) -> Dict[str, str]:
     {"CRATE_JAVA_OPTS": "\\"-Dxy=foo\\"", "cluster.name": "foo"}
     """
     try:
-        return dict(i.split('=', maxsplit=1) for i in options)
+        return dict(i.split('=', maxsplit=1) for i in options)  # type: ignore
     except ValueError:
         raise ArgumentError(
             f'Option must be in format <key>=<value>, got: {options}')
