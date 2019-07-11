@@ -178,7 +178,7 @@ def _try_print_log(logfile):
 def _ensure_running(proc):
     result = proc.poll()
     if result:
-        raise SystemError('Process exited: ' + str(result))
+        raise SystemExit('Process exited: ' + str(result))
     return True
 
 
@@ -232,8 +232,8 @@ class CrateNode(contextlib.ExitStack):
         self.env.setdefault('LANG',
                             os.environ.get('LANG', os.environ.get('LC_ALL')))
         if not self.env['LANG']:
-            raise SystemError('Your locale are not configured correctly. '
-                              'Please set LANG or alternatively LC_ALL.')
+            raise SystemExit('Your locale are not configured correctly. '
+                             'Please set LANG or alternatively LC_ALL.')
         self.monitor = OutputMonitor()
         self.process = None  # type: subprocess.Popen
         self.http_url = None  # type: str
@@ -315,13 +315,13 @@ class CrateNode(contextlib.ExitStack):
                 lambda: show_spinner() and cluster_state_200(self.http_url),
                 timeout=30
             )
-        except (SystemError, TimeoutError):
+        except (SystemExit, TimeoutError):
             if not log_lines:
                 _try_print_log(logfile)
             else:
-                for line in log_lines:
+                for line in (x.rstrip() for x in log_lines if x):
                     log.error(line)
-            raise SystemExit("Exiting because CrateDB didn't start correctly")
+            raise SystemExit("CrateDB didn't start in time or couldn't form a cluster.") from None
         else:
             self.monitor.consumers.remove(log_lines.append)
         log.info('Cluster ready to process requests')
