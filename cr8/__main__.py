@@ -17,6 +17,7 @@ from cr8.insert_blob import insert_blob
 from cr8.run_spec import run_spec
 from cr8.run_crate import run_crate, create_node
 from cr8.run_track import run_track
+from cr8.reindex import reindex
 
 
 log = logging.getLogger(__name__)
@@ -71,7 +72,8 @@ def main():
                     insert_blob,
                     run_spec,
                     run_crate,
-                    run_track])
+                    run_track,
+                    reindex])
     args_groups = list(break_iterable(sys.argv[1:], lambda x: x == '--'))
     if len(args_groups) == 1:
         p.dispatch()

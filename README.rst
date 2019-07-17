@@ -38,6 +38,7 @@ TOC
         - `Find regressions`_
         - `Profiling`_
     - `run-track`_
+    - `reindex`_
 - `Protocols`_
 - `Development ☢`_
 
@@ -312,6 +313,18 @@ will be executed::
     # Running setUp
     # Running benchmark
     ...
+
+
+reindex
+-------
+
+A command to re-index all tables on a cluster which have been created in the
+previous major versions. So if you're running a 3.x CrateDB cluster, all tables
+from 2.x would be re-created::
+
+   >>> cr8 reindex --help
+   usage: cr8 reindex [-h] --hosts HOSTS
+   ...
 
 
 Protocols

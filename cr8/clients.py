@@ -8,7 +8,6 @@ from urllib.parse import urlparse, parse_qs
 from datetime import datetime, date
 from typing import List, Union, Iterable
 from decimal import Decimal
-from urllib.parse import urlparse, parse_qs
 from cr8.aio import asyncio  # import via aio for uvloop setup
 
 try:
