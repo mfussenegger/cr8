@@ -273,16 +273,27 @@ class HttpClient:
     def __init__(self, hosts, conn_pool_limit=25):
         self.hosts = hosts
         self.urls = itertools.cycle([i + '/_sql' for i in hosts])
-        verify_ssl = _verify_ssl_from_first(self.hosts)
-        conn = aiohttp.TCPConnector(limit=conn_pool_limit, verify_ssl=verify_ssl)
-        self._session = aiohttp.ClientSession(connector=conn)
+        self._connector_params = {
+            'limit': conn_pool_limit,
+            'verify_ssl': _verify_ssl_from_first(self.hosts)
+        }
+        self.__session = None
+
+    @property
+    async def _session(self):
+        session = self.__session
+        if session is None:
+            conn = aiohttp.TCPConnector(**self._connector_params)
+            self.__session = session = aiohttp.ClientSession(connector=conn)
+        return session
 
     async def execute(self, stmt, args=None):
         payload = {'stmt': _plain_or_callable(stmt)}
         if args:
             payload['args'] = _plain_or_callable(args)
+        session = await self._session
         return await _exec(
-            self._session,
+            session,
             next(self.urls),
             json.dumps(payload, cls=CrateJsonEncoder)
         )
@@ -292,10 +303,12 @@ class HttpClient:
             stmt=_plain_or_callable(stmt),
             bulk_args=_plain_or_callable(bulk_args)
         ), cls=CrateJsonEncoder)
-        return await _exec(self._session, next(self.urls), data)
+        session = await self._session
+        return await _exec(session, next(self.urls), data)
 
     async def get_server_version(self):
-        async with self._session.get(self.hosts[0] + '/') as resp:
+        session = await self._session
+        async with session.get(self.hosts[0] + '/') as resp:
             r = await resp.json()
             version = r['version']
             return {
@@ -305,8 +318,8 @@ class HttpClient:
             }
 
     async def _close(self):
-        if self._session:
-            await self._session.close()
+        if self.__session:
+            await self.__session.close()
 
     def close(self):
         asyncio.get_event_loop().run_until_complete(self._close())
