@@ -324,7 +324,7 @@ class CrateNode(contextlib.ExitStack):
             raise SystemExit("CrateDB didn't start in time or couldn't form a cluster.") from None
         else:
             self.monitor.consumers.remove(log_lines.append)
-        log.info('Cluster ready to process requests')
+        log.info('Node ready to process requests')
 
     def _set_addr(self, protocol, addr):
         log.info('{0:10}: {1}'.format(protocol.capitalize(), addr))
@@ -631,10 +631,10 @@ def create_node(
         crate_root=None,
         keep_data=False,
         java_magic=False,
+        cluster_name='cr8-crate-run' + str(random.randrange(1e9))
 ):
-    init_logging(log)
     settings = {
-        'cluster.name': 'cr8-crate-run' + str(random.randrange(1e9))
+        'cluster.name': cluster_name
     }
     crate_dir = get_crate(version, crate_root)
     if setting:
@@ -659,6 +659,9 @@ def create_node(
 @argh.arg(
     '--disable-java-magic',
     help='Disable the logic to detect a suitable JAVA_HOME')
+@argh.arg(
+    '-n', '--number-of-nodes',
+    help='The number of nodes to start.')
 @argh.wrap_errors([ArgumentError])
 def run_crate(
         version,
@@ -667,6 +670,7 @@ def run_crate(
         crate_root=None,
         keep_data=False,
         disable_java_magic=False,
+        number_of_nodes=1,
 ):
     """Launch a crate instance.
 
@@ -692,20 +696,33 @@ def run_crate(
     The postgres host and port are available as {node.addresses.psql.host} and
     {node.addresses.psql.port}
     """
-    with create_node(
-            version,
-            env,
-            setting,
-            crate_root,
-            keep_data,
-            java_magic=not disable_java_magic,
-    ) as n:
+    init_logging(log)
+    cluster_name = 'cr8-crate-run' + str(random.randrange(1e9))
+    nodes = []
+    for i in range(number_of_nodes):
+        n = create_node(
+                version,
+                env,
+                setting,
+                crate_root,
+                keep_data,
+                java_magic=not disable_java_magic,
+                cluster_name=cluster_name
+        )
+        nodes.append(n)
         try:
             n.start()
-            n.process.wait()
         except KeyboardInterrupt:
             print('Stopping Crate...')
+            n.stop()
+    log.info('Cluster ready to process requests')
 
+    try:
+        nodes[0].process.wait()
+    except KeyboardInterrupt:
+        print('Stopping Crate...')
+        for n in nodes:
+            n.stop()
 
 if __name__ == "__main__":
     argh.dispatch_command(run_crate)
