@@ -45,7 +45,7 @@ class TestReindex(TestCase):
         self._to_stop.remove(crate_v3)
 
         crate_v4 = CrateNode(
-            crate_dir=get_crate('4.0.x'),
+            crate_dir=get_crate('4.0.3'),
             keep_data=True,
             settings=self.crate_settings
         )
@@ -56,7 +56,7 @@ class TestReindex(TestCase):
             cur = conn.cursor()
             cur.execute("SELECT version FROM information_schema.tables WHERE table_name = 't'")
             version, = cur.fetchone()
-            self.assertEqual(version, {'upgraded': None, 'created': '4.0.2'})
+            self.assertEqual(version, {'upgraded': None, 'created': '4.0.3'})
 
             cur.execute('SELECT count(*) FROM t')
             cnt, = cur.fetchone()
