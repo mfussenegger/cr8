@@ -1,3 +1,14 @@
+2019-08-20 0.17.0
+=================
+
+- Added a new ``reindex`` command which will go through all tables on a cluster
+  which need to be re-indexed to be compatible with CrateDB major_version+1. It
+  will one by one create a copy of a table and then remove the old table,
+  replacing it with the copy.
+
+- Added a new ``infile`` argument to the ``insert-json`` command. This should
+  make certain scripting scenarios easier.
+
 2019-07-01 0.16.0
 =================
 
