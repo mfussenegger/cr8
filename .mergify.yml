@@ -7,7 +7,7 @@ pull_request_rules:
         strict: true
     conditions:
       - label=ready-to-merge
-      - 'status-success=cr8'
+      - 'status-success=Test python-3.7 on ubuntu-latest'
       - 'status-success=LGTM analysis: Python'
     name: default
   - name: Delete branch after merge
