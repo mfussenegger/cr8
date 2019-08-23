@@ -55,7 +55,7 @@ jobs:
           twine check dist/*.tar.gz
 
       - name: Publish package
-        uses: mfussenegger/gh-action-pypi-publish@63c35b2cc56443d44589efa87a970cc1895ce79a
+        uses: mfussenegger/gh-action-pypi-publish@action-yml
         if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags')
         with:
           user: __token__
