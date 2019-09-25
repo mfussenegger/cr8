@@ -18,6 +18,7 @@ from cr8.run_spec import run_spec
 from cr8.run_crate import run_crate, create_node
 from cr8.run_track import run_track
 from cr8.reindex import reindex
+from cr8.move_shards import move_shards
 
 
 log = logging.getLogger(__name__)
@@ -73,7 +74,8 @@ def main():
                     run_spec,
                     run_crate,
                     run_track,
-                    reindex])
+                    reindex,
+                    move_shards])
     args_groups = list(break_iterable(sys.argv[1:], lambda x: x == '--'))
     if len(args_groups) == 1:
         p.dispatch()
