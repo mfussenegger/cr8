@@ -4,7 +4,7 @@ import itertools
 import calendar
 import types
 import time
-from urllib.parse import urlparse, parse_qs
+from urllib.parse import urlparse, parse_qs, urlunparse
 from datetime import datetime, date
 from typing import List, Union, Iterable
 from decimal import Decimal
@@ -308,7 +308,9 @@ class HttpClient:
 
     async def get_server_version(self):
         session = await self._session
-        async with session.get(self.hosts[0] + '/') as resp:
+        urlparts = urlparse(self.hosts[0])
+        url = urlunparse((urlparts.scheme, urlparts.netloc, '/', '', '', ''))
+        async with session.get(url) as resp:
             r = await resp.json()
             version = r['version']
             return {
