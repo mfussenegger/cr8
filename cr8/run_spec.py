@@ -120,6 +120,13 @@ class Executor:
             aio.run_many(self.client.execute_many, inserts, concurrency=concurrency)
             aio.run(self.client.execute, 'refresh table {target}'.format(target=data_file['target']))
 
+    def update_server_stats(self):
+        """Triggers ANALYZE on the server to update statistics."""
+        try:
+            aio.run(self.client.execute, 'ANALYZE')
+        except Exception:
+            pass  # swallow; CrateDB 4.1.0+ is required to run ANALYZE
+
     def run_load_data(self, data_spec, meta=None):
         inserts = self._to_inserts(data_spec)
         statement = next(iter(inserts))[0]
@@ -215,6 +222,7 @@ def do_run_spec(spec,
             if not action or 'setup' in action:
                 log.info('# Running setUp')
                 executor.exec_instructions(spec.setup)
+                executor.update_server_stats()
             log.info('# Running benchmark')
             if spec.load_data and (not action or 'load_data' in action):
                 for data_spec in spec.load_data:
