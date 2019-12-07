@@ -79,8 +79,10 @@ def _gen_long(f):
 class DataFaker:
     _mapping = {
         ('id', 'string'): operator.attrgetter('uuid4'),
+        ('id', 'text'): operator.attrgetter('uuid4'),
         ('id', 'integer'): auto_inc,
         ('id', 'long'): auto_inc,
+        ('id', 'bigint'): auto_inc,
     }
 
     _type_default = {
