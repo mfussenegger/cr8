@@ -23,7 +23,7 @@ def to_insert(table, d):
         tuple of statement and arguments
 
     >>> to_insert('doc.foobar', {'name': 'Marvin'})
-    ('insert into doc.foobar ("name") values (?)', ['Marvin'])
+    ('insert into doc.foobar ("name") values ($1)', ['Marvin'])
     """
 
     columns = []
@@ -34,7 +34,8 @@ def to_insert(table, d):
     stmt = 'insert into {table} ({columns}) values ({params})'.format(
         table=table,
         columns=', '.join(columns),
-        params=', '.join(['?'] * len(columns)))
+        params=', '.join(f'${i + 1}' for i in range(len(columns)))
+    )
     return (stmt, args)
 
 

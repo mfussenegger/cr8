@@ -132,7 +132,7 @@ The following command can be used to insert 1000 records::
         "name": "text"
     }
     Using insert statement: 
-    insert into "x"."demo" ("id", "name", "country") values (?, ?, ?)
+    insert into "x"."demo" ("id", "name", "country") values ($1, $2, $3)
     Will make 1 requests with a bulk size of 200
     Generating fake data and executing inserts
     <BLANKLINE>
@@ -158,7 +158,7 @@ insert-json
 Or simply print the insert statement generated from a JSON string::
 
     >>> echo '{"name": "Arthur"}' | cr8 insert-json --table mytable
-    ('insert into mytable ("name") values (?)', ['Arthur'])
+    ('insert into mytable ("name") values ($1)', ['Arthur'])
     ...
 
 insert-blob
