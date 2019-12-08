@@ -51,7 +51,14 @@ def timeit(hosts=None,
     num_lines = 0
     log = Logger(output_fmt)
     with Runner(hosts, concurrency, sample_mode) as runner:
-        version_info = aio.run(runner.client.get_server_version)
+        try:
+            version_info = aio.run(runner.client.get_server_version)
+        except Exception:
+            result = aio.run(runner.client.execute, 'select version()')
+            version_info = {
+                'hash': None,
+                'number': result['rows'][0][0]
+            }
         for line in as_statements(lines_from_stdin(stmt)):
             runner.warmup(line, warmup)
             timed_stats = runner.run(line, iterations=repeat, duration=duration)
