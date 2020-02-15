@@ -222,10 +222,10 @@ class CrateNode(contextlib.ExitStack):
         """
         super().__init__()
         self.crate_dir = crate_dir
-        version = version or _extract_version(crate_dir)
+        self.version = version or _extract_version(crate_dir)
         self.env = env or {}
         if java_magic:
-            java_home = find_java_home(version)
+            java_home = find_java_home(self.version)
         else:
             java_home = os.environ.get('JAVA_HOME', '')
         self.env.setdefault('JAVA_HOME', java_home)
@@ -241,7 +241,7 @@ class CrateNode(contextlib.ExitStack):
         start_script = 'crate.bat' if sys.platform == 'win32' else 'crate'
 
         settings = _get_settings(settings)
-        if version < (1, 1, 0):
+        if self.version < (1, 1, 0):
             settings.setdefault('discovery.zen.ping.multicast.enabled', False)
         self.data_path = settings.get('path.data') or tempfile.mkdtemp()
         self.logs_path = settings.get('path.logs') or os.path.join(crate_dir, 'logs')
@@ -249,7 +249,7 @@ class CrateNode(contextlib.ExitStack):
         self.keep_data = keep_data
         settings['path.data'] = self.data_path
         settings['cluster.name'] = self.cluster_name
-        if version < (1, 0, 0):
+        if self.version < (1, 0, 0):
             _format_option = _format_cmd_option_legacy
         else:
             _format_option = _format_cmd_option
