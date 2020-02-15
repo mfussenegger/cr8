@@ -37,6 +37,7 @@ TOC
         - `Script reproduction`_
         - `Find regressions`_
         - `Profiling`_
+        - `Creating a CrateDB cluster`_
     - `run-track`_
     - `reindex`_
 - `Protocols`_
@@ -295,6 +296,14 @@ profiling::
         -- @jcmd {node.process.pid} JFR.start duration=60s filename=myrecording.jfr \
         -- run-spec path/to/specs/example.toml {node.http_url} --action queries \
         -- @jcmd {node.process.pid} JFR.stop
+
+
+Creating a CrateDB cluster
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+``cr8`` doesn't contain a dedicated command to spawn a CrateDB cluster. But you
+can run ``cr8 run-crate <version> -s cluster.name=<name>`` to launch multiple
+nodes. If the cluster name matches, it will form a cluster.
 
 
 run-track
