@@ -5,7 +5,7 @@ import ast
 from collections import OrderedDict
 
 
-def to_int(s):
+def to_int(s: str) -> int:
     """ converts a string to an integer
 
     >>> to_int('1_000_000')

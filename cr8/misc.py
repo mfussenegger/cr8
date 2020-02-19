@@ -2,7 +2,7 @@
 
 import logging
 import gzip
-from typing import Tuple, Iterator, Any
+from typing import Tuple, Iterator, Any, Optional
 from collections import defaultdict
 
 
@@ -13,7 +13,7 @@ def init_logging(log):
     log.addHandler(ch)
 
 
-def try_len(o: Any) -> int:
+def try_len(o: Any) -> Optional[int]:
     """ Return len of `o` or None if `o` doesn't support len
 
     >>> try_len([1, 2])
@@ -39,11 +39,9 @@ def parse_version(version: str) -> tuple:
     >>> parse_version('12')
     (12, 0, 0)
     """
-    if not version:
-        return None
     parts = version.split('.')
     missing = 3 - len(parts)
-    return tuple(int(i) for i in parts + ([0] * missing))
+    return tuple(map(int, parts + (['0'] * missing)))
 
 
 def parse_table(fq_table: str) -> Tuple[str, str]:

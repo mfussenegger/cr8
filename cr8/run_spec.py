@@ -4,18 +4,18 @@ import itertools
 from functools import partial
 
 from cr8 import aio, clients
-from .insert_json import to_insert
-from .bench_spec import load_spec
-from .engine import Runner, Result, run_and_measure, eval_fail_if
-from .misc import (
+from cr8.insert_json import to_insert
+from cr8.bench_spec import load_spec
+from cr8.engine import Runner, Result, run_and_measure, eval_fail_if
+from cr8.misc import (
     as_bulk_queries,
     as_statements,
     get_lines,
     parse_version,
     try_len
 )
-from .cli import dicts_from_lines
-from .log import Logger
+from cr8.cli import dicts_from_lines
+from cr8.log import Logger
 
 
 BENCHMARK_TABLE = '''
@@ -163,7 +163,8 @@ class Executor:
             concurrency = query.get('concurrency', 1)
             args = query.get('args')
             bulk_args = query.get('bulk_args')
-            min_version = parse_version(query.get('min_version'))
+            _min_version = query.get('min_version')
+            min_version = _min_version and parse_version(_min_version)
             if min_version and min_version > self.server_version:
                 self.log.info(self._skip_message(min_version, stmt))
                 continue
