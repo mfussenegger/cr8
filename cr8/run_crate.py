@@ -521,7 +521,7 @@ def _build_tarball(src_repo) -> Path:
     src_repo = Path(src_repo)
     if os.path.exists(src_repo / 'es' / 'upstream'):
         run(['git', 'submodule', 'update', '--init', '--', 'es/upstream'])
-    run(['./gradlew', '--no-daemon', 'clean', 'distTar'])
+    run(['./gradlew', '--parallel', '--no-daemon', 'clean', 'distTar'])
     distributions = Path(src_repo) / 'app' / 'build' / 'distributions'
     return next(distributions.glob('crate-*.tar.gz'))
 
