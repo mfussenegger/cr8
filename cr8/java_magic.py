@@ -45,7 +45,7 @@ def _detect_java_version(java_home: str) -> tuple:
     return _parse_java_version(line)
 
 
-def _find_matching_java_home(version_matches: Callable[[], bool]) -> str:
+def _find_matching_java_home(version_matches: Callable[[tuple], bool]) -> str:
     java_home = os.environ.get('JAVA_HOME', '')
     for path in filter(os.path.exists, (java_home, ) + JAVA_CANDIDATES):
         version = _detect_java_version(path)

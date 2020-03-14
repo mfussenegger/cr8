@@ -13,11 +13,11 @@ from functools import partial
 from collections import OrderedDict
 from concurrent.futures import ThreadPoolExecutor
 
-from .insert_json import to_insert
-from .misc import parse_table, parse_version
-from .aio import asyncio, consume
-from .cli import to_int
-from .fake_providers import GeoSpatialProvider, auto_inc
+from cr8.insert_json import to_insert
+from cr8.misc import parse_table, parse_version
+from cr8.aio import asyncio, consume
+from cr8.cli import to_int
+from cr8.fake_providers import GeoSpatialProvider, auto_inc
 from cr8 import clients, aio
 
 loop = asyncio.get_event_loop()
