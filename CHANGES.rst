@@ -1,3 +1,15 @@
+2020-03-27 0.18.0
+=================
+
+- ``timeit`` can now be used with PostgreSQL and Cockroach if using
+  ``asyncpg``.
+
+- ``insert-fake-data`` now uses ``uuid4`` automatically for columns of type
+  ``text``. This was already the case pre CrateDB 4.0 for columns of type
+  ``string``.
+
+- ``run-spec`` now implicitly triggers an ``ANALYZE`` after the setup.
+
 2019-08-20 0.17.0
 =================
 
