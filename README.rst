@@ -2,9 +2,9 @@
 cr8
 ===
 
-.. image:: https://travis-ci.org/mfussenegger/cr8.svg?branch=master
-    :target: https://travis-ci.org/mfussenegger/cr8
-    :alt: travis-ci
+.. image:: https://github.com/mfussenegger/cr8/workflows/test%20&%20publish/badge.svg
+    :target: https://github.com/mfussenegger/cr8/actions
+    :alt: github actions
 
 .. image:: https://img.shields.io/pypi/wheel/cr8.svg
     :target: https://pypi.python.org/pypi/cr8/
