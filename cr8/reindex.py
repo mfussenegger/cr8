@@ -97,7 +97,7 @@ async def _async_reindex(client):
         raise ValueError("reindex only works on a CrateDB cluster running 3.3.0 or later")
     tables = await _fetch_tables_to_upgrade(client, version)
     for schema, table in tables:
-        create_table = await _show_create_table(client, f'{schema}.{table}')
+        create_table = await _show_create_table(client, f'"{schema}"."{table}"')
         column_names = await _fetch_column_names(client, schema, table)
         await _reindex_table(client, schema, table, create_table, column_names)
 
