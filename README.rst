@@ -90,6 +90,14 @@ description.
 
 The included sub-commands are described in more detail below:
 
+**Tip**:
+
+Any `<subcommand>` with ``--hosts`` argument supports password authentication
+like this::
+
+    cr8 <subcommand> --hosts http://username:password@localhost:4200 <remaining args>
+
+
 Sub-commands
 ============
 
@@ -126,18 +134,17 @@ For example given the table as follows::
 The following command can be used to insert 1000 records::
 
     >>> cr8 insert-fake-data --hosts localhost:4200 --table x.demo --num-records 200
-    Found schema: 
+    Found schema:
     {
         "country": "text",
         "id": "integer",
         "name": "text"
     }
-    Using insert statement: 
+    Using insert statement:
     insert into "x"."demo" ("id", "name", "country") values ($1, $2, $3)
     Will make 1 requests with a bulk size of 200
     Generating fake data and executing inserts
     <BLANKLINE>
-
 
 It will automatically read the schema from the table and map the columns to
 faker `providers
