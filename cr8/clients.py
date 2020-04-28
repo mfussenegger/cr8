@@ -211,6 +211,7 @@ class AsyncpgClient:
         self.dsn = _to_dsn(hosts)
         self.pool_size = pool_size
         self._pool = None
+        self.is_cratedb = True
 
     async def _get_pool(self):
         if not self._pool:
@@ -247,11 +248,19 @@ class AsyncpgClient:
     async def get_server_version(self):
         pool = await self._get_pool()
         async with pool.acquire() as conn:
-            for (version,) in await conn.fetch('select version from sys.nodes'):
-                version = json.loads(version)
+            try:
+                for (version,) in await conn.fetch('select version from sys.nodes'):
+                    version = json.loads(version)
+                    return {
+                        'hash': version['build_hash'],
+                        'number': version['number']
+                    }
+            except asyncpg.exceptions.UndefinedTableError:
+                self.is_cratedb = False
+                version = await conn.fetchval("select current_setting('server_version_num')")
                 return {
-                    'hash': version['build_hash'],
-                    'number': version['number']
+                    'hash': None,
+                    'number': version
                 }
 
     async def _close_pool(self):
@@ -278,6 +287,7 @@ class HttpClient:
             'verify_ssl': _verify_ssl_from_first(self.hosts)
         }
         self.__session = None
+        self.is_cratedb = True
 
     @property
     async def _session(self):
