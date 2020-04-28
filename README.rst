@@ -153,6 +153,10 @@ give number of records.
 
 (Currently only top-level columns are supported)
 
+An alternative way to generate random records is `mkjson
+<https://github.com/mfussenegger/mkjson>`_ which can be used together with
+``insert-json``.
+
 insert-json
 -----------
 
