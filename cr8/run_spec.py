@@ -118,7 +118,8 @@ class Executor:
                                       data_file.get('bulk_size', 5000))
             concurrency = data_file.get('concurrency', 25)
             aio.run_many(self.client.execute_many, inserts, concurrency=concurrency)
-            aio.run(self.client.execute, 'refresh table {target}'.format(target=data_file['target']))
+            if self.client.is_cratedb:
+                aio.run(self.client.execute, f"refresh table {data_file['target']}")
 
     def update_server_stats(self):
         """Triggers ANALYZE on the server to update statistics."""

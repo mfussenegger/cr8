@@ -15,13 +15,13 @@ duration = 1
 concurrency = 2
 
 [[queries]]
-statement = '''select count(*) from countries where "isoNumeric" = ?'''
+statement = '''select count(*) from countries where "isoNumeric" = $1'''
 args = ["020"]
 iterations = 10
 concurrency = 1
 
 [[queries]]
-statement = '''delete from countries where "countryCode" = ?'''
+statement = '''delete from countries where "countryCode" = $1'''
 bulk_args = [["AE"], ["AF"]]
 # iterations = 1 & concurrency = 1 is the default for queries
 
