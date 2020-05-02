@@ -1,3 +1,14 @@
+2020-05-02 0.19.0
+=================
+
+- Spec files now support a ``name`` property in the ``queries`` section to make
+  it easier to analyse the results.
+
+- ``run-spec`` can now also be used with PostgreSQL if using ``asyncpg``.
+
+- ``reindex`` now skips blob tables and quotes schema and table names, so it
+  should work in more cases.
+
 2020-03-27 0.18.0
 =================
 
