@@ -10,6 +10,7 @@ statement_files = ["sql/create_countries.sql"]
     source = "data/countries2.json.gz" # paths are relative to the spec file
 
 [[queries]]
+name = "count countries" # Can be used to give the queries a name for easier analytics of the results
 statement = "select count(*) from countries"
 duration = 1
 concurrency = 2

@@ -27,13 +27,15 @@ class DotDict(dict):
 
 
 class Result:
+
     def __init__(self,
                  version_info,
                  statement,
                  timed_stats,
                  concurrency,
                  meta=None,
-                 bulk_size=None):
+                 bulk_size=None,
+                 name=None):
         self.version_info = version_info
         self.statement = str(statement)
         self.meta = meta and DotDict(meta) or None
@@ -42,6 +44,7 @@ class Result:
         self.runtime_stats = DotDict(timed_stats.stats.get())
         self.concurrency = concurrency
         self.bulk_size = bulk_size
+        self.name = name
 
     def as_dict(self):
         return self.__dict__

@@ -2,6 +2,7 @@ import argh
 import os
 import itertools
 from functools import partial
+from typing import Iterable
 
 from cr8 import aio, clients
 from cr8.insert_json import to_insert
@@ -21,13 +22,14 @@ from cr8.log import Logger
 BENCHMARK_TABLE = '''
 create table if not exists benchmarks (
     version_info object (strict) as (
-        number string,
-        hash string,
+        number text,
+        hash text,
         date timestamp
     ),
-    statement string,
+    name text,
+    statement text,
     meta object as (
-        name string
+        name text
     ),
     started timestamp,
     ended timestamp,
@@ -156,11 +158,12 @@ class Executor:
             server_version='.'.join((str(x) for x in self.server_version)))
         return msg
 
-    def run_queries(self, queries, meta=None):
+    def run_queries(self, queries: Iterable[dict], meta=None):
         for query in queries:
             stmt = query['statement']
             iterations = query.get('iterations', 1)
-            duration = query.get('duration', None)
+            duration = query.get('duration')
+            name = query.get('name')
             concurrency = query.get('concurrency', 1)
             args = query.get('args')
             bulk_args = query.get('bulk_args')
@@ -170,8 +173,10 @@ class Executor:
                 self.log.info(self._skip_message(min_version, stmt))
                 continue
             mode_desc = 'Duration' if duration else 'Iterations'
+            name_line = name and f'   Name: {name}\n' or ''
             self.log.info(
                 (f'\n## Running Query:\n'
+                 f'{name_line}'
                  f'   Statement:\n'
                  f'     {stmt}\n'
                  f'   Concurrency: {concurrency}\n'
@@ -190,7 +195,8 @@ class Executor:
                 meta=meta,
                 timed_stats=timed_stats,
                 concurrency=concurrency,
-                bulk_size=try_len(bulk_args)
+                bulk_size=try_len(bulk_args),
+                name=name
             )
             self.process_result(result)
             self.fail_if(result)
