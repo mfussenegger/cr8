@@ -70,6 +70,9 @@ def _to_http_hosts(hosts: Union[Iterable[str], str]) -> List[str]:
     >>> _to_http_hosts('https://n1:4200')
     ['https://n1:4200']
 
+    >>> _to_http_hosts('https://n1:4200/?verify_ssl=false')
+    ['https://n1:4200/?verify_ssl=false']
+
     >>> _to_http_hosts(['http://n1:4200', 'n2:4200'])
     ['http://n1:4200', 'http://n2:4200']
     """
@@ -278,10 +281,30 @@ class AsyncpgClient:
         self.close()
 
 
+def _append_sql(host):
+    """ Append `/_sql` to the host, dropping any query parameters.
+
+    >>> _append_sql('http://n1:4200')
+    'http://n1:4200/_sql'
+
+    >>> _append_sql('https://n1:4200/?verify_ssl=false')
+    'https://n1:4200/_sql'
+
+    >>> _append_sql('https://crate@n1:4200/?verify_ssl=false')
+    'https://crate@n1:4200/_sql'
+
+    """
+    p = list(urlparse(host))
+    p[2] = '_sql'
+    p[3] = None
+    p[4] = None
+    return urlunparse(tuple(p))
+
+
 class HttpClient:
     def __init__(self, hosts, conn_pool_limit=25):
         self.hosts = hosts
-        self.urls = itertools.cycle([i + '/_sql' for i in hosts])
+        self.urls = itertools.cycle(list(map(_append_sql, hosts)))
         self._connector_params = {
             'limit': conn_pool_limit,
             'verify_ssl': _verify_ssl_from_first(self.hosts)
