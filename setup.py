@@ -16,6 +16,7 @@ setup(
     url='https://github.com/mfussenegger/cr8',
     description='A collection of command line tools for crate devs',
     long_description=readme,
+    long_description_content_type='text/x-rst',
     entry_points={
         'console_scripts': [
             'cr8 = cr8.__main__:main',
