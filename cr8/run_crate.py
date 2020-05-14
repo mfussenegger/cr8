@@ -362,7 +362,7 @@ class Address(NamedTuple):
 class AddrConsumer:
 
     ADDRESS_RE = re.compile(
-        r'.*\[(?P<protocol>http|i.c.p.h.CrateNettyHttpServerTransport|o.e.h.HttpServer|psql|transport|o.e.t.TransportService)\s*\] \[.*\] .*'
+        r'.*\[(?P<protocol>http|i.c.p.h.CrateNettyHttpServerTransport|o.e.h.n.Netty4HttpServerTransport|o.e.h.HttpServer|psql|transport|o.e.t.TransportService)\s*\] \[.*\] .*'
         r'publish_address {'
         r'(?:(inet\[[A-Za-z-\.]*/)|([A-Za-z\.]*/))?'
         r'?(?P<addr>\[?[\d\.:]+\]?:?\d+)'
@@ -371,6 +371,7 @@ class AddrConsumer:
     )
     PROTOCOL_MAP = {
         'i.c.p.h.CrateNettyHttpServerTransport': 'http',
+        'o.e.h.n.Netty4HttpServerTransport': 'http',
         'o.e.h.HttpServer': 'http',
         'o.e.t.TransportService': 'transport'
     }
@@ -386,6 +387,9 @@ class AddrConsumer:
         (None, None)
 
         >>> AddrConsumer._parse('[INFO ][i.c.p.h.CrateNettyHttpServerTransport] [Widderstein] publish_address {127.0.0.1:4200}, bound_addresses {[fe80::1]:4200}, {[::1]:4200}, {127.0.0.1:4200}')
+        ('http', '127.0.0.1:4200')
+
+        >>> AddrConsumer._parse('[INFO ][o.e.h.n.Netty4HttpServerTransport] [Piz Forun] publish_address {127.0.0.1:4200}, bound_addresses {[::1]:4200}, {127.0.0.1:4200}')
         ('http', '127.0.0.1:4200')
 
         >>> AddrConsumer._parse('[INFO ][o.e.t.TransportService   ] [Widderstein] publish_address {127.0.0.1:4300}, bound_addresses {[fe80::1]:4300}, {[::1]:4300}, {127.0.0.1:4300}')
