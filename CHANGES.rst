@@ -1,3 +1,11 @@
+2020-05-14 0.19.1
+=================
+
+- Extended ``run_crate`` to be forward compatible with an upcoming change in
+  the log format in CrateDB.
+
+- Fixed the handling of the ``?verify_ssl=false`` parameter in ``--hosts``
+
 2020-05-02 0.19.0
 =================
 
