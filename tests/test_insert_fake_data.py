@@ -73,19 +73,19 @@ class TestDataFaker(TestCase):
 
     def test_float_type_default(self):
         provider = self.f.provider_for_column('x', 'float')
-        self.assertEqual(provider(), -31246013015.0)
+        self.assertEqual(provider(), 31246013015.0)
 
     def test_real_type_default(self):
         provider = self.f.provider_for_column('x', 'real')
-        self.assertEqual(provider(), -31246013015.0)
+        self.assertEqual(provider(), 31246013015.0)
 
     def test_double_type_default(self):
         provider = self.f.provider_for_column('x', 'double')
-        self.assertEqual(provider(), Decimal(-31246013015.0))
+        self.assertEqual(provider(), Decimal(31246013015.0))
 
     def test_double_precision_type_default(self):
         provider = self.f.provider_for_column('x', 'double precision')
-        self.assertEqual(provider(), Decimal(-31246013015.0))
+        self.assertEqual(provider(), Decimal(31246013015.0))
 
     def test_short_type_default(self):
         provider = self.f.provider_for_column('x', 'short')
@@ -105,7 +105,7 @@ class TestDataFaker(TestCase):
 
     def test_ip_type_default(self):
         provider = self.f.provider_for_column('x', 'ip')
-        self.assertEqual(provider(), '198.50.12.206')
+        self.assertEqual(provider(), '129.153.198.180')
 
     def test_text_type_default(self):
         provider = self.f.provider_for_column('x', 'text')
