@@ -1,3 +1,10 @@
+2020-06-10 0.19.2
+=================
+
+- Extended the ``faker`` version constraint to ``>= 4, < 5``, this should make
+  it easier to use ``cr8`` as a dependency in projects where another dependency
+  uses ``faker`` as well.
+
 2020-05-14 0.19.1
 =================
 
