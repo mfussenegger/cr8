@@ -76,7 +76,12 @@ Install them using `pip <https://pip.pypa.io/en/stable/>`_::
 
     python3.6 -m pip install --user cr8
 
-Or download a single ``zipapp`` file from the `releases page
+This will install ``cr8`` into ``~/.local/bin``. Either use
+``~/.local/bin/cr8`` to launch it or add ``~/.local/bin`` to your ``$PATH``
+environment variable.
+
+
+An alternative is to download a single ``zipapp`` file from the `releases page
 <https://github.com/mfussenegger/cr8/releases>`_.
 
 
