@@ -17,6 +17,7 @@ import threading
 import fnmatch
 import socket
 import ssl
+import platform
 from datetime import datetime
 from hashlib import sha1
 from pathlib import Path
@@ -34,6 +35,7 @@ log = logging.getLogger(__name__)
 
 NO_SSL_VERIFY_CTX = ssl._create_unverified_context()
 RELEASE_URL = 'https://cdn.crate.io/downloads/releases/crate-{version}.tar.gz'
+RELEASE_PLATFORM_URL = 'https://cdn.crate.io/downloads/releases/cratedb/{arch}_{os}/crate-{version}.{extension}'
 VERSION_RE = re.compile(r'^(\d+\.\d+\.\d+)$')
 DYNAMIC_VERSION_RE = re.compile(r'^((\d+|x)\.(\d+|x)\.(\d+|x))$')
 BRANCH_VERSION_RE = re.compile(r'^((\d+)\.(\d+))$')
@@ -45,6 +47,45 @@ DEFAULT_SETTINGS = {
     'network.host': '127.0.0.1',
     'udc.enabled': False
 }
+
+
+class ReleaseUrlSegments(NamedTuple):
+    arch: str
+    os: str
+    extension: str
+
+    @classmethod
+    def create(cls):
+        extension = 'tar.gz'
+        if sys.platform.startswith('linux'):
+            os = 'linux'
+        elif sys.platform.startswith('win32'):
+            os = 'windows'
+            extension = 'zip'
+        elif sys.platform.startswith('darwin'):
+            os = 'mac'
+        else:
+            raise ValueError(f'Unsupported platform: {sys.platform}')
+
+        machine = platform.machine()
+        if machine.startswith('arm'):
+            arch = 'aarch64'
+        else:
+            arch = 'x64'
+
+        return ReleaseUrlSegments(arch=arch, os=os, extension=extension)
+
+    @property
+    def platform_key(self):
+        return f'{self.arch}_{self.os}'
+
+    def get_uri(self, version):
+        return RELEASE_PLATFORM_URL.format(
+            version=version,
+            os=self.os,
+            extension=self.extension,
+            arch=self.arch
+        )
 
 
 def _format_cmd_option_legacy(k, v):
@@ -458,7 +499,12 @@ def _from_versions_json(key):
                     versions = json.loads(r.read())
             else:
                 versions = json.loads(r.read().decode('utf-8'))
-        return versions[key]['downloads']['tar.gz']['url']
+        segments = ReleaseUrlSegments.create()
+        downloads = versions[key]['downloads']
+        if segments.platform_key in downloads:
+            return downloads[segments.platform_key]['url']
+        else:
+            return downloads['tar.gz']['url']
     return retrieve
 
 
@@ -496,19 +542,30 @@ _version_lookups = {
 }
 
 
+def _get_uri_from_released_version(version: str) -> str:
+    version_tup = parse_version(version)
+    if version_tup < (4, 2, 0):
+        return RELEASE_URL.format(version=version)
+    try:
+        return ReleaseUrlSegments.create().get_uri(version)
+    except ValueError:
+        # Unsupported platform, just return the linux tarball
+        return RELEASE_URL.format(version=version)
+
+
 def _lookup_uri(version):
     if version in _version_lookups:
         version = _version_lookups[version]()
     m = VERSION_RE.match(version)
     if m:
-        return RELEASE_URL.format(version=m.group(0))
+        return _get_uri_from_released_version(m.group(0))
     m = DYNAMIC_VERSION_RE.match(version)
     if m:
         versions = sorted(map(parse_version, list(_retrieve_crate_versions())))
         versions = ['.'.join(map(str, v)) for v in versions[::-1]]
         release = _find_matching_version(versions, m.group(0))
         if release:
-            return RELEASE_URL.format(version=release)
+            return _get_uri_from_released_version(release)
     return version
 
 
