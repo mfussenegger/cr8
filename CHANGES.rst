@@ -1,3 +1,9 @@
+2020-07-15 0.19.3
+=================
+
+- ``run-crate`` now uses a system specific CrateDB tarball if available. This
+  is required for the platform dependent builds starting with CrateDB 4.2.
+
 2020-06-10 0.19.2
 =================
 
