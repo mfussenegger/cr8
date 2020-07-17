@@ -1,8 +1,10 @@
 
 import sys
-import json
 import ast
-from collections import OrderedDict
+try:
+    from simdjson import loads
+except ImportError:
+    from json import loads
 
 
 def to_int(s: str) -> int:
@@ -59,10 +61,10 @@ def dicts_from_lines(lines):
         if not line:
             continue  # skip empty lines
         try:
-            yield json.loads(line, object_pairs_hook=OrderedDict)
-        except json.decoder.JSONDecodeError:
+            yield loads(line)
+        except ValueError:
             content = line + ''.join(lines)
-            dicts = json.loads(content, object_pairs_hook=OrderedDict)
+            dicts = loads(content)
             if isinstance(dicts, list):
                 yield from dicts
             else:

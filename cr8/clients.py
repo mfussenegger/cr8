@@ -15,6 +15,12 @@ try:
 except ImportError:
     asyncpg = None
 
+try:
+    import simdjson
+    dumps = simdjson.dumps
+except ImportError:
+    dumps = json.dumps
+
 
 HTTP_DEFAULT_HDRS = {'Content-Type': 'application/json'}
 
@@ -328,11 +334,11 @@ class HttpClient:
         return await _exec(
             session,
             next(self.urls),
-            json.dumps(payload, cls=CrateJsonEncoder)
+            dumps(payload, cls=CrateJsonEncoder)
         )
 
     async def execute_many(self, stmt, bulk_args):
-        data = json.dumps(dict(
+        data = dumps(dict(
             stmt=_plain_or_callable(stmt),
             bulk_args=_plain_or_callable(bulk_args)
         ), cls=CrateJsonEncoder)

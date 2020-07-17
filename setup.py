@@ -32,7 +32,7 @@ setup(
         'toml'
     ],
     extras_require={
-        'uvloop': ['uvloop'],
+        'extra': ['uvloop', 'pysimdjson'],
         'asyncpg': ['asyncpg']
     },
     python_requires='>=3.6',
