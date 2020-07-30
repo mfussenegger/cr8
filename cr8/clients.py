@@ -232,7 +232,7 @@ class AsyncpgClient:
         return self._pool
 
     async def execute(self, stmt, args=None):
-        start = time.time()
+        start = time.perf_counter()
         pool = await self._get_pool()
         async with pool.acquire() as conn:
             if args:
@@ -240,17 +240,17 @@ class AsyncpgClient:
             else:
                 rows = await conn.fetch(stmt)
             return {
-                'duration': (time.time() - start) * 1000.,
+                'duration': (time.perf_counter() - start) * 1000.,
                 'rows': rows
             }
 
     async def execute_many(self, stmt, bulk_args):
-        start = time.time()
+        start = time.perf_counter()
         pool = await self._get_pool()
         async with pool.acquire() as conn:
             await conn.executemany(stmt, bulk_args)
             return {
-                'duration': (time.time() - start) * 1000.,
+                'duration': (time.perf_counter() - start) * 1000.,
                 'rows': []
             }
 
