@@ -54,6 +54,10 @@ def dicts_from_lines(lines):
             {"name": "n1"},
             {"name": "n2"},
         ]
+
+    Or a list of JSON objects in a single line:
+
+        [{"name": "n1"}, {"name": "n2"}]
     """
     lines = iter(lines)
     for line in lines:
@@ -61,7 +65,11 @@ def dicts_from_lines(lines):
         if not line:
             continue  # skip empty lines
         try:
-            yield loads(line)
+            data = loads(line)
+            if isinstance(data, list):
+                yield from data
+            else:
+                yield data
         except ValueError:
             content = line + ''.join(lines)
             dicts = loads(content)

@@ -71,6 +71,11 @@ class CliTest(TestCase):
         d = next(iter(dicts_from_lines(iter(['{\n', '    "name": 10\n', '}\n']))))
         self.assertEqual(d, {"name": 10})
 
+    def test_dicts_from_list_of_objects_in_single_line(self):
+        it = iter(dicts_from_lines(['[{"name": 10}, {"name": 20}]']))
+        self.assertEqual(next(it), {"name": 10})
+        self.assertEqual(next(it), {"name": 20})
+
 
 def load_tests(loader, tests, ignore):
     tests.addTests(DocTestSuite(cli))
