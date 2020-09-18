@@ -33,7 +33,7 @@ class CrateJsonEncoder(json.JSONEncoder):
         if isinstance(o, Decimal):
             return str(o)
         if isinstance(o, datetime):
-            delta = o - self.epoch
+            delta = o.replace(tzinfo=None) - self.epoch
             return int(delta.total_seconds() * 1000)
         if isinstance(o, date):
             return calendar.timegm(o.timetuple()) * 1000

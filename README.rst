@@ -31,6 +31,7 @@ TOC
     - `timeit 🕐`_
     - `insert-fake-data`_
     - `insert-json`_
+    - `insert-from-sql`_
     - `insert-blob`_
     - `run-spec`_
     - `run-crate`_
@@ -177,6 +178,29 @@ Or simply print the insert statement generated from a JSON string::
     >>> echo '{"name": "Arthur"}' | cr8 insert-json --table mytable
     ('insert into mytable ("name") values ($1)', ['Arthur'])
     ...
+
+insert-from-sql
+---------------
+
+Copies data from one CrateDB cluster or PostgreSQL server to another.
+This requires the optional ``asyncpg`` dependency.
+
+::
+
+    >>> cr8 insert-from-sql \
+    ...   --src-uri "postgresql://crate@localhost:5432/doc" \
+    ...   --query "SELECT name FROM x.demo" \
+    ...   --hosts localhost:4200 \
+    ...   --table y.demo \
+    INSERT INTO y.demo (name) VALUES ($1)
+    Runtime (in ms):
+    ...
+
+
+The ``concurrency`` option of the command only affects the number of concurrent
+write operations that will be made. There will always be a single read
+operation, so copy operations may be bound by the read performance.
+
 
 insert-blob
 -----------

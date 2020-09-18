@@ -22,6 +22,7 @@ def setup(*args):
         c = conn.cursor()
         c.execute('create table x.demo (id int, name string, country string) \
                   with (number_of_replicas = 0)')
+        c.execute('create table y.demo (name text) with (number_of_replicas = 0)')
         c.execute('create blob table blobtable with (number_of_replicas = 0)')
 
 
@@ -40,6 +41,9 @@ def transform(s):
     s = s.replace(
         'asyncpg://localhost:5432',
         f'asyncpg://{node.addresses.psql.host}:{node.addresses.psql.port}')
+    s = s.replace(
+        'postgresql://crate@localhost:5432/doc',
+        f'postgresql://crate@{node.addresses.psql.host}:{node.addresses.psql.port}/doc')
     return (
         r'print(sh("""%s""").stdout.decode("utf-8"))' % s) + '\n'
 
