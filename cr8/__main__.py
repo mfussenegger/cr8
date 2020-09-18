@@ -18,6 +18,7 @@ from cr8.run_spec import run_spec
 from cr8.run_crate import run_crate, create_node
 from cr8.run_track import run_track
 from cr8.reindex import reindex
+from cr8.insert_from_sql import insert_from_sql
 
 
 log = logging.getLogger(__name__)
@@ -70,6 +71,7 @@ def main():
                     insert_json,
                     insert_fake_data,
                     insert_blob,
+                    insert_from_sql,
                     run_spec,
                     run_crate,
                     run_track,
