@@ -1,3 +1,14 @@
+2020-09-22 0.20.0
+=================
+
+- Added a new ``insert-from-sql`` command that can be used to insert data from
+  another CrateDB or PostgreSQL server.
+
+- Extended ``insert-json`` to also support a list of JSON objects within a
+  single line as input format. (Something like ``[{"name": "n1"}, {"name":
+  "n2"}]``)
+
+
 2020-07-15 0.19.3
 =================
 
