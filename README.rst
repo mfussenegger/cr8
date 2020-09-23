@@ -183,7 +183,6 @@ insert-from-sql
 ---------------
 
 Copies data from one CrateDB cluster or PostgreSQL server to another.
-This requires the optional ``asyncpg`` dependency.
 
 ::
 
