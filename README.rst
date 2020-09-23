@@ -381,11 +381,14 @@ from 2.x would be re-created::
 Protocols
 =========
 
-``cr8`` supports using ``HTTP`` or the ``postgres`` protocol if the extra
-dependency ``asyncpg`` is installed.
+``cr8`` supports using ``HTTP`` or the ``postgres`` protocol.
 
 Note that using the postgres protocol will cause ``cr8`` to measure the
-round-trip time instead of the service time. So measurements will be different::
+round-trip time instead of the service time. So measurements will be different.
+
+To use the ``postgres`` protocol, the ``asyncpg`` scheme must be used inside hosts URIs:
+
+::
 
 
     >>> echo "select 1" | cr8 timeit --hosts asyncpg://localhost:5432
