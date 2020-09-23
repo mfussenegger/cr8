@@ -29,11 +29,11 @@ setup(
         'tqdm',
         'Faker>=4.0,<5.0',
         'aiohttp>=3.3,<4',
-        'toml'
+        'toml',
+        'asyncpg'
     ],
     extras_require={
-        'extra': ['uvloop', 'pysimdjson'],
-        'asyncpg': ['asyncpg']
+        'extra': ['uvloop', 'pysimdjson']
     },
     python_requires='>=3.6',
     classifiers=[
