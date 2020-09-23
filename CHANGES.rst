@@ -1,3 +1,9 @@
+2020-09-23 0.20.1
+=================
+
+- Added ``asyncpg`` as non-optional dependency, as it is required by
+  ``insert-from-sql``.
+
 2020-09-22 0.20.0
 =================
 
