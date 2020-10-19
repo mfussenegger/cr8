@@ -5,7 +5,8 @@ import functools
 from unittest import TestCase
 
 from cr8.run_crate import CrateNode, get_crate
-from crate.client import connect
+from cr8.clients import client
+from cr8 import aio
 
 
 crate_dir = get_crate('latest-testing')
@@ -18,20 +19,21 @@ node = CrateNode(
 
 
 def setup(*args):
-    with connect(node.http_url) as conn:
-        c = conn.cursor()
-        c.execute('create table x.demo (id int, name string, country string) \
-                  with (number_of_replicas = 0)')
-        c.execute('create table y.demo (name text) with (number_of_replicas = 0)')
-        c.execute('create blob table blobtable with (number_of_replicas = 0)')
+    with client(node.http_url) as c:
+        aio.run(
+            c.execute,
+            'create table x.demo (id int, name string, country string) \
+            with (number_of_replicas = 0)'
+        )
+        aio.run(c.execute, 'create table y.demo (name text) with (number_of_replicas = 0)')
+        aio.run(c.execute, 'create blob table blobtable with (number_of_replicas = 0)')
 
 
 def teardown(*args):
     try:
-        with connect(node.http_url) as conn:
-            c = conn.cursor()
-            c.execute('drop table x.demo')
-            c.execute('drop blob table blobtable')
+        with client(node.http_url) as c:
+            aio.run(c.execute, 'drop table x.demo')
+            aio.run(c.execute, 'drop blob table blobtable')
     finally:
         node.stop()
 

@@ -32,7 +32,6 @@ TOC
     - `insert-fake-data`_
     - `insert-json`_
     - `insert-from-sql`_
-    - `insert-blob`_
     - `run-spec`_
     - `run-crate`_
         - `Script reproduction`_
@@ -199,15 +198,6 @@ Copies data from one CrateDB cluster or PostgreSQL server to another.
 The ``concurrency`` option of the command only affects the number of concurrent
 write operations that will be made. There will always be a single read
 operation, so copy operations may be bound by the read performance.
-
-
-insert-blob
------------
-
-A tool to upload a file into a blob table::
-
-    >>> cr8 insert-blob --hosts localhost:4200 --table blobtable specs/sample.toml
-    http://.../_blobs/blobtable/8a181a0732cae9d13a2e4224819f58744714282f
 
 
 run-spec

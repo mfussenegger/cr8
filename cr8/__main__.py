@@ -13,7 +13,6 @@ from cr8.misc import break_iterable, init_logging
 from cr8.timeit import timeit
 from cr8.insert_json import insert_json
 from cr8.insert_fake_data import insert_fake_data
-from cr8.insert_blob import insert_blob
 from cr8.run_spec import run_spec
 from cr8.run_crate import run_crate, create_node
 from cr8.run_track import run_track
@@ -70,7 +69,6 @@ def main():
     p.add_commands([timeit,
                     insert_json,
                     insert_fake_data,
-                    insert_blob,
                     insert_from_sql,
                     run_spec,
                     run_crate,

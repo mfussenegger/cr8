@@ -24,7 +24,6 @@ setup(
     },
     packages=['cr8'],
     install_requires=[
-        'crate>=0.16',
         'argh',
         'tqdm',
         'Faker>=4.0,<5.0',
