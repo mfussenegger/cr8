@@ -272,11 +272,12 @@ class CrateNode(contextlib.ExitStack):
         else:
             java_home = os.environ.get('JAVA_HOME', '')
         self.env.setdefault('JAVA_HOME', java_home)
-        self.env.setdefault('LANG',
-                            os.environ.get('LANG', os.environ.get('LC_ALL')))
-        if not self.env['LANG']:
-            raise SystemExit('Your locale are not configured correctly. '
-                             'Please set LANG or alternatively LC_ALL.')
+        if sys.platform != "win32":
+            self.env.setdefault('LANG',
+                                os.environ.get('LANG', os.environ.get('LC_ALL')))
+            if not self.env['LANG']:
+                raise SystemExit('Your locale are not configured correctly. '
+                                 'Please set LANG or alternatively LC_ALL.')
         self.monitor = OutputMonitor()
         self.process = None  # type: Optional[subprocess.Popen]
         self.http_url = None  # type: Optional[str]
