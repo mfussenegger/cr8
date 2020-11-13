@@ -34,6 +34,7 @@ jobs:
           pip install .
 
       - name: Test
+        shell: bash
         run: python -m xmlrunner discover -v -o test-results/test/
 
       - name: Pycodestyle
