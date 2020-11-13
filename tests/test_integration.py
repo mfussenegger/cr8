@@ -2,7 +2,8 @@ import os
 import doctest
 import subprocess
 import functools
-from unittest import TestCase
+import sys
+import unittest
 
 from cr8.run_crate import CrateNode, get_crate
 from cr8.clients import client
@@ -60,7 +61,8 @@ class Parser(doctest.DocTestParser):
         return r
 
 
-class SourceBuildTest(TestCase):
+@unittest.skipIf(sys.platform.startswith("win"), "Not supported on Windows")
+class SourceBuildTest(unittest.TestCase):
 
     def test_build_from_branch(self):
         self.assertIsNotNone(get_crate('4.1'))
