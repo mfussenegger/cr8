@@ -1,3 +1,5 @@
+import zipfile
+
 import argh
 import os
 import json
@@ -472,18 +474,22 @@ def _can_use_cache(uri, crate_dir):
 
 def _download_and_extract(uri, crate_root):
     filename = os.path.basename(uri)
-    crate_folder_name = re.sub(r'\.tar(\.gz)?$', '', filename)
+    crate_folder_name = re.sub(r'\.(tar|zip)(\.gz)?$', '', filename)
     crate_dir = os.path.join(crate_root, crate_folder_name)
 
     if _can_use_cache(uri, crate_dir):
-        log.info('Skipping download, tarball alrady extracted at %s', crate_dir)
+        log.info('Skipping download, archive already extracted at %s', crate_dir)
         return crate_dir
     elif os.path.exists(crate_dir):
         shutil.rmtree(crate_dir, ignore_errors=True)
     log.info('Downloading %s and extracting to %s', uri, crate_root)
     with _openuri(uri) as tmpfile:
-        with tarfile.open(fileobj=tmpfile) as t:
-            t.extractall(crate_root)
+        if uri.endswith(".zip"):
+            with zipfile.ZipFile(file=tmpfile) as t:
+                t.extractall(crate_root)
+        else:
+            with tarfile.open(fileobj=tmpfile) as t:
+                t.extractall(crate_root)
         tmpfile.seek(0)
         checksum = sha1(tmpfile.read()).hexdigest()
         with open(os.path.join(crate_dir, checksum), 'a'):
