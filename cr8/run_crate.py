@@ -272,17 +272,27 @@ class CrateNode(contextlib.ExitStack):
         else:
             java_home = os.environ.get('JAVA_HOME', '')
         self.env.setdefault('JAVA_HOME', java_home)
-        if sys.platform != "win32":
+
+        # Operating system specific configuration.
+        if sys.platform == "win32":
+            start_script = 'crate.bat'
+
+            # Mitigate errors like
+            # java.io.IOException: Unable to establish loopback connection
+            # java.net.SocketException: Unrecognized Windows Sockets error: 10106: socket
+            self.env.setdefault('SystemRoot', 'C:\\Windows')
+        else:
+            start_script = 'crate'
             self.env.setdefault('LANG',
                                 os.environ.get('LANG', os.environ.get('LC_ALL')))
             if not self.env['LANG']:
                 raise SystemExit('Your locale are not configured correctly. '
                                  'Please set LANG or alternatively LC_ALL.')
+
         self.monitor = OutputMonitor()
         self.process = None  # type: Optional[subprocess.Popen]
         self.http_url = None  # type: Optional[str]
         self.http_host = None  # type: Optional[str]
-        start_script = 'crate.bat' if sys.platform == 'win32' else 'crate'
 
         settings = _get_settings(settings)
         if self.version < (1, 1, 0):
