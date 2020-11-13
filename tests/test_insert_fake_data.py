@@ -122,15 +122,15 @@ class TestDataFaker(TestCase):
 
     def test_geoshape_type_default(self):
         provider = self.f.provider_for_column(Column('area', 'geo_shape', None))
-        self.assertEqual(provider(),
-                         'POLYGON (( '
+        self.assertEqual('POLYGON (( '
                          '-132.47048275355667 44.147296981090086, '
                          '-131.2679223792111 42.09369742374501, '
                          '-132.14018682738413 37.17894586552094, '
                          '-133.04540290479406 36.10457754779138, '
                          '-142.31051949147854 46.75961787621673, '
                          '-132.47048275355667 44.147296981090086 '
-                         '))')
+                         '))',
+                         provider())
 
     def test_invalid_provider_for_column(self):
         msg = 'No fake provider found for column "x" with type "y"'
