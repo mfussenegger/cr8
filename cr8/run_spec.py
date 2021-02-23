@@ -1,6 +1,7 @@
 import argh
 import os
 import itertools
+import subprocess
 from functools import partial
 from typing import Iterable
 
@@ -122,6 +123,23 @@ class Executor:
             aio.run_many(self.client.execute_many, inserts, concurrency=concurrency)
             if self.client.is_cratedb:
                 aio.run(self.client.execute, f"refresh table {data_file['target']}")
+
+        for data_cmd in instructions.data_cmds:
+            process = subprocess.Popen(
+                data_cmd['cmd'],
+                stdout=subprocess.PIPE,
+                universal_newlines=True
+            )
+            target = data_cmd['target']
+            dicts = dicts_from_lines(process.stdout)
+            inserts = as_bulk_queries(
+                (to_insert(target, d) for d in dicts),
+                data_cmd.get('bulk_size', 5000)
+            )
+            concurrency = data_cmd.get('concurrency', 25)
+            aio.run_many(self.client.execute_many, inserts, concurrency=concurrency)
+            if self.client.is_cratedb:
+                aio.run(self.client.execute, f"refresh table {target}")
 
     def update_server_stats(self):
         """Triggers ANALYZE on the server to update statistics."""

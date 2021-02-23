@@ -9,17 +9,20 @@ class Instructions:
     def __init__(self,
                  statements=None,
                  statement_files=None,
-                 data_files=None):
+                 data_files=None,
+                 data_cmds=None):
         self.statements = statements or []
         self.statement_files = statement_files or []
         self.data_files = data_files or []
+        self.data_cmds = data_cmds or []
 
     @staticmethod
     def from_dict(d):
         return Instructions(
             statements=d.get('statements', []),
             statement_files=d.get('statement_files', []),
-            data_files=d.get('data_files', [])
+            data_files=d.get('data_files', []),
+            data_cmds=d.get('data_cmds', [])
         )
 
 
