@@ -24,7 +24,7 @@ class Counter:
             return val.value
 
 
-def auto_inc(fake):
+def auto_inc(fake, col):
     manager = Manager()
     return Counter(manager.Value('i', 0), manager.Lock())
 
