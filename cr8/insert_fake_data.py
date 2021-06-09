@@ -5,13 +5,12 @@ import sys
 import json
 import argh
 import argparse
-import operator
 import math
 import signal
 from faker import Factory
 from functools import partial
-from collections import OrderedDict
 from concurrent.futures import ThreadPoolExecutor
+from typing import NamedTuple, Optional
 
 from cr8.insert_json import to_insert
 from cr8.misc import parse_table, parse_version
@@ -26,7 +25,8 @@ loop = asyncio.get_event_loop()
 SELLECT_COLS = """
 select
     column_name,
-    data_type
+    data_type,
+    character_maximum_length
 from
     information_schema.columns
 where
@@ -38,13 +38,19 @@ order by ordinal_position asc
 """
 
 
+class Column(NamedTuple):
+    name: str
+    type_name: str
+    max_len: Optional[int]
+
+
 def retrieve_columns(client, schema, table):
     r = aio.run(client.execute, "select min(version['number']) from sys.nodes")
     version = parse_version(r['rows'][0][0])
     stmt = SELLECT_COLS.format(
         schema_column_name='table_schema' if version >= (0, 57, 0) else 'schema_name')
     r = aio.run(client.execute, stmt, (schema, table))
-    return OrderedDict(r['rows'])
+    return [Column(*row) for row in r['rows']]
 
 
 def generate_row(fakers):
@@ -60,56 +66,66 @@ def array_provider(len_provider, value_provider, dimensions):
 
 
 def make_array_provider(inner_provider, dimensions):
-    def setup_array_providers(fake):
-        inner = inner_provider(fake)
+    def setup_array_providers(fake, column):
+        inner = inner_provider(fake, column)
         arr_len = partial(fake.random_int, min=0, max=50)
         return partial(array_provider, arr_len, inner, dimensions)
     return setup_array_providers
 
 
-def _gen_short(f):
+def _gen_short(f, col):
     return partial(f.random_int, min=-32768, max=32767)
 
 
-def _gen_long(f):
+def _gen_long(f, col):
     return partial(
         f.random_int, min=-9223372036854775808, max=9223372036854775807)
 
 
+def _gen_bit(f, col: Column):
+    def _gen():
+        l = []
+        for _ in range(col.max_len or 8):
+            l.append(f.boolean() and '1' or '0')
+        return ''.join(l)
+    return _gen
+
+
 class DataFaker:
     _mapping = {
-        ('id', 'string'): operator.attrgetter('uuid4'),
-        ('id', 'text'): operator.attrgetter('uuid4'),
+        ('id', 'string'): lambda f, ctx: f.uuid4,
+        ('id', 'text'): lambda f, ctx: f.uuid4,
         ('id', 'integer'): auto_inc,
         ('id', 'long'): auto_inc,
         ('id', 'bigint'): auto_inc,
     }
 
     _type_default = {
-        'byte': lambda f: partial(f.random_int, min=-128, max=127),
-        'char': lambda f: partial(f.random_int, min=-128, max=127),
+        'byte': lambda f, col: partial(f.random_int, min=-128, max=127),
+        'char': lambda f, col: partial(f.random_int, min=-128, max=127),
         'short': _gen_short,
         'smallint': _gen_short,
-        'integer': lambda f: partial(f.random_int, min=-2147483648, max=2147483647),
+        'integer': lambda f, col: partial(f.random_int, min=-2147483648, max=2147483647),
         'long': _gen_long,
         'bigint': _gen_long,
-        'float': operator.attrgetter('pyfloat'),
-        'real': operator.attrgetter('pyfloat'),
-        'double': operator.attrgetter('pydecimal'),
-        'double precision': operator.attrgetter('pydecimal'),
-        'ip': operator.attrgetter('ipv4'),
-        'timestamp': lambda f: partial(
+        'float': lambda f, col: f.pyfloat,
+        'real': lambda f, col: f.pyfloat,
+        'double': lambda f, col: f.pydecimal,
+        'double precision': lambda f, col: f.pydecimal,
+        'ip': lambda f, col: f.ipv4,
+        'timestamp': lambda f, col: partial(
             f.date_time_between, start_date='-2y', end_date='now'),
-        'timestamp with time zone': lambda f: partial(
+        'timestamp with time zone': lambda f, col: partial(
             f.date_time_between, start_date='-2y', end_date='now'),
-        'timestamp without time zone': lambda f: partial(
+        'timestamp without time zone': lambda f, col: partial(
             f.date_time_between, start_date='-2y', end_date='now'),
-        'string': operator.attrgetter('word'),
-        'text': operator.attrgetter('word'),
-        'boolean': operator.attrgetter('boolean'),
-        'geo_point': operator.attrgetter('geo_point'),
-        'geo_shape': operator.attrgetter('geo_shape'),
-        'object': lambda f: dict
+        'string': lambda f, col: f.word,
+        'text': lambda f, col: f.word,
+        'boolean': lambda f, col: f.boolean,
+        'geo_point': lambda f, col: f.geo_point,
+        'geo_shape': lambda f, col: f.geo_shape,
+        'object': lambda f, col: dict,
+        'bit': _gen_bit,
     }
 
     _custom = {
@@ -120,27 +136,27 @@ class DataFaker:
         self.fake = Factory.create()
         self.fake.add_provider(GeoSpatialProvider)
 
-    def _provider_for_type(self, data_type):
-        inner_type, *dim = data_type.split('_array')
+    def _provider_for_type(self, column: Column):
+        inner_type, *dim = column.type_name.split('_array')
         inner_provider = self._type_default.get(inner_type)
         if not dim or not inner_provider:
             return inner_provider
         return make_array_provider(inner_provider, len(dim))
 
-    def provider_for_column(self, column_name, data_type):
-        provider = getattr(self.fake, column_name, None)
+    def provider_for_column(self, column):
+        provider = getattr(self.fake, column.name, None)
         if provider:
             return provider
-        custom_provider = self._custom.get(column_name)
+        custom_provider = self._custom.get(column.name)
         if custom_provider:
-            return custom_provider(self.fake)
-        alternative = self._mapping.get((column_name, data_type))
+            return custom_provider(self.fake, column)
+        alternative = self._mapping.get((column.name, column.type_name))
         if not alternative:
-            alternative = self._provider_for_type(data_type)
+            alternative = self._provider_for_type(column)
             if not alternative:
                 msg = 'No fake provider found for column "{col}" with type "{type}"'
-                raise ValueError(msg.format(col=column_name, type=data_type))
-        return alternative(self.fake)
+                raise ValueError(msg.format(col=column.name, type=column.type_name))
+        return alternative(self.fake, column)
 
     def provider_from_mapping(self, column_name, mapping):
         key = mapping[column_name]
@@ -158,11 +174,11 @@ class DataFaker:
 def create_row_generator(columns, mapping=None):
     fake = DataFaker()
     fakers = []
-    for column_name, type_name in columns.items():
-        if mapping and column_name in mapping:
-            fakers.append(fake.provider_from_mapping(column_name, mapping))
+    for column in columns:
+        if mapping and column.name in mapping:
+            fakers.append(fake.provider_from_mapping(column, mapping))
         else:
-            fakers.append(fake.provider_for_column(column_name, type_name))
+            fakers.append(fake.provider_for_column(column))
     return partial(generate_row, fakers)
 
 
@@ -258,7 +274,8 @@ def insert_fake_data(hosts=None,
     if not columns:
         sys.exit('Could not find columns for table "{}"'.format(table))
     print('Found schema: ')
-    print(json.dumps(columns, sort_keys=True, indent=4))
+    columns_dict = {r.name: r.type_name for r in columns}
+    print(json.dumps(columns_dict, sort_keys=True, indent=4))
     mapping = None
     if mapping_file:
         mapping = json.load(mapping_file)
@@ -268,7 +285,7 @@ def insert_fake_data(hosts=None,
 
     gen_row = create_row_generator(columns, mapping)
 
-    stmt = to_insert('"{schema}"."{table_name}"'.format(**locals()), columns)[0]
+    stmt = to_insert('"{schema}"."{table_name}"'.format(**locals()), columns_dict)[0]
     print('Using insert statement: ')
     print(stmt)
 
