@@ -68,3 +68,5 @@ bin/
 venv/
 
 nose2-junit.xml
+
+test-results/
