@@ -1,3 +1,13 @@
+2022-01-26 0.21.0
+=================
+
+- Added a ``setup.data_cmds`` directive to allow data generation via external
+  commands within spec files.
+  The command must output one JSON object per line.
+
+- Added a data provider for the ``bit`` data type.
+
+
 2020-09-23 0.20.1
 =================
 
