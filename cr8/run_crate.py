@@ -183,7 +183,7 @@ def _create_connection(host: str, port: int):
 
 def _has_ssl(host: str, port: int):
     try:
-        with ssl.wrap_socket(_create_connection(host, port)) as s:
+        with NO_SSL_VERIFY_CTX.wrap_socket(_create_connection(host, port)) as s:
             s.close()
             return True
     except (socket.gaierror, ssl.SSLError):
