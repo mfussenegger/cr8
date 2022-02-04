@@ -3,30 +3,19 @@
 
 import math
 from faker.providers import BaseProvider
-from multiprocessing import Manager
 
 EARTH_RADIUS = 6371  # earth radius in km
 
-# Not implemented as Provider because with providers it's not possible to have
-# 1 instance per column. So either there would be one shared Counter accross
-# multiple auto_inc columns or there could be duplicate values within one column
-
-
-class Counter:
-    def __init__(self, value, lock):
-        self.value = value
-        self.lock = lock
-
-    def __call__(self):
-        val = self.value
-        with self.lock:
-            val.value += 1
-            return val.value
-
 
 def auto_inc(fake, col):
-    manager = Manager()
-    return Counter(manager.Value('i', 0), manager.Lock())
+    x = 0
+
+    def inc():
+        nonlocal x
+        x = x + 1
+        return x
+
+    return inc
 
 
 def _dest_point(point, distance, bearing, radius):
