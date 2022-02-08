@@ -658,6 +658,7 @@ def get_crate(version, crate_root=None):
     """
     if not crate_root:
         crate_root = _crates_cache()
+        os.makedirs(crate_root, exist_ok=True)
         _remove_old_crates(crate_root)
     if _is_project_repo(version):
         return _extract_tarball(_build_tarball(version))
