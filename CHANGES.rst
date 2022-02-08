@@ -1,3 +1,12 @@
+2022-02-08 0.21.1
+=================
+
+- Changed ``cr8 run-crate`` to implicitly create the cache folder if it is
+  missing instead of raising an error.
+
+- Improved the performance of the ``insert-fake-data ``auto_inc`` provider for
+  ``id`` columns of type ``integer``.
+
 2022-01-26 0.21.0
 =================
 
