@@ -1,4 +1,5 @@
 import argh
+import re
 import os
 import itertools
 import subprocess
@@ -237,7 +238,8 @@ def do_run_spec(spec,
                 sample_mode,
                 result_hosts=None,
                 action=None,
-                fail_if=None):
+                fail_if=None,
+                re_name=None):
     with Executor(
         spec_dir=os.path.dirname(spec),
         benchmark_hosts=benchmark_hosts,
@@ -257,7 +259,12 @@ def do_run_spec(spec,
                 for data_spec in spec.load_data:
                     executor.run_load_data(data_spec, spec.meta)
             if spec.queries and (not action or 'queries' in action):
-                executor.run_queries(spec.queries, spec.meta)
+                if re_name:
+                    rex = re.compile(re_name)
+                    queries = (q for q in spec.queries if 'name' in q and rex.match(q['name']))
+                else:
+                    queries = spec.queries
+                executor.run_queries(queries, spec.meta)
         finally:
             if not action or 'teardown' in action:
                 log.info('# Running tearDown')
@@ -265,6 +272,7 @@ def do_run_spec(spec,
 
 
 @argh.arg('benchmark_hosts', type=str)
+@argh.arg('-r', '--result_hosts', type=str)
 @argh.arg('-of', '--output-fmt', choices=['json', 'text'], default='text')
 @argh.arg('--action',
           choices=['setup', 'teardown', 'queries', 'load_data'],
@@ -273,6 +281,7 @@ def do_run_spec(spec,
 @argh.arg('--logfile-result', help='Redirect benchmark results to a file')
 @argh.arg('--sample-mode', choices=('all', 'reservoir'),
           help='Method used for sampling', default='reservoir')
+@argh.arg('--re-name', type=str, help='Regex used to filter queries executed by name')
 @argh.wrap_errors([KeyboardInterrupt, BrokenPipeError] + clients.client_errors)
 def run_spec(spec,
              benchmark_hosts,
@@ -282,7 +291,8 @@ def run_spec(spec,
              logfile_result=None,
              action=None,
              fail_if=None,
-             sample_mode='reservoir'):
+             sample_mode='reservoir',
+             re_name=None):
     """Run a spec file, executing the statements on the benchmark_hosts.
 
     Short example of a spec file:
@@ -337,7 +347,8 @@ def run_spec(spec,
             result_hosts=result_hosts,
             action=action,
             fail_if=fail_if,
-            sample_mode=sample_mode
+            sample_mode=sample_mode,
+            re_name=re_name
         )
 
 
