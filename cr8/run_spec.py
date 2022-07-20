@@ -180,6 +180,7 @@ class Executor:
         for query in queries:
             stmt = query['statement']
             iterations = query.get('iterations', 1)
+            warmup = query.get('warmup', 0)
             duration = query.get('duration')
             name = query.get('name')
             concurrency = query.get('concurrency', 1)
@@ -201,6 +202,8 @@ class Executor:
                  f'   {mode_desc}: {duration or iterations}')
             )
             with Runner(self.benchmark_hosts, concurrency, self.sample_mode) as runner:
+                if warmup > 0:
+                    runner.warmup(stmt, warmup, concurrency, args)
                 timed_stats = runner.run(
                     stmt,
                     iterations=iterations,

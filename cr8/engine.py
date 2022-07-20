@@ -74,9 +74,9 @@ class Runner:
         self.client = client(hosts, concurrency=concurrency)
         self.sampler = get_sampler(sample_mode)
 
-    def warmup(self, stmt, num_warmup):
-        statements = itertools.repeat((stmt,), num_warmup)
-        aio.run_many(self.client.execute, statements, 0, num_items=num_warmup)
+    def warmup(self, stmt, num_warmup, concurrency=0, args=None):
+        statements = itertools.repeat((stmt, args or ()), num_warmup)
+        aio.run_many(self.client.execute, statements, concurrency, num_items=num_warmup)
 
     def run(self, stmt, *, iterations=None, duration=None, args=None, bulk_args=None):
         if bulk_args:
