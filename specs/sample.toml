@@ -24,6 +24,7 @@ concurrency = 2
 statement = '''select count(*) from countries where "isoNumeric" = $1'''
 args = ["020"]
 iterations = 10
+warmup = 5
 concurrency = 1
 
 [[queries]]
