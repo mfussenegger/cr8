@@ -70,11 +70,11 @@ Why cr8? 🤔
 Install 💾
 ==========
 
-Python >= 3.6 is required to use the command line tools.
+Python >= 3.7 is required to use the command line tools.
 
 Install them using `pip <https://pip.pypa.io/en/stable/>`_::
 
-    python3.6 -m pip install --user cr8
+    python3.7 -m pip install --user cr8
 
 This will install ``cr8`` into ``~/.local/bin``. Either use
 ``~/.local/bin/cr8`` to launch it or add ``~/.local/bin`` to your ``$PATH``
