@@ -105,7 +105,9 @@ class Executor:
 
     def _to_inserts(self, data_spec):
         target = data_spec['target']
-        source = os.path.join(self.spec_dir, data_spec['source'])
+        source = data_spec['source']
+        if not source.startswith(('http://', 'https://')):
+            source = os.path.join(self.spec_dir, source)
         dicts = dicts_from_lines(get_lines(source))
         return (to_insert(target, d) for d in dicts)
 

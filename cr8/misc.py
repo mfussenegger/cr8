@@ -2,6 +2,8 @@
 
 import logging
 import gzip
+from pathlib import Path
+from urllib.request import urlopen
 from typing import Tuple, Iterator, Any, Optional
 from collections import defaultdict
 
@@ -84,14 +86,23 @@ def as_bulk_queries(queries, bulk_size):
 
 def get_lines(filename: str) -> Iterator[str]:
     """Create an iterator that returns the lines of a utf-8 encoded file."""
-    if filename.endswith('.gz'):
-        with gzip.open(filename, 'r') as f:
+
+    if filename.startswith(('https://', 'http://')):
+        uri = filename
+    else:
+        path = Path(filename)
+        if not path.is_absolute():
+            path = Path.cwd() / path
+        uri = path.as_uri()
+
+    with urlopen(uri) as f:
+        if filename.endswith('.gz'):
+            with gzip.GzipFile(fileobj=f) as fz:
+                for line in fz:
+                    yield line.decode('utf-8')
+        else:
             for line in f:
                 yield line.decode('utf-8')
-    else:
-        with open(filename, 'r', encoding='utf-8') as f:
-            for line in f:
-                yield line
 
 
 def as_statements(lines: Iterator[str]) -> Iterator[str]:
