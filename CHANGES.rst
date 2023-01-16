@@ -1,3 +1,15 @@
+2023-01-16 0.22.0
+=================
+
+- Added support for HTTP(s) URLs as source to ``load_data`` of spec files.
+
+- Added a ``--re-name`` option to the ``run-spec`` command which allows to only
+  run queries where the ``name`` property matches the given regex.
+
+- Added a ``warmup`` option to queries in spec files
+
+- Dropped Python 3.6 Support
+
 2022-02-08 0.21.1
 =================
 
