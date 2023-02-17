@@ -1,4 +1,3 @@
-
 import argh
 import asyncpg
 import asyncio
@@ -10,14 +9,17 @@ from cr8.cli import to_int
 from cr8.metrics import Stats
 from cr8.log import format_stats
 
+from crate import client
+from sqlalchemy import create_engine
+from sqlalchemy import text
+from sqlalchemy.orm import sessionmaker
 
 def mk_insert(table, attributes):
     columns = ', '.join((x.name for x in attributes))
     params = ', '.join((f'${i + 1}' for i in range(len(attributes))))
     return f'INSERT INTO {table} ({columns}) VALUES ({params})'
 
-
-async def reader(q, conn, stmt, fetch_size):
+async def pgreader(q, conn, stmt, fetch_size):
     async with conn.transaction():
         bulk_args = []
         async for row in stmt.cursor(prefetch=fetch_size):
@@ -29,6 +31,22 @@ async def reader(q, conn, stmt, fetch_size):
             await q.put(bulk_args)
         await q.put(None)
 
+async def cratereader(q, engine, stmt, fetch_size):
+    bulk_args = []
+    session=sessionmaker(bind= engine)()
+    with session.begin():        
+        while True:
+            rows = stmt.fetchmany(fetch_size)
+            if not rows:
+                break
+            for row in rows:
+                bulk_args.append(tuple(row))
+            if len(bulk_args) >= fetch_size:
+                await q.put(bulk_args)
+                bulk_args = []
+        if bulk_args:
+            await q.put(bulk_args)
+        await q.put(None)
 
 async def writer(q, insert, insert_many):
     with aio.tqdm() as t:
@@ -46,19 +64,42 @@ async def async_insert_from_sql(src_uri,
                                 fetch_size,
                                 table,
                                 insert_many):
-    conn = await asyncpg.connect(src_uri)
-    try:
-        stmt = await conn.prepare(query)
-        insert = mk_insert(table, stmt.get_attributes())
-        print(insert)
-        q = asyncio.Queue(maxsize=concurrency)
-        await asyncio.gather(
-            reader(q, conn, stmt, fetch_size),
-            writer(q, insert, insert_many)
-        )
-    finally:
-        await conn.close()
-
+    if src_uri.startswith("https://"):
+        engine_url = "crate://" + src_uri[8:] + "/?ssl=true"
+    elif src_uri.startswith("http://"):
+        engine_url = "crate://" + src_uri[7:]
+    else:
+        engine_url = src_uri
+    
+    if engine_url.startswith("crate://"):
+        engine = create_engine(engine_url)
+        try:
+            with engine.connect() as conn:
+                stmt = conn.execute(text(query))
+                columns = ', '.join(stmt.keys())
+                params = ', '.join((f'${i + 1}' for i in range(len(stmt.keys()))))
+                insert = f"INSERT INTO {table} ({columns}) VALUES ({params})"
+                print(insert)
+                q = asyncio.Queue(maxsize=concurrency)
+                await asyncio.gather(
+                    cratereader(q, engine, stmt, fetch_size),
+                    writer(q, insert, insert_many)
+                )
+        finally:
+            engine.dispose()
+    else:    
+        conn = await asyncpg.connect(engine_url)
+        try:
+            stmt = await conn.prepare(query)
+            insert = mk_insert(table, stmt.get_attributes())
+            print(insert)
+            q = asyncio.Queue(maxsize=concurrency)
+            await asyncio.gather(
+                pgreader(q, conn, stmt, fetch_size),
+                writer(q, insert, insert_many)
+            )
+        finally:
+            await conn.close()
 
 @argh.arg('--src-uri', help='source uri', required=True)
 @argh.arg('--query', help='select statement', required=True)
