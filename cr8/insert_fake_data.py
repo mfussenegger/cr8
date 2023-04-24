@@ -158,8 +158,8 @@ class DataFaker:
                 raise ValueError(msg.format(col=column.name, type=column.type_name))
         return alternative(self.fake, column)
 
-    def provider_from_mapping(self, column_name, mapping):
-        key = mapping[column_name]
+    def provider_from_mapping(self, column: Column, mapping):
+        key = mapping[column.name]
         args = None
         if isinstance(key, list):
             key, args = key
