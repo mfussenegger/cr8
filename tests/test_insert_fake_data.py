@@ -68,7 +68,8 @@ class TestDataFaker(TestCase):
 
     def test_provider_from_mapping(self):
         mapping = {'x': ['random_int', [10, 20]]}
-        provider = self.f.provider_from_mapping('x', mapping)
+        column = Column("x", "integer", None)
+        provider = self.f.provider_from_mapping(column, mapping)
         self.assertEqual(provider(), 20)
 
     def test_float_type_default(self):
