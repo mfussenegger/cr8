@@ -2,7 +2,10 @@
 import os
 from os.path import basename
 import json
-import toml
+try:
+    import tomllib as toml
+except ImportError:
+    import toml
 
 
 class Instructions:
