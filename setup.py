@@ -28,7 +28,7 @@ setup(
         'tqdm',
         'Faker>=4.0,<5.0',
         'aiohttp>=3.3,<4',
-        'toml',
+        'toml;python_version<"3.11"',
         'asyncpg'
     ],
     extras_require={

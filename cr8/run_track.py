@@ -1,6 +1,18 @@
 import argh
 import os
-import toml
+try:
+    import tomllib
+
+    def load_toml(path: str) -> dict:
+        with open(path, "rb") as f:
+            return tomllib.load(f)
+
+except ImportError:
+    import toml
+
+    def load_toml(path: str) -> dict:
+        return toml.load(path)
+
 import sys
 from glob import glob
 from .log import Logger
@@ -82,7 +94,7 @@ class Executor:
                     os.path.basename(version),
                     os.path.basename(configuration)
                 ))
-                configuration = toml.load(os.path.join(self.track_dir, configuration))
+                configuration = load_toml(os.path.join(self.track_dir, configuration))
                 crate_dir = get_crate(version, self.crate_root)
                 with CrateNode(crate_dir=crate_dir,
                                env=configuration.get('env'),
@@ -121,7 +133,7 @@ def run_track(track,
             fail_fast=failfast,
             sample_mode=sample_mode
         )
-        error = executor.execute(toml.load(track))
+        error = executor.execute(load_toml(track))
         if error:
             sys.exit(1)
 
