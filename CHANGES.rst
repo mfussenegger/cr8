@@ -1,3 +1,15 @@
+2023-07-10 0.23.0
+=================
+
+- Use ``tomllib`` if available (Python 3.11+) in favour of ``toml``. The
+  ``tomllib`` parser seems more resilient when parsing multi-line strings.
+
+- Fixed a column lookup error in ``insert-fake-data`` that happened when using
+  a mapping file.
+
+- Increased the timeout for ``CrateNode.stop()`` to give the CrateDB shutdown
+  procedure more time to shutdown gracefully.
+
 2023-01-16 0.22.0
 =================
 
