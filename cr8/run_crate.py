@@ -577,7 +577,7 @@ def _is_project_repo(src_repo):
 
 def _build_tarball(src_repo) -> Path:
     """ Build a tarball from src and return the path to it """
-    run = partial(subprocess.run, cwd=src_repo, check=True)
+    run = partial(subprocess.run, cwd=src_repo, check=True, stdin=subprocess.DEVNULL)
     run(['git', 'clean', '-xdff'])
     src_repo = Path(src_repo)
     if os.path.exists(src_repo / 'es' / 'upstream'):
@@ -597,10 +597,15 @@ def _extract_tarball(tarball):
 def _build_from_release_branch(branch, crate_root):
     crates = Path(crate_root)
     src_repo = crates / 'sources_tmp'
-    run_in_repo = partial(subprocess.run, cwd=src_repo, check=True)
+    run_in_repo = partial(
+        subprocess.run,
+        cwd=src_repo,
+        check=True,
+        stdin=subprocess.DEVNULL
+    )
     if not src_repo.exists() or not (src_repo / '.git').exists():
         clone = ['git', 'clone', REPO_URL, 'sources_tmp']
-        subprocess.run(clone, cwd=crate_root, check=True)
+        subprocess.run(clone, cwd=crate_root, check=True, stdin=subprocess.DEVNULL)
     else:
         run_in_repo(['git', 'fetch'])
     run_in_repo(['git', 'checkout', branch])
