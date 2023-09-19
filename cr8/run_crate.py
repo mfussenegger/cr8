@@ -493,7 +493,7 @@ def _download_and_extract(uri, crate_root):
 
 def _from_versions_json(key):
     def retrieve():
-        with urlopen('https://crate.io/releases.json') as r:
+        with urlopen('https://cratedb.com/releases.json') as r:
             if r.headers.get('Content-Encoding') == 'gzip':
                 with gzip.open(r, 'rt') as r:
                     versions = json.loads(r.read())
