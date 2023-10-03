@@ -570,26 +570,45 @@ def _lookup_uri(version):
 
 
 def _is_project_repo(src_repo):
-    return (os.path.isdir(src_repo) and
-            os.path.exists(os.path.join(src_repo, '.git')) and
-            os.path.exists(os.path.join(src_repo, 'gradlew')))
+    path = Path(src_repo)
+    return (
+        path.is_dir()
+        and (path / ".git").exists()
+        and ((path / "gradlew").exists() or (path / "mvnw").exists())
+    )
 
 
 def _build_tarball(src_repo) -> Path:
     """ Build a tarball from src and return the path to it """
     run = partial(subprocess.run, cwd=src_repo, check=True, stdin=subprocess.DEVNULL)
     run(['git', 'clean', '-xdff'])
-    src_repo = Path(src_repo)
-    if os.path.exists(src_repo / 'es' / 'upstream'):
+    path = Path(src_repo)
+    if (path / 'es' / 'upstream').exists():
         run(['git', 'submodule', 'update', '--init', '--', 'es/upstream'])
-    run(['./gradlew', '--parallel', '--no-daemon', 'clean', 'distTar'])
-    distributions = Path(src_repo) / 'app' / 'build' / 'distributions'
+    if (path / "mvnw").exists():
+        run([
+            "mvnw",
+            "-T", "1C",
+            "clean",
+            "package",
+            "-DskipTests=true",
+            "-Dcheckstyle.skip",
+            "-Djacoco.skip=true"
+        ])
+        distributions = path / "app" / "target"
+    else:
+        run(['./gradlew', '--parallel', '--no-daemon', 'clean', 'distTar'])
+        distributions = path / 'app' / 'build' / 'distributions'
     return next(distributions.glob('crate-*.tar.gz'))
 
 
 def _extract_tarball(tarball):
     with tarfile.open(tarball) as t:
-        folder_name = t.getnames()[0]
+        first_file = t.getnames()[0]
+        # First file name might be the folder, or a file inside the folder
+        # Normalize to folder
+        folder_name = os.path.dirname(first_file)
+        folder_name = folder_name == "" and first_file or folder_name
         t.extractall(tarball.parent)
     return str(tarball.parent / folder_name)
 
@@ -701,7 +720,7 @@ def create_node(
 ):
     init_logging(log)
     settings = {
-        'cluster.name': 'cr8-crate-run' + str(random.randrange(1e9))
+        'cluster.name': 'cr8-crate-run' + str(random.randrange(int(1e9)))
     }
     crate_dir = get_crate(version, crate_root)
     if setting:
