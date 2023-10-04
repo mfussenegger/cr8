@@ -587,7 +587,7 @@ def _build_tarball(src_repo) -> Path:
         run(['git', 'submodule', 'update', '--init', '--', 'es/upstream'])
     if (path / "mvnw").exists():
         run([
-            "mvnw",
+            "./mvnw",
             "-T", "1C",
             "clean",
             "package",
