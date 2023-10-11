@@ -12,7 +12,7 @@ from cr8.log import format_stats
 
 
 def mk_insert(table, attributes):
-    columns = ', '.join((x.name for x in attributes))
+    columns = ', '.join(('"' + x.name + '"' for x in attributes))
     params = ', '.join((f'${i + 1}' for i in range(len(attributes))))
     return f'INSERT INTO {table} ({columns}) VALUES ({params})'
 
