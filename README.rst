@@ -190,7 +190,7 @@ Copies data from one CrateDB cluster or PostgreSQL server to another.
     ...   --query "SELECT name FROM x.demo" \
     ...   --hosts localhost:4200 \
     ...   --table y.demo \
-    INSERT INTO y.demo (name) VALUES ($1)
+    INSERT INTO y.demo ("name") VALUES ($1)
     Runtime (in ms):
     ...
 
