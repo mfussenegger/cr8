@@ -1,3 +1,16 @@
+2023-10-12 0.24.0
+=================
+
+- Fixed an issue that prevented ``cr8 run-crate path/to/source`` from working
+  if used as part of ``git bisect run``.
+
+- Added handling for maven as build system when using ``cr8 run-crate`` with a
+  source path or ``branch:<name>``.
+
+- Changed ``cr8 insert-from-sql`` to quote the column names used in the insert
+  statements to make them case sensitive.
+
+
 2023-07-10 0.23.0
 =================
 
