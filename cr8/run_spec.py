@@ -273,7 +273,6 @@ def do_run_spec(spec,
                 executor.exec_instructions(spec.teardown)
 
 
-@argh.arg('benchmark_hosts', type=str)
 @argh.arg('-r', '--result_hosts', type=str)
 @argh.arg('-of', '--output-fmt', choices=['json', 'text'], default='text')
 @argh.arg('--action',
@@ -287,6 +286,7 @@ def do_run_spec(spec,
 @argh.wrap_errors([KeyboardInterrupt, BrokenPipeError] + clients.client_errors)
 def run_spec(spec,
              benchmark_hosts,
+             *,
              result_hosts=None,
              output_fmt=None,
              logfile_info=None,

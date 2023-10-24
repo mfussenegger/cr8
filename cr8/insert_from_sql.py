@@ -68,7 +68,8 @@ async def async_insert_from_sql(src_uri,
 @argh.arg('-c', '--concurrency', type=to_int)
 @argh.arg('-of', '--output-fmt', choices=['json', 'text'], default='text')
 @argh.wrap_errors([KeyboardInterrupt, BrokenPipeError] + clients.client_errors)
-def insert_from_sql(src_uri=None,
+def insert_from_sql(*,
+                    src_uri=None,
                     query=None,
                     fetch_size=100,
                     concurrency=25,

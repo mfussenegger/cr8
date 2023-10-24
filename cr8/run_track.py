@@ -114,6 +114,7 @@ class Executor:
           help='Method used for sampling', default='reservoir')
 @argh.wrap_errors([KeyboardInterrupt, BrokenPipeError] + client_errors)
 def run_track(track,
+              *,
               result_hosts=None,
               crate_root=None,
               output_fmt=None,

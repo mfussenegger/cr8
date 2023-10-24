@@ -223,7 +223,8 @@ async def _gen_data_and_insert(q, e, client, stmt, row_fun, size_seq):
           type=argparse.FileType('r'),
           help='JSON file with a column to fake provider mapping.')
 @argh.wrap_errors([KeyboardInterrupt] + clients.client_errors)
-def insert_fake_data(hosts=None,
+def insert_fake_data(*,
+                     hosts=None,
                      table=None,
                      num_records=1e5,
                      bulk_size=1000,

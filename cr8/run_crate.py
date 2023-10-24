@@ -748,6 +748,7 @@ def create_node(
 @argh.wrap_errors([ArgumentError])
 def run_crate(
         version,
+        *,
         env=None,
         setting=None,
         crate_root=None,
