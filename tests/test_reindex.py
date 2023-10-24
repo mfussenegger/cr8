@@ -51,7 +51,7 @@ class TestReindex(TestCase):
         )
         self._to_stop.append(crate_v4)
         crate_v4.start()
-        reindex(crate_v4.http_url)
+        reindex(hosts=crate_v4.http_url)
         with client(crate_v4.http_url) as c:
             result = aio.run(c.execute, "SELECT version FROM information_schema.tables WHERE table_name = 't'")
             version = result['rows'][0][0]

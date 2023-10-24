@@ -25,7 +25,8 @@ from cr8.engine import Runner, Result, eval_fail_if
 @argh.arg('--sample-mode', choices=('all', 'reservoir'),
           help='Method used for sampling', default='reservoir')
 @argh.wrap_errors([KeyboardInterrupt, BrokenPipeError] + client_errors)
-def timeit(hosts=None,
+def timeit(*,
+           hosts=None,
            stmt=None,
            warmup=30,
            repeat=None,

@@ -54,7 +54,8 @@ def print_only(lines, table):
 @argh.arg('-i', '--infile', type=FileType('r', encoding='utf-8'), default=sys.stdin)
 @argh.arg('-of', '--output-fmt', choices=['json', 'text'], default='text')
 @argh.wrap_errors([KeyboardInterrupt, BrokenPipeError] + clients.client_errors)
-def insert_json(table=None,
+def insert_json(*,
+                table=None,
                 bulk_size=1000,
                 concurrency=25,
                 hosts=None,

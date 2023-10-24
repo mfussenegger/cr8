@@ -106,7 +106,7 @@ async def _async_reindex(client):
 
 
 @argh.arg('--hosts', help='crate hosts', type=str, required=True)
-def reindex(hosts=None):
+def reindex(*, hosts=None):
     with clients.client(hosts) as client:
         run(_async_reindex, client)
 
