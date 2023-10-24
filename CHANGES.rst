@@ -1,3 +1,11 @@
+2023-10-24 0.25.0
+=================
+
+- Added compatibility for ``argh>=0.30.1``. Due to this several of the main
+  entry point functions have now mandatory keyword arguments and no longer
+  support positional arguments.
+  For CLI use nothing changes, but for API consumers this is a breaking change.
+
 2023-10-12 0.24.0
 =================
 
