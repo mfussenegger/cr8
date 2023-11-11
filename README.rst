@@ -27,6 +27,7 @@ TOC
 - `Why cr8? 🤔`_
 - `Install 💾`_
 - `Usage`_
+    - `Shell completion`_
 - `Sub-commands`_
     - `timeit 🕐`_
     - `insert-fake-data`_
@@ -101,6 +102,21 @@ Any `<subcommand>` with ``--hosts`` argument supports password authentication
 like this::
 
     cr8 <subcommand> --hosts http://username:password@localhost:4200 <remaining args>
+
+
+Shell completion
+----------------
+
+``cr8`` supports command completion in both ``bash`` and ``zsh`` via `argcomplete`_.
+
+- Install ``argcomplete``
+- Run ``activate-global-python-argcomplete``
+
+Make sure you're using the ``argcomplete`` > 3.0.
+In older versions of ``argcomplete`` it would be necessary to use the
+``bashcompinit`` compatibility layer in ``zsh`` and register the application
+via ``eval "$(register-python-argcomplete cr8)"``. See the upstream
+documentation for details.
 
 
 Sub-commands
@@ -404,3 +420,4 @@ Run ``cr8``::
 Tests are run with ``python -m unittest``
 
 .. _jq: https://stedolan.github.io/jq/
+.. _argcomplete: https://kislyuk.github.io/argcomplete/
