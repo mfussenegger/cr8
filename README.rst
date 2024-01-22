@@ -77,8 +77,9 @@ Install them using `pip <https://pip.pypa.io/en/stable/>`_::
 
     python3.7 -m pip install --user cr8
 
-This will install ``cr8`` into ``~/.local/bin``. Either use
-``~/.local/bin/cr8`` to launch it or add ``~/.local/bin`` to your ``$PATH``
+On \*nix systems, this will install ``cr8`` into ``~/.local/bin``, and on
+MacOS it will install it into ``~/Library/Python3/bin``.  Either launch
+using the full path, or add the relevant ``bin`` directory to your ``$PATH``
 environment variable.
 
 
