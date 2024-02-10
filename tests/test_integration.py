@@ -5,50 +5,15 @@ import functools
 import sys
 import unittest
 
-from cr8.run_crate import CrateNode, get_crate
-from cr8.clients import client
-from cr8 import aio
+from cr8.run_crate import get_crate
+from tests.integration_util import teardown, node, setup, transform
 
 
-crate_dir = get_crate('latest-testing')
-node = CrateNode(
-    crate_dir=crate_dir,
-    settings={
-        'cluster.name': 'cr8-tests',
-        'http.port': '44200-44250'
-    })
-
-
-def setup(*args):
-    with client(node.http_url) as c:
-        aio.run(
-            c.execute,
-            'create table x.demo (id int, name string, country string) \
-            with (number_of_replicas = 0)'
-        )
-        aio.run(c.execute, 'create table y.demo (name text) with (number_of_replicas = 0)')
-        aio.run(c.execute, 'create blob table blobtable with (number_of_replicas = 0)')
-
-
-def teardown(*args):
+def final_teardown(*args):
     try:
-        with client(node.http_url) as c:
-            aio.run(c.execute, 'drop table x.demo')
-            aio.run(c.execute, 'drop blob table blobtable')
+        teardown()
     finally:
         node.stop()
-
-
-def transform(s):
-    s = s.replace('localhost:4200', node.http_url)
-    s = s.replace(
-        'asyncpg://localhost:5432',
-        f'asyncpg://{node.addresses.psql.host}:{node.addresses.psql.port}')
-    s = s.replace(
-        'postgresql://crate@localhost:5432/doc',
-        f'postgresql://crate@{node.addresses.psql.host}:{node.addresses.psql.port}/doc')
-    return (
-        r'print(sh("""%s""").stdout.decode("utf-8"))' % s) + '\n'
 
 
 class Parser(doctest.DocTestParser):
@@ -69,10 +34,23 @@ class SourceBuildTest(unittest.TestCase):
 
 
 def load_tests(loader, tests, ignore):
+    """
+    Intercept test discovery, in order to add doctests from `README.rst`.
+    """
+
+    # FIXME: doctests have errors on Windows.
+    if sys.platform.startswith("win"):
+        return tests
+
+    # Parsing doctests happens early, way before the test suite is invoked.
+    # However, the doctest translator needs to know about the TCP address
+    # of CrateDB, so it needs to be started right away.
     env = os.environ.copy()
     env['CR8_NO_TQDM'] = 'True'
     node.start()
     assert node.http_host, "http_url must be available"
+
+    # Add integration tests defined as doctests in README.rst.
     tests.addTests(doctest.DocFileSuite(
         os.path.join('..', 'README.rst'),
         globs={
@@ -88,7 +66,7 @@ def load_tests(loader, tests, ignore):
         },
         optionflags=doctest.NORMALIZE_WHITESPACE | doctest.ELLIPSIS,
         setUp=setup,
-        tearDown=teardown,
+        tearDown=final_teardown,
         parser=Parser()
     ))
     return tests
