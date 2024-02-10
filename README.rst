@@ -128,7 +128,7 @@ timeit 🕐
 A tool that can be used to measure the runtime of a given SQL statement on a
 cluster::
 
-    >>> echo "select name from sys.cluster" | cr8 timeit --hosts localhost:4200
+    >>> echo 'select name from sys.cluster' | cr8 timeit --hosts localhost:4200
     Runtime (in ms):
         mean:    ... ± ...
         min/max: ... → ...
@@ -396,7 +396,7 @@ To use the ``postgres`` protocol, the ``asyncpg`` scheme must be used inside hos
 ::
 
 
-    >>> echo "select 1" | cr8 timeit --hosts asyncpg://localhost:5432
+    >>> echo 'select 1' | cr8 timeit --hosts asyncpg://localhost:5432
     Runtime (in ms):
     ...
 
