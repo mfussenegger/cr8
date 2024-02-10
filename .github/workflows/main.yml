@@ -39,6 +39,13 @@ jobs:
           pip install pycodestyle unittest-xml-reporting
           pip install .
 
+      - name: Adjust Windows PATH
+        if: startsWith(matrix.os, 'win')
+        shell: bash
+        run: |
+          echo "C:\msys64\usr\bin" >> $GITHUB_PATH
+          dir 'C:\msys64\usr\bin'
+
       - name: Test
         shell: bash
         run: |
