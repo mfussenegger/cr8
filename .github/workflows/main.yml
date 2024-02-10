@@ -41,7 +41,9 @@ jobs:
 
       - name: Test
         shell: bash
-        run: python -m xmlrunner discover -v -o test-results/test/
+        run: |
+          command -v chcp && chcp 65001 # Set code page to utf-8.
+          python -m xmlrunner discover -v -o test-results/test/
 
       - name: Pycodestyle
         run: pycodestyle cr8
