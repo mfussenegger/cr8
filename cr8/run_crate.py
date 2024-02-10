@@ -273,6 +273,13 @@ class CrateNode(contextlib.ExitStack):
             java_home = os.environ.get('JAVA_HOME', '')
         self.env.setdefault('JAVA_HOME', java_home)
 
+        # Propagate charset encoding / code page information.
+        self.env.setdefault('LANG',
+                            os.environ.get('LANG', os.environ.get('LC_ALL')))
+        if not self.env['LANG']:
+            raise SystemExit('Your locale are not configured correctly. '
+                             'Please set LANG or alternatively LC_ALL.')
+
         # Operating system specific configuration.
         if sys.platform == "win32":
             start_script = 'crate.bat'
@@ -283,11 +290,6 @@ class CrateNode(contextlib.ExitStack):
             self.env.setdefault('SystemRoot', 'C:\\Windows')
         else:
             start_script = 'crate'
-            self.env.setdefault('LANG',
-                                os.environ.get('LANG', os.environ.get('LC_ALL')))
-            if not self.env['LANG']:
-                raise SystemExit('Your locale are not configured correctly. '
-                                 'Please set LANG or alternatively LC_ALL.')
 
         self.monitor = OutputMonitor()
         self.process = None  # type: Optional[subprocess.Popen]
