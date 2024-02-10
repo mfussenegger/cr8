@@ -19,6 +19,8 @@ jobs:
       LANG: en_US.UTF-8
       LC_ALL: en_US.UTF-8
       LANGUAGE: en_US.UTF-8
+      WINUTF8: 1
+
     steps:
       - uses: actions/checkout@master
       - name: Set up Python ${{ matrix.python-version }}
