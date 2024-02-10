@@ -1,3 +1,9 @@
-import pkg_resources
+try:
+    from importlib.metadata import PackageNotFoundError, version
+except ModuleNotFoundError:  # pragma:nocover
+    from importlib_metadata import PackageNotFoundError, version
 
-__version__ = pkg_resources.require('cr8')[0].version
+try:
+    __version__ = version("cr8")
+except PackageNotFoundError:  # pragma: no cover
+    __version__ = "unknown"

@@ -29,7 +29,8 @@ setup(
         'Faker>=4.0,<5.0',
         'aiohttp>=3.3,<4',
         'toml;python_version<"3.11"',
-        'asyncpg'
+        'asyncpg',
+        'importlib-metadata;python_version<"3.8"',
     ],
     extras_require={
         'extra': ['uvloop', 'pysimdjson']
@@ -44,6 +45,7 @@ setup(
         'Programming Language :: Python :: 3.9',
         'Programming Language :: Python :: 3.10',
         'Programming Language :: Python :: 3.11',
+        'Programming Language :: Python :: 3.12',
     ],
     use_scm_version=True,
     setup_requires=['setuptools_scm']
