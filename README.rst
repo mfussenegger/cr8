@@ -205,7 +205,7 @@ Copies data from one CrateDB cluster or PostgreSQL server to another.
     ...   --src-uri "postgresql://crate@localhost:5432/doc" \
     ...   --query "SELECT name FROM x.demo" \
     ...   --hosts localhost:4200 \
-    ...   --table y.demo \
+    ...   --table y.demo
     INSERT INTO y.demo ("name") VALUES ($1)
     Runtime (in ms):
     ...
