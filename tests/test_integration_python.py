@@ -1,5 +1,6 @@
 import subprocess
 import sys
+import time
 import unittest
 
 from tests.integration_util import node, setup, teardown, translate
@@ -43,10 +44,12 @@ class IntegrationTest(unittest.TestCase):
         command = "cr8 timeit --hosts localhost:4200"
         self.cmd(command)
 
+    @unittest.skip(reason="Windows quoting issue")
     def test_sys_cluster(self):
         command = """echo "SELECT * FROM sys.cluster;" | sed -e 's/\(^"\|"$\)//g' | cr8 timeit --hosts localhost:4200"""
         self.cmd(command)
 
+    @unittest.skip(reason="Windows quoting issue")
     def test_sys_summits(self):
         command = """echo "SELECT * FROM sys.summits ORDER BY height DESC LIMIT 3;" | sed -e 's/\(^"\|"$\)//g' | cr8 timeit --hosts localhost:4200"""
         self.cmd(command)
@@ -59,6 +62,7 @@ class IntegrationTest(unittest.TestCase):
         command = "cat tests/demo.json | cr8 insert-json --table x.demo --hosts localhost:4200"
         self.cmd(command)
 
+    @unittest.skip(reason="Windows quoting issue")
     def test_insert_json_print(self):
         command = """echo '{"name": "Arthur"}' | sed -e "s/\(^'\|'$\)//g" | cr8 insert-json --table mytable"""
         self.cmd(command)
@@ -66,8 +70,12 @@ class IntegrationTest(unittest.TestCase):
     def test_insert_from_sql(self):
         command = "cr8 insert-fake-data --hosts localhost:4200 --table x.demo --num-records 200"
         self.cmd(command)
-        command = """echo "REFRESH TABLE x.demo;" | sed -e 's/\(^"\|"$\)//g' | cr8 timeit --hosts localhost:4200"""
-        self.cmd(command)
+
+        # Synchronize writes.
+        # command = """echo "REFRESH TABLE x.demo;" | sed -e 's/\(^"\|"$\)//g' | cr8 timeit --hosts localhost:4200"""
+        # self.cmd(command)
+        time.sleep(1)
+
         command = """
         cr8 insert-from-sql \
           --src-uri "postgresql://crate@localhost:5432/doc" \
