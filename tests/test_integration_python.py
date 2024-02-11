@@ -44,11 +44,11 @@ class IntegrationTest(unittest.TestCase):
         self.cmd(command)
 
     def test_sys_cluster(self):
-        command = "echo 'SELECT * FROM sys.cluster;' | cr8 timeit --hosts localhost:4200"
+        command = """echo "SELECT * FROM sys.cluster;" | sed -e 's/\(^"\|"$\)//g' | cr8 timeit --hosts localhost:4200"""
         self.cmd(command)
 
     def test_sys_summits(self):
-        command = "echo 'SELECT * FROM sys.summits ORDER BY height DESC LIMIT 3;' | cr8 timeit --hosts localhost:4200"
+        command = """echo "SELECT * FROM sys.summits ORDER BY height DESC LIMIT 3;" | sed -e 's/\(^"\|"$\)//g' | cr8 timeit --hosts localhost:4200"""
         self.cmd(command)
 
     def test_insert_fake_data(self):
@@ -60,13 +60,13 @@ class IntegrationTest(unittest.TestCase):
         self.cmd(command)
 
     def test_insert_json_print(self):
-        command = """echo '{"name": "Arthur"}' | cr8 insert-json --table mytable"""
+        command = """echo '{"name": "Arthur"}' | sed -e "s/\(^'\|'$\)//g" | cr8 insert-json --table mytable"""
         self.cmd(command)
 
     def test_insert_from_sql(self):
         command = "cr8 insert-fake-data --hosts localhost:4200 --table x.demo --num-records 200"
         self.cmd(command)
-        command = "echo 'REFRESH TABLE x.demo;' | cr8 timeit --hosts localhost:4200"
+        command = """echo "REFRESH TABLE x.demo;" | sed -e 's/\(^"\|"$\)//g' | cr8 timeit --hosts localhost:4200"""
         self.cmd(command)
         command = """
         cr8 insert-from-sql \
