@@ -394,7 +394,8 @@ class CrateNode(contextlib.ExitStack):
     def stop(self):
         if self.process:
             self.process.terminate()
-            self.process.communicate(timeout=120)
+            if not sys.platform.startswith("win"):
+                self.process.communicate(timeout=120)
         self.addresses = DotDict({})
         self.http_host = None
         self.http_url = None
