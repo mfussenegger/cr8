@@ -12,8 +12,14 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest]
+        os: [ubuntu-latest, windows-latest]
         python-version: [3.7, 3.8, 3.9, '3.10', '3.11']
+
+    env:
+      LANG: en_US.UTF-8
+      LC_ALL: en_US.UTF-8
+      LANGUAGE: en_US.UTF-8
+      WINUTF8: 1
 
     steps:
       - uses: actions/checkout@master
@@ -33,8 +39,18 @@ jobs:
           pip install pycodestyle unittest-xml-reporting
           pip install .
 
+      - name: Adjust Windows PATH
+        if: startsWith(matrix.os, 'win')
+        shell: bash
+        run: |
+          echo "C:\msys64\usr\bin" >> $GITHUB_PATH
+          dir 'C:\msys64\usr\bin'
+
       - name: Test
-        run: python -m xmlrunner discover -v -o test-results/test/
+        shell: bash
+        run: |
+          command -v chcp && chcp 65001 # Set code page to utf-8.
+          python -m xmlrunner discover -v -o test-results/test/
 
       - name: Pycodestyle
         run: pycodestyle cr8

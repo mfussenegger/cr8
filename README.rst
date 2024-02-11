@@ -128,7 +128,7 @@ timeit 🕐
 A tool that can be used to measure the runtime of a given SQL statement on a
 cluster::
 
-    >>> echo "select name from sys.cluster" | cr8 timeit --hosts localhost:4200
+    >>> echo 'select name from sys.cluster' | cr8 timeit --hosts localhost:4200
     Runtime (in ms):
         mean:    ... ± ...
         min/max: ... → ...
@@ -205,7 +205,7 @@ Copies data from one CrateDB cluster or PostgreSQL server to another.
     ...   --src-uri "postgresql://crate@localhost:5432/doc" \
     ...   --query "SELECT name FROM x.demo" \
     ...   --hosts localhost:4200 \
-    ...   --table y.demo \
+    ...   --table y.demo
     INSERT INTO y.demo ("name") VALUES ($1)
     Runtime (in ms):
     ...
@@ -396,7 +396,7 @@ To use the ``postgres`` protocol, the ``asyncpg`` scheme must be used inside hos
 ::
 
 
-    >>> echo "select 1" | cr8 timeit --hosts asyncpg://localhost:5432
+    >>> echo 'select 1' | cr8 timeit --hosts asyncpg://localhost:5432
     Runtime (in ms):
     ...
 
