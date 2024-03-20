@@ -609,6 +609,9 @@ def _extract_tarball(tarball):
         # Normalize to folder
         folder_name = os.path.dirname(first_file)
         folder_name = folder_name == "" and first_file or folder_name
+        target = tarball.parent / folder_name
+        if target.exists():
+            shutil.rmtree(target)
         t.extractall(tarball.parent)
     return str(tarball.parent / folder_name)
 
