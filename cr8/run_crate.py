@@ -483,6 +483,7 @@ def _download_and_extract(uri, crate_root):
     log.info('Downloading %s and extracting to %s', uri, crate_root)
     with _openuri(uri) as tmpfile:
         with tarfile.open(fileobj=tmpfile) as t:
+            t.extraction_filter = getattr(tarfile, 'data_filter', (lambda member, path: member))
             t.extractall(crate_root)
         tmpfile.seek(0)
         checksum = sha1(tmpfile.read()).hexdigest()
@@ -612,6 +613,7 @@ def _extract_tarball(tarball):
         target = tarball.parent / folder_name
         if target.exists():
             shutil.rmtree(target)
+        t.extraction_filter = getattr(tarfile, 'data_filter', (lambda member, path: member))
         t.extractall(tarball.parent)
     return str(tarball.parent / folder_name)
 
