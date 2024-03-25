@@ -1,10 +1,16 @@
+2024-03-25 0.26.1
+=================
+
+- Fixed a regression that could lead to errors using ``cr8 run-crate`` when it
+  tries to extract the CrateDB tarball.
+
 2024-03-20 0.26.0
 =================
 
 - Added support for python 3.12
 
-- Fixed a permission denied error that could occur using `cr8 run-crate` with a
-  branch version specification.
+- Fixed a permission denied error that could occur using ``cr8 run-crate`` with
+  a branch version specification.
 
 2023-10-24 0.25.0
 =================
