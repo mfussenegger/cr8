@@ -18,6 +18,7 @@ import fnmatch
 import socket
 import ssl
 import platform
+import signal
 from datetime import datetime
 from hashlib import sha1
 from pathlib import Path
@@ -276,7 +277,7 @@ class CrateNode(contextlib.ExitStack):
             raise SystemExit('Your locale are not configured correctly. '
                              'Please set LANG or alternatively LC_ALL.')
         self.monitor = OutputMonitor()
-        self.process = None  # type: Optional[subprocess.Popen]
+        self.process: Optional[subprocess.Popen] = None
         self.http_url = None  # type: Optional[str]
         self.http_host = None  # type: Optional[str]
         start_script = 'crate.bat' if sys.platform == 'win32' else 'crate'
@@ -379,7 +380,11 @@ class CrateNode(contextlib.ExitStack):
     def stop(self):
         if self.process:
             self.process.terminate()
-            self.process.communicate(timeout=120)
+            try:
+                self.process.communicate(timeout=120)
+            except subprocess.TimeoutExpired:
+                self.process.kill()
+                self.process.communicate()
         self.addresses = DotDict({})
         self.http_host = None
         self.http_url = None
@@ -790,6 +795,13 @@ def run_crate(
             keep_data,
             java_magic=not disable_java_magic,
     ) as n:
+
+        def stop(signum, frame):
+            if n.process:
+                n.process.send_signal(signum)
+            sys.exit(signum)
+
+        signal.signal(signal.SIGTERM, stop)
         try:
             n.start()
             n.process.wait()
