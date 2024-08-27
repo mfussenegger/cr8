@@ -81,11 +81,13 @@ class Executor:
                  result_hosts,
                  log,
                  fail_if,
-                 sample_mode):
+                 sample_mode,
+                 session_settings):
         self.benchmark_hosts = benchmark_hosts
         self.sample_mode = sample_mode
+        self.session_settings = session_settings
         self.spec_dir = spec_dir
-        self.client = clients.client(benchmark_hosts)
+        self.client = clients.client(benchmark_hosts, session_settings)
         self.result_client = clients.client(result_hosts)
         self.server_version_info = aio.run(self.client.get_server_version)
         self.server_version = parse_version(self.server_version_info['number'])
@@ -204,7 +206,7 @@ class Executor:
                  f'   Concurrency: {concurrency}\n'
                  f'   {mode_desc}: {duration or iterations}')
             )
-            with Runner(self.benchmark_hosts, concurrency, self.sample_mode) as runner:
+            with Runner(self.benchmark_hosts, concurrency, self.sample_mode, self.session_settings) as runner:
                 if warmup > 0:
                     runner.warmup(stmt, warmup, concurrency, args)
                 timed_stats = runner.run(
@@ -242,15 +244,17 @@ def do_run_spec(spec,
                 action=None,
                 fail_if=None,
                 re_name=None):
+    spec_dir = os.path.dirname(spec)
+    spec = load_spec(spec)
     with Executor(
-        spec_dir=os.path.dirname(spec),
+        spec_dir=spec_dir,
         benchmark_hosts=benchmark_hosts,
         result_hosts=result_hosts,
         log=log,
         fail_if=fail_if,
-        sample_mode=sample_mode
+        sample_mode=sample_mode,
+        session_settings=spec.session_settings
     ) as executor:
-        spec = load_spec(spec)
         try:
             if not action or 'setup' in action:
                 log.info('# Running setUp')

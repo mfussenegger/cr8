@@ -63,7 +63,7 @@ class Parser(doctest.DocTestParser):
 class SourceBuildTest(TestCase):
 
     def test_build_from_branch(self):
-        self.assertIsNotNone(get_crate('4.1'))
+        self.assertIsNotNone(get_crate('5.8'))
 
 
 def load_tests(loader, tests, ignore):

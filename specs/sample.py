@@ -1,4 +1,3 @@
-
 from itertools import count
 from cr8.bench_spec import Spec, Instructions
 
@@ -21,4 +20,5 @@ spec = Spec(
     setup=Instructions(statements=["create table t (x int)"]),
     teardown=Instructions(statements=["drop table t"]),
     queries=queries(),
+    session_settings={'application_name': 'my_app', 'timezone': 'UTC'}
 )

@@ -69,9 +69,9 @@ def _generate_statements(stmt, args, iterations, duration):
 
 
 class Runner:
-    def __init__(self, hosts, concurrency, sample_mode):
+    def __init__(self, hosts, concurrency, sample_mode, session_settings=None):
         self.concurrency = concurrency
-        self.client = client(hosts, concurrency=concurrency)
+        self.client = client(hosts, session_settings=session_settings, concurrency=concurrency)
         self.sampler = get_sampler(sample_mode)
 
     def warmup(self, stmt, num_warmup, concurrency=0, args=None):

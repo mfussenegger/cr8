@@ -216,18 +216,25 @@ def _verify_ssl_from_first(hosts):
 
 
 class AsyncpgClient:
-    def __init__(self, hosts, pool_size=25):
+    def __init__(self, hosts, pool_size=25, session_settings=None):
         self.dsn = _to_dsn(hosts)
         self.pool_size = pool_size
         self._pool = None
         self.is_cratedb = True
+        self.session_settings = session_settings or {}
 
     async def _get_pool(self):
+
+        async def set_session_settings(conn):
+            for setting, value in self.session_settings.items():
+                await conn.execute(f'set {setting}={value}')
+
         if not self._pool:
             self._pool = await asyncpg.create_pool(
                 self.dsn,
                 min_size=self.pool_size,
-                max_size=self.pool_size
+                max_size=self.pool_size,
+                setup=set_session_settings
             )
         return self._pool
 
@@ -308,7 +315,7 @@ def _append_sql(host):
 
 
 class HttpClient:
-    def __init__(self, hosts, conn_pool_limit=25):
+    def __init__(self, hosts, conn_pool_limit=25, session_settings=None):
         self.hosts = hosts
         self.urls = itertools.cycle(list(map(_append_sql, hosts)))
         self._connector_params = {
@@ -317,6 +324,7 @@ class HttpClient:
         }
         self.__session = None
         self.is_cratedb = True
+        self.session_settings = session_settings or {}
 
     @property
     async def _session(self):
@@ -324,6 +332,13 @@ class HttpClient:
         if session is None:
             conn = aiohttp.TCPConnector(**self._connector_params)
             self.__session = session = aiohttp.ClientSession(connector=conn)
+            for setting, value in self.session_settings.items():
+                payload = {'stmt': f'set {setting}={value}'}
+                await _exec(
+                    session,
+                    next(self.urls),
+                    dumps(payload, cls=CrateJsonEncoder)
+                )
         return session
 
     async def execute(self, stmt, args=None):
@@ -372,10 +387,10 @@ class HttpClient:
         self.close()
 
 
-def client(hosts, concurrency=25):
+def client(hosts, session_settings=None, concurrency=25):
     hosts = hosts or 'localhost:4200'
     if hosts.startswith('asyncpg://'):
         if not asyncpg:
             raise ValueError('Cannot use "asyncpg" scheme if asyncpg is not available')
-        return AsyncpgClient(hosts, pool_size=concurrency)
-    return HttpClient(_to_http_hosts(hosts), conn_pool_limit=concurrency)
+        return AsyncpgClient(hosts, pool_size=concurrency, session_settings=session_settings)
+    return HttpClient(_to_http_hosts(hosts), conn_pool_limit=concurrency, session_settings=session_settings)

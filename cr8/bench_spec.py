@@ -30,12 +30,13 @@ class Instructions:
 
 
 class Spec:
-    def __init__(self, setup, teardown, queries=None, load_data=None, meta=None):
+    def __init__(self, setup, teardown, queries=None, load_data=None, meta=None, session_settings=None):
         self.setup = setup
         self.teardown = teardown
         self.queries = queries
         self.load_data = load_data
         self.meta = meta or {}
+        self.session_settings = session_settings or {}
 
     @staticmethod
     def from_dict(d):
@@ -45,6 +46,7 @@ class Spec:
             meta=d.get('meta', {}),
             queries=d.get('queries', []),
             load_data=d.get('load_data', []),
+            session_settings=d.get('session_settings', {}),
         )
 
     @staticmethod
