@@ -234,7 +234,7 @@ class AsyncpgClient:
                 self.dsn,
                 min_size=self.pool_size,
                 max_size=self.pool_size,
-                setup=set_session_settings
+                init=set_session_settings
             )
         return self._pool
 
