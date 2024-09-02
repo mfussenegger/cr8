@@ -315,7 +315,7 @@ def _append_sql(host):
 
 
 class HttpClient:
-    def __init__(self, hosts, conn_pool_limit=25, session_settings=None):
+    def __init__(self, hosts, conn_pool_limit=25):
         self.hosts = hosts
         self.urls = itertools.cycle(list(map(_append_sql, hosts)))
         self._connector_params = {
@@ -324,7 +324,6 @@ class HttpClient:
         }
         self.__session = None
         self.is_cratedb = True
-        self.session_settings = session_settings or {}
 
     @property
     async def _session(self):
@@ -332,13 +331,6 @@ class HttpClient:
         if session is None:
             conn = aiohttp.TCPConnector(**self._connector_params)
             self.__session = session = aiohttp.ClientSession(connector=conn)
-            for setting, value in self.session_settings.items():
-                payload = {'stmt': f'set {setting}={value}'}
-                await _exec(
-                    session,
-                    next(self.urls),
-                    dumps(payload, cls=CrateJsonEncoder)
-                )
         return session
 
     async def execute(self, stmt, args=None):
@@ -393,4 +385,4 @@ def client(hosts, session_settings=None, concurrency=25):
         if not asyncpg:
             raise ValueError('Cannot use "asyncpg" scheme if asyncpg is not available')
         return AsyncpgClient(hosts, pool_size=concurrency, session_settings=session_settings)
-    return HttpClient(_to_http_hosts(hosts), conn_pool_limit=concurrency, session_settings=session_settings)
+    return HttpClient(_to_http_hosts(hosts), conn_pool_limit=concurrency)

@@ -205,6 +205,7 @@ class Executor:
                  f'   {mode_desc}: {duration or iterations}')
             )
             with Runner(self.benchmark_hosts, concurrency, self.sample_mode, session_settings) as runner:
+                runner.set_session_settings()
                 if warmup > 0:
                     runner.warmup(stmt, warmup, concurrency, args)
                 timed_stats = runner.run(
