@@ -72,15 +72,6 @@ class Runner:
         self.concurrency = concurrency
         self.client = client(hosts, session_settings=session_settings, concurrency=concurrency)
         self.sampler = get_sampler(sample_mode)
-        self.session_settings = session_settings or {}
-
-    def set_session_settings(self):
-        if isinstance(self.client, HttpClient):
-            f = self.client.execute
-            for setting, value in self.session_settings.items():
-                stmt = f'set {setting}={value}'
-                statements = itertools.repeat((stmt, ()), self.concurrency)
-                aio.run_many(f, statements, self.concurrency, self.concurrency)
 
     def warmup(self, stmt, num_warmup, concurrency=0, args=None):
         statements = itertools.repeat((stmt, args or ()), num_warmup)

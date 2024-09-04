@@ -1,4 +1,6 @@
 import json
+import random
+
 import aiohttp
 import itertools
 import calendar
@@ -315,23 +317,36 @@ def _append_sql(host):
 
 
 class HttpClient:
-    def __init__(self, hosts, conn_pool_limit=25):
+    def __init__(self, hosts, conn_pool_limit=25, session_settings=None):
         self.hosts = hosts
         self.urls = itertools.cycle(list(map(_append_sql, hosts)))
-        self._connector_params = {
-            'limit': conn_pool_limit,
-            'verify_ssl': _verify_ssl_from_first(self.hosts)
-        }
-        self.__session = None
+        self.conn_pool_limit = conn_pool_limit;
         self.is_cratedb = True
+        self._pool = []
+        self.session_settings = session_settings or {}
+
 
     @property
     async def _session(self):
-        session = self.__session
-        if session is None:
-            conn = aiohttp.TCPConnector(**self._connector_params)
-            self.__session = session = aiohttp.ClientSession(connector=conn)
-        return session
+        if not self._pool:
+            self._connector_params = {
+                'limit': 1,
+                'verify_ssl': _verify_ssl_from_first(self.hosts)
+            }
+            for n in range(0, self.conn_pool_limit):
+                tcp_connector = aiohttp.TCPConnector(**self._connector_params)
+                session = aiohttp.ClientSession(connector=tcp_connector)
+                for setting, value in self.session_settings.items():
+                    payload = {'stmt': f'set {setting}={value}'}
+                    await _exec(
+                        session,
+                        next(self.urls),
+                        dumps(payload, cls=CrateJsonEncoder)
+                    )
+                self._pool.append(session)
+            
+        return random.choice(self._pool)
+
 
     async def execute(self, stmt, args=None):
         payload = {'stmt': _plain_or_callable(stmt)}
@@ -366,8 +381,8 @@ class HttpClient:
             }
 
     async def _close(self):
-        if self.__session:
-            await self.__session.close()
+        for session in self._pool:
+            await session.close()
 
     def close(self):
         asyncio.get_event_loop().run_until_complete(self._close())
@@ -385,4 +400,4 @@ def client(hosts, session_settings=None, concurrency=25):
         if not asyncpg:
             raise ValueError('Cannot use "asyncpg" scheme if asyncpg is not available')
         return AsyncpgClient(hosts, pool_size=concurrency, session_settings=session_settings)
-    return HttpClient(_to_http_hosts(hosts), conn_pool_limit=concurrency)
+    return HttpClient(_to_http_hosts(hosts), conn_pool_limit=concurrency, session_settings=session_settings)
