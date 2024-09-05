@@ -1,5 +1,4 @@
 import json
-import random
 
 import aiohttp
 import itertools
@@ -320,11 +319,10 @@ class HttpClient:
     def __init__(self, hosts, conn_pool_limit=25, session_settings=None):
         self.hosts = hosts
         self.urls = itertools.cycle(list(map(_append_sql, hosts)))
-        self.conn_pool_limit = conn_pool_limit;
+        self.conn_pool_limit = conn_pool_limit
         self.is_cratedb = True
         self._pool = []
         self.session_settings = session_settings or {}
-
 
     @property
     async def _session(self):
@@ -344,8 +342,8 @@ class HttpClient:
                         dumps(payload, cls=CrateJsonEncoder)
                     )
                 self._pool.append(session)
-            
-        return random.choice(self._pool)
+
+        return self._pool.pop()
 
 
     async def execute(self, stmt, args=None):
@@ -353,11 +351,13 @@ class HttpClient:
         if args:
             payload['args'] = _plain_or_callable(args)
         session = await self._session
-        return await _exec(
+        result = await _exec(
             session,
             next(self.urls),
             dumps(payload, cls=CrateJsonEncoder)
         )
+        self._pool.append(session)
+        return result
 
     async def execute_many(self, stmt, bulk_args):
         data = dumps(dict(
@@ -365,7 +365,9 @@ class HttpClient:
             bulk_args=_plain_or_callable(bulk_args)
         ), cls=CrateJsonEncoder)
         session = await self._session
-        return await _exec(session, next(self.urls), data)
+        result = await _exec(session, next(self.urls), data)
+        self._pool.append(session)
+        return result
 
     async def get_server_version(self):
         session = await self._session
@@ -374,11 +376,13 @@ class HttpClient:
         async with session.get(url) as resp:
             r = await resp.json()
             version = r['version']
-            return {
+            result = {
                 'hash': version['build_hash'],
                 'number': version['number'],
                 'date': _date_or_none(version['build_timestamp'][:10])
             }
+            self._pool.append(session)
+            return result
 
     async def _close(self):
         for session in self._pool:
