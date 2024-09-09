@@ -75,13 +75,10 @@ Python >= 3.7 is required to use the command line tools.
 
 Install them using `pip <https://pip.pypa.io/en/stable/>`_::
 
-    python3.7 -m pip install --user cr8
+    python3 -m venv venv
+    venv/bin/python -m pip install cr8
 
-This will install ``cr8`` into ``~/.local/bin``. Either use
-``~/.local/bin/cr8`` to launch it or add ``~/.local/bin`` to your ``$PATH``
-environment variable.
-
-
+This will install ``cr8`` into ``venv/bin``
 An alternative is to download a single ``zipapp`` file from the `releases page
 <https://github.com/mfussenegger/cr8/releases>`_.
 
