@@ -7,17 +7,17 @@ import types
 import time
 from urllib.parse import urlparse, parse_qs, urlunparse
 from datetime import datetime, date
-from typing import List, Union, Iterable, Dict
+from typing import List, Union, Iterable, Dict, Optional, Any
 from decimal import Decimal
 from cr8.aio import asyncio  # import via aio for uvloop setup
 
 try:
     import asyncpg
 except ImportError:
-    asyncpg = None
+    asyncpg = None  # type: ignore
 
 try:
-    import simdjson
+    import simdjson  # type: ignore
     dumps = simdjson.dumps
 except ImportError:
     dumps = json.dumps
@@ -137,7 +137,7 @@ def _plain_or_callable(obj):
         return obj
 
 
-def _date_or_none(d: str) -> str:
+def _date_or_none(d: str) -> Optional[str]:
     """Return a date as if, if valid, otherwise None
 
     >>> _date_or_none('2017-02-27')
@@ -152,7 +152,7 @@ def _date_or_none(d: str) -> str:
         return None
 
 
-def _to_dsn(hosts):
+def _to_dsn(hosts: str) -> str:
     """Convert a host URI into a dsn for aiopg.
 
     >>> _to_dsn('aiopg://myhostname:4242/mydb')
@@ -177,7 +177,7 @@ def _to_dsn(hosts):
         host, port = netloc.split(':', maxsplit=1)
     except ValueError:
         host = netloc
-        port = 5432
+        port = "5432"
     dbname = p.path[1:] if p.path else 'doc'
     dsn = f'postgres://{user_and_pw}@{host}:{port}/{dbname}'
     if p.query:
@@ -185,7 +185,7 @@ def _to_dsn(hosts):
     return dsn
 
 
-def _to_boolean(v):
+def _to_boolean(v: str) -> bool:
     if str(v).lower() in ("true"):
         return True
     elif str(v).lower() in ("false"):
@@ -194,7 +194,7 @@ def _to_boolean(v):
         raise ValueError('not a boolean value')
 
 
-def _verify_ssl_from_first(hosts):
+def _verify_ssl_from_first(hosts: List[str]) -> bool:
     """Check if SSL validation parameter is passed in URI
 
     >>> _verify_ssl_from_first(['https://myhost:4200/?verify_ssl=false'])
@@ -295,7 +295,7 @@ class AsyncpgClient:
         self.close()
 
 
-def _append_sql(host):
+def _append_sql(host: str) -> str:
     """ Append `/_sql` to the host, dropping any query parameters.
 
     >>> _append_sql('http://n1:4200')
@@ -316,12 +316,15 @@ def _append_sql(host):
 
 
 class HttpClient:
-    def __init__(self, hosts, conn_pool_limit=25, session_settings=None):
+    def __init__(self,
+                 hosts: List[str],
+                 conn_pool_limit=25,
+                 session_settings: Optional[Dict[str, Any]] = None):
         self.hosts = hosts
         self.urls = itertools.cycle(list(map(_append_sql, hosts)))
         self.conn_pool_limit = conn_pool_limit
         self.is_cratedb = True
-        self._pools = {}
+        self._pools: Dict[str, asyncio.Queue] = {}
         self.session_settings = session_settings or {}
 
     async def _session(self, url):
