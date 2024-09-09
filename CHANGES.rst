@@ -1,3 +1,9 @@
+2024-09-09 0.27.1
+=================
+
+- Fixed a regression in 0.27.0 that could cause HTTP sessions to remain open,
+  resulting in stuck operations.
+
 2024-09-09 0.27.0
 =================
 
