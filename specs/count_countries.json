@@ -15,8 +15,8 @@
         ]
     },
     "session_settings": {
-            "application_name": "my_app",
-            "timezone": "UTC"
+        "application_name": "my_app",
+        "timezone": "UTC"
     },
     "queries": [{
         "iterations": 1000,

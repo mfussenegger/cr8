@@ -5,7 +5,7 @@ from collections import namedtuple
 
 from cr8 import aio
 from cr8.metrics import Stats, get_sampler
-from cr8.clients import client, HttpClient
+from cr8.clients import client
 
 TimedStats = namedtuple('TimedStats', ['started', 'ended', 'stats'])
 
