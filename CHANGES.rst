@@ -1,3 +1,11 @@
+2024-09-09 0.27.0
+=================
+
+- Added support for setting up session settings per connection for spec files.
+
+- Fixed an issue that caused CrateDB process leaks if `cr8 run-crate` was
+  killed via SIGTERM.
+
 2024-03-25 0.26.1
 =================
 
