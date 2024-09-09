@@ -1,0 +1,22 @@
+{
+   "$schema": "https://raw.githubusercontent.com/mfussenegger/dapconfig-schema/master/dapconfig-schema.json",
+   "version": "0.2.0",
+   "configurations": [
+       {
+           "type": "debugpy",
+           "request": "launch",
+           "name": "run_crate",
+           "module": "cr8.run_crate",
+           "args": ["latest-nightly"],
+           "console": "integratedTerminal"
+       },
+       {
+           "type": "debugpy",
+           "request": "launch",
+           "name": "run_spec",
+           "module": "cr8.run_spec",
+           "args": ["specs/sample.toml", "localhost:4200"],
+           "console": "integratedTerminal"
+       }
+   ]
+}
