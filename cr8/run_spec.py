@@ -179,7 +179,7 @@ class Executor:
             server_version='.'.join((str(x) for x in self.server_version)))
         return msg
 
-    def run_queries(self, queries: Iterable[dict], meta=None):
+    def run_queries(self, queries: Iterable[dict], meta=None, session_settings=None):
         for query in queries:
             stmt = query['statement']
             iterations = query.get('iterations', 1)
@@ -204,7 +204,7 @@ class Executor:
                  f'   Concurrency: {concurrency}\n'
                  f'   {mode_desc}: {duration or iterations}')
             )
-            with Runner(self.benchmark_hosts, concurrency, self.sample_mode) as runner:
+            with Runner(self.benchmark_hosts, concurrency, self.sample_mode, session_settings) as runner:
                 if warmup > 0:
                     runner.warmup(stmt, warmup, concurrency, args)
                 timed_stats = runner.run(
@@ -266,7 +266,7 @@ def do_run_spec(spec,
                     queries = (q for q in spec.queries if 'name' in q and rex.match(q['name']))
                 else:
                     queries = spec.queries
-                executor.run_queries(queries, spec.meta)
+                executor.run_queries(queries, spec.meta, spec.session_settings)
         finally:
             if not action or 'teardown' in action:
                 log.info('# Running tearDown')
