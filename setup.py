@@ -32,7 +32,8 @@ setup(
         'asyncpg'
     ],
     extras_require={
-        'extra': ['uvloop', 'pysimdjson']
+        'extra': ['uvloop', 'pysimdjson'],
+        "dev": ["asyncpg-stubs", "mypy"]
     },
     python_requires='>=3.7',
     classifiers=[
