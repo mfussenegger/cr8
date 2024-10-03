@@ -58,6 +58,13 @@ class ReleaseUrlSegments(NamedTuple):
     @classmethod
     def create(cls):
         extension = 'tar.gz'
+
+        machine = platform.machine()
+        if machine.startswith('arm'):
+            arch = 'aarch64'
+        else:
+            arch = 'x64'
+
         if sys.platform.startswith('linux'):
             os = 'linux'
         elif sys.platform.startswith('win32'):
@@ -65,14 +72,12 @@ class ReleaseUrlSegments(NamedTuple):
             extension = 'zip'
         elif sys.platform.startswith('darwin'):
             os = 'mac'
+
+            # there are no aarch64/arm64 distributions available
+            # x64 should work via emulation layer
+            arch = 'x64'
         else:
             raise ValueError(f'Unsupported platform: {sys.platform}')
-
-        machine = platform.machine()
-        if machine.startswith('arm'):
-            arch = 'aarch64'
-        else:
-            arch = 'x64'
 
         return ReleaseUrlSegments(arch=arch, os=os, extension=extension)
 
