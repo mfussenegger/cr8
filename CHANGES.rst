@@ -1,3 +1,10 @@
+2024-10-07 0.27.2
+=================
+
+- Changed ``run-crate <version>`` to download the x64 version of a tarball
+  under a ``arm64`` Mac because there are no mac arm64 distributions for
+  CrateDB. The x64 version works via emulation layer.
+
 2024-09-09 0.27.1
 =================
 
@@ -9,7 +16,7 @@
 
 - Added support for setting up session settings per connection for spec files.
 
-- Fixed an issue that caused CrateDB process leaks if `cr8 run-crate` was
+- Fixed an issue that caused CrateDB process leaks if ``cr8 run-crate`` was
   killed via SIGTERM.
 
 2024-03-25 0.26.1
