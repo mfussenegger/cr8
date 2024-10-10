@@ -13,40 +13,43 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        python-version: [3.7, 3.8, 3.9, '3.10', '3.11', '3.12']
+        python-version: [3.9, '3.10', '3.11', '3.12', '3.13']
 
     steps:
       - uses: actions/checkout@v4
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5
+
+      - name: Install the latest version of uv
+        uses: astral-sh/setup-uv@v3
         with:
-          python-version: ${{ matrix.python-version }}
-          cache: "pip"
-          cache-dependency-path: setup.py
+          version: "latest"
+          enable-cache: true
+          cache-dependency-glob: "**/setup.py"
 
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
           distribution: "temurin"
-          java-version: 11
+          java-version: 17
+
+      - name: Install python
+        run: uv venv --python ${{ matrix.python-version }}
 
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
-          pip install pycodestyle unittest-xml-reporting
-          pip install .
+          uv pip install pycodestyle unittest-xml-reporting
+          uv pip install .
 
       - name: Test
-        run: python -m xmlrunner discover -v -o test-results/test/
+        run: uv run -m xmlrunner discover -v -o test-results/test/
 
       - name: Pycodestyle
-        run: pycodestyle cr8
+        run: uv run -m pycodestyle cr8
 
       - name: Upload results to wacklig
         env:
           WACKLIG_TOKEN: ${{ secrets.WACKLIG_TOKEN }}
         run: |
-          curl -s https://raw.githubusercontent.com/pipifein/wacklig-uploader/master/wacklig.py | python - --token "$WACKLIG_TOKEN" || echo "Upload to wacklig failed"
+          curl -s https://raw.githubusercontent.com/pipifein/wacklig-uploader/master/wacklig.py | uv run - --token "$WACKLIG_TOKEN" || echo "Upload to wacklig failed"
 
   publish:
     name: Build & publish package to pypi
